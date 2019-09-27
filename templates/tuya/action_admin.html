@@ -1,0 +1,143 @@
+<!-- action usual -->
+[#if DATA_SOURCE="tudevices" || DATA_SOURCE=""#]
+
+<!-- table tudevices search -->
+[#if VIEW_MODE="search_tudevices" || VIEW_MODE=""#]
+   <div>
+      <img src="../templates/tuya/img/tuya.png"  width="30" height="30">
+      &nbsp;&nbsp;&nbsp;
+      <a class="btn btn-default" href="#api_settings" data-toggle="collapse"><i class="glyphicon glyphicon-cog"></i> <#LANG_SETUP#></a>
+      &nbsp;&nbsp;&nbsp;
+      [#if CYCLERUN==1#]
+         <span class="label label-success" title="Статус цикла">Цикл запущен</span>
+      [#else#]
+         <span class="label label-danger" title="Статус цикла">Цикл остановлен</span>
+      [#endif#]
+      <div class="float-right">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+      <button class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#about">О модуле&nbsp;&nbsp;<span class="glyphicon glyphicon-info-sign icon-white"></span></button>
+   </div>
+
+   <div class="collapse" id='api_settings'>
+      &nbsp;
+      <form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
+         <fieldset>
+            <div class="form-group">
+               <label class="control-label col-lg-6"[#if ERR_TUYA_USERNAME#] style="color:red;font-weight:bold"[#endif#]>
+                  UserName
+                  <span class='support-hover' tabindex="1" data-title="E-mail для входа в Tuya" class="glyphicon glyphicon-info-sign"></i></span>
+               </label>
+               <div class="col-lg-4">
+                  <input type="text" name="tuya_username" value="<#TUYA_USERNAME#>" class="form-control" placeholder="">
+               </div>
+            </div>
+            <div class="form-group">
+               <label class="control-label col-lg-6">
+                  Password
+                  <span class='support-hover' tabindex="1" data-title="Пароль для входа в Tuya"><i class="glyphicon glyphicon-info-sign"></i></span>
+               </label>
+               <div class="col-lg-4">
+                 <input type="text" name="tuya_passwd" value="<#TUYA_PASSWD#>" class="form-control" placeholder="">
+               </div>
+            </div>
+            <div class="form-group">
+               <label class="control-label col-lg-6">
+                  Интервал обновлений
+                  <span class='support-hover' tabindex="1" data-title="Интервал между обновлениями состяния устройств из облака"><i class="glyphicon glyphicon-info-sign"></i></span>
+               </label>
+               <div class="col-lg-4">
+                 <input type="text" name="tuya_interval" value="<#TUYA_INTERVAL#>" class="form-control" placeholder="">
+               </div>
+            </div>
+            <div class="form-actions">
+               <button type="submit" name="subm" value="Submit" class="btn btn-primary"><#LANG_UPDATE#></button>
+               <input type="hidden" name="view_mode" value="update_settings">
+               <input type="hidden" name="mode" value="update">
+            </div>
+         </fieldset>
+      </form>
+   </div>
+   &nbsp;
+   [#inc tudevices_search_admin.html#]
+[#endif VIEW_MODE#]
+
+<!-- / table tudevices search -->
+<!-- table tudevices edit -->
+[#if VIEW_MODE="edit_tudevices"#]
+   [#if ID!=""#]
+      [#if TITLE!=""#]<h4>[#TITLE#]</h4>[#endif TITLE#]
+      <ul class="nav nav-tabs">
+         <li [#if TAB=""#] class="active"[#endif#]>
+            <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#VIEW_MODE#>&id=<#ID#>&tab="><#LANG_GENERAL#></a>
+         </li>
+         <li [#if TAB="data"#] class="active"[#endif#]>
+            <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#VIEW_MODE#>&id=<#ID#>&tab=data"><#LANG_DATA#></a>
+         </li>
+      </ul>
+      &nbsp;
+      <br/>
+   [#endif ID#]
+   
+   [#if TAB=""#]
+      [#inc tudevices_edit_default.html#]
+   [#endif TAB#]
+   
+   [#if TAB="data"#]
+      [#inc tudevices_edit_data.html#]
+   [#endif TAB#]
+[#endif VIEW_MODE#]
+
+<!-- / table tudevices edit -->
+<!-- table tudevices view --> 
+[#if VIEW_MODE="view_tudevices"#]
+   [#if TAB=""#]
+      [#inc tudevices_view_default.html#]
+   [#endif TAB#]
+[#endif VIEW_MODE#]
+
+<!-- / table tudevices view -->
+[#endif DATA_SOURCE#]
+
+<!-- action usual -->
+[#if DATA_SOURCE="tucommands"#]
+   <!-- table tucommands search -->
+   [#if VIEW_MODE="search_tucommands" || VIEW_MODE=""#]
+      [#inc tucommands_search_admin.html#]
+   [#endif VIEW_MODE#]
+   <!-- / table tucommands search -->
+   <!-- table xicommands edit -->
+   [#if VIEW_MODE="edit_tucommands"#]
+      [#inc tucommands_edit.html#]
+   [#endif VIEW_MODE#]
+   <!-- / table tucommands edit -->
+   <!-- table tucommands view --> 
+   [#if VIEW_MODE="view_tucommands"#]
+      [#inc tucommands_view.html#]
+   [#endif VIEW_MODE#]
+   <!-- / table tucommands view -->
+[#endif DATA_SOURCE#]
+
+<!-- About -->
+<div class="modal fade" id="about" tabindex="-1" role="dialog" aria-labelledby="about1" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Закрыть</span></button>
+            <h4 class="modal-title">Tuya</h4>
+         </div>
+         <div class="modal-body" style="padding-bottom: 1px;">
+            <div class="float-right">
+               <img src="../templates/tuya/img/tuya.png"  width="48" height="48">
+            </div>
+            <p class="float-left">
+               Модуль поддержки wi-fi устройств из экосистемы Tuya.<br><br>
+            </p>
+            <hr size="1">
+
+         </div>
+         <div class="modal-footer" style="margin-top: 1px;">
+            <div class="pull-left">Автор: FanDaymon" </div>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+         </div>
+      </div>
+   </div>
+</div>
