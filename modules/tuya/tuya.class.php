@@ -367,26 +367,59 @@ class tuya extends module
   }
 
   function requestLocalStatus(){
-   $devices=SQLSelect("SELECT * FROM tudevices WHERE LOCAL_KEY IS NOT NULL and DEV_IP IS NOT NULL");
+   $devices=SQLSelect("SELECT * FROM tudevices WHERE LOCAL_KEY IS NOT NULL and DEV_IP IS NOT NULL ORDER BY DEV_ID");
    foreach($devices as $device) {
-    $status=$this->TuyaLocalMsg('STATUS',$device['DEV_ID'],$device['LOCAL_KEY'],$device['DEV_IP']);
-    if ($status!='') { 
-     debmes('Status: '.$status.' '.$device['DEV_IP']);
-     $status=json_decode($status);
-     $dps=$status->dps;
-     foreach ($dps as $k=>$d){
-      if (is_bool($d)) {
-       $d=($d)?1:0;
-      } 
-      if ($k=='1'){
-       $k='state';
-      }
-      $this->processCommand($device['ID'],$k,$d);
-     }
-     $dps=json_encode($dps);
-     $data=$dps;     
-     $this->processCommand($device['ID'],'report',$data);
+    $mdev=strpos($device['DEV_ID'],'_');
+    if ($mdev>0 and substr($device['DEV_ID'],$mdev+1)==1) {
+       $dev_id=substr($device['DEV_ID'],0,$mdev);
+       $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP']);
+       if ($status!='') { 
+        debmes('Status: '.$status.' '.$device['DEV_IP']);
+        $status=json_decode($status);
+        $dps=$status->dps;
+        foreach ($dps as $k=>$d){
+         if (is_bool($d)) {
+          $d=($d)?1:0;
+         } 
+         if ($k=='1'){
+          $k='state';
+          $this->processCommand($device['ID'],$k,$d);
+         } elseif ($k<8) {
+          $k='state';
+          $dev_k=SQLSelectOne('SELECT ID FROM tudevices WHERE DEV_ID=' . $dev_id .'_' .$k);
+          $this->processCommand($dev_k['ID'],$k,$d);
+         } else {
+          $this->processCommand($device['ID'],$k,$d);
 
+         }
+         
+       }
+       $dps=json_encode($dps);
+       $data=$dps;     
+       $this->processCommand($device['ID'],'report',$data);
+      }
+
+
+  
+    } else {
+     $status=$this->TuyaLocalMsg('STATUS',$device['DEV_ID'],$device['LOCAL_KEY'],$device['DEV_IP']);
+     if ($status!='') { 
+      debmes('Status: '.$status.' '.$device['DEV_IP']);
+      $status=json_decode($status);
+      $dps=$status->dps;
+      foreach ($dps as $k=>$d){
+       if (is_bool($d)) {
+        $d=($d)?1:0;
+       } 
+       if ($k=='1'){
+        $k='state';
+       }
+       $this->processCommand($device['ID'],$k,$d);
+      }
+      $dps=json_encode($dps);
+      $data=$dps;     
+      $this->processCommand($device['ID'],'report',$data);
+     }
 
     }
    }
