@@ -546,11 +546,18 @@ class tuya extends module
        $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value);
       }
      } else {
-      if ($properties[0]['TITLE']=='state') $dps_name='1';
+      $mdev=strpos($properties[0]['DEV_ID'],'_');
+      if ($mdev>0) {
+       $dev_id=substr($properties[0]['DEV_ID'],0,$mdev);
+       if ($properties[0]['TITLE']=='state') $dps_name=substr($properties[0]['DEV_ID'],$mdev+1);
+      } else {
+       if ($properties[0]['TITLE']=='state') $dps_name='1';
+       $dev_id=$properties[0]['DEV_ID'];
+      }
 
       $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
 
-      $this->TuyaLocalMsg('SET',$properties[0]['DEV_ID'],$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
+      $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
      }
      $rec=SQLSelect("select * from tucommands where ID=".$properties[0]['ID']);
      $rec[$property]=$value;
