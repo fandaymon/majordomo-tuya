@@ -46,10 +46,11 @@ while (1) {
 	if ((time()-$latest_check) >= $tuya_interval) {
 		$latest_check = time();
 		setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
-                $token=$tuya_module->RefreshToken();
-                $tuya_module->Tuya_Discovery_Devices($token);
-                $tuya_module->requestLocalStatus();
-
+                if ($tuya_module->config['TUYA_REFRESH_TOKEN']!=NULL) {
+                 $token=$tuya_module->RefreshToken();
+                 $tuya_module->Tuya_Discovery_Devices($token);
+                 $tuya_module->requestLocalStatus();
+                }
 
 	}
 	if (file_exists('./reboot') || IsSet($_GET['onetime'])) {

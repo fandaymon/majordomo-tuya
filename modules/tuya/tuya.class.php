@@ -465,6 +465,38 @@ class tuya extends module
     }
    }
 
+   function TuyaRemoteMsg($dev_id,$value){
+    $token=$this->RefreshToken();
+    $sURL = 'https://px1.tuyaeu.com/homeassistant/skill';
+
+        $header = [
+            'name'           => 'turnOnOff',
+            'namespace'      => 'control',
+            'payloadVersion' => 1,
+        ];
+        $payload['value']=$value;
+        $payload['accessToken'] = $token;
+        $payload['devId']=$dev_id;
+
+        $data = [
+            'header'  => $header,
+            'payload' => $payload,
+        ];
+ 
+
+   $aHTTP = array(
+   'http' => 
+    array(
+    'method'  => 'POST', 
+    'header'  => 'Content-Type: application/json',
+    'content' => json_encode($data, JSON_FORCE_OBJECT)
+    )
+    );
+    $context = stream_context_create($aHTTP);  
+    $contents = file_get_contents($sURL, false, $context);
+    $result=json_decode($contents);
+    return $result;
+   }
 
    function processCommand($device_id, $command, $value, $params = 0) {
 		
@@ -508,12 +540,18 @@ class tuya extends module
    
     if ($total) {
      $dps_name=$properties[0]['TITLE'];
-     if ($properties[0]['TITLE']=='state') $dps_name='1';
+     if ($properties[0]['LOCAL_KEY']==NULL or $properties[0]['DEV_IP']==NULL) {
 
-     $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
+      if ($dps_name=='state') {
+       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value);
+      }
+     } else {
+      if ($properties[0]['TITLE']=='state') $dps_name='1';
 
-     $this->TuyaLocalMsg('SET',$properties[0]['DEV_ID'],$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
+      $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
 
+      $this->TuyaLocalMsg('SET',$properties[0]['DEV_ID'],$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
+     }
      $rec=SQLSelect("select * from tucommands where ID=".$properties[0]['ID']);
      $rec[$property]=$value;
      SQLUpdate('tucommands',$rec);
