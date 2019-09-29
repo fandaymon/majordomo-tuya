@@ -427,6 +427,7 @@ class tuya extends module
 
   function Tuya_send_receive( $payload,$local_ip) {
    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+   socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 2, "usec" => 0));
    $buf='';
    if (socket_connect($socket, $local_ip, 6668)) {
     socket_send($socket, $payload, strlen($payload), 0);
@@ -492,9 +493,7 @@ class tuya extends module
       $this->processCommand($rec['ID'], $key, $value);
     }
 
-    $this->processCommand($rec['ID'], 'report', $data);
-   // debmes('Tuya Web :'.$data);
-     
+    
     }
    }
 
@@ -541,7 +540,7 @@ class tuya extends module
 			$cmd_rec['DEVICE_ID'] = $device_id;
 			$cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
 		}
-
+                if ($cmd_rec['DIVIDEDBY10']) $value=$value/10;
 		$old_value = $cmd_rec['VALUE'];
 
 		$cmd_rec['VALUE'] = $value;
@@ -646,17 +645,18 @@ class tuya extends module
  tudevices: DEV_ID varchar(255) NOT NULL DEFAULT ''
  tudevices: LOCAL_KEY varchar(255) NOT NULL DEFAULT ''
  tudevices: DEV_IP varchar(255) NOT NULL DEFAULT ''
- tudevices: DEV_INTERVAL int(10) NOT NULL DEFAULT 5
  tudevices: UPDATED datetime
 
  tucommands: ID int(10) unsigned NOT NULL auto_increment
  tucommands: TITLE varchar(100) NOT NULL DEFAULT ''
  tucommands: VALUE varchar(255) NOT NULL DEFAULT ''
+ tucommands: ALIAS varchar(255) NOT NULL DEFAULT ''
  tucommands: SDEVICE_TYPE varchar(255) NOT NULL DEFAULT ''
  tucommands: DEVICE_ID int(10) NOT NULL DEFAULT '0'
  tucommands: LINKED_OBJECT varchar(100) NOT NULL DEFAULT ''
  tucommands: LINKED_PROPERTY varchar(100) NOT NULL DEFAULT ''
  tucommands: LINKED_METHOD varchar(100) NOT NULL DEFAULT ''
+ tucommands: DIVIDEDBY10 boolean NOT NULL DEFAULT 0
  tucommands: UPDATED datetime
 
 EOD;

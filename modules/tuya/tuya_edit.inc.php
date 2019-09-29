@@ -33,8 +33,7 @@
          global $dev_ip;
          $rec['DEV_IP'] = $dev_ip;
 
-         global $dev_interval;
-         $rec['DEV_INTERVAL'] = $dev_interval;
+
       }
 
       //UPDATING RECORD

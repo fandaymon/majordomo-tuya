@@ -31,12 +31,24 @@ if ($res[0]['ID']) {
       $tmp = explode(' ', $res[$i]['UPDATED']);
       $res[$i]['UPDATED'] = $tmp[0] . " " . $tmp[1];
 
-      $commands = SQLSelect("SELECT * FROM tucommands WHERE DEVICE_ID=" . $res[$i]['ID'] . " AND TITLE!='report'  AND TITLE!='ip' AND TITLE!='command' ORDER BY TITLE");
+      $commands = SQLSelect("SELECT * FROM tucommands WHERE DEVICE_ID=" . $res[$i]['ID'] . " AND TITLE!='report'  ORDER BY TITLE");
 
       if ($commands[0]['ID']) {
          $totalc = count($commands);
          for ($ic = 0; $ic < $totalc; $ic++) {
-            $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['TITLE'] . ': <i>' . $commands[$ic]['VALUE'] . '</i>';
+            if ($commands[$ic]['TITLE'] == 'online') {
+               $res[$i]['ONLINE'] = (int)$commands[$ic]['VALUE'];
+               continue;
+            }
+            if ($commands[$ic]['TITLE'] == 'state') {
+               $res[$i]['STATE'] = (int)$commands[$ic]['VALUE'];
+               continue;
+            }
+            if ($commands[$ic]['ALIAS']=='') {
+             $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['TITLE'] . ': <i>' . $commands[$ic]['VALUE'] . '</i>';
+            } else {
+             $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['ALIAS'] . ': <i>' . $commands[$ic]['VALUE'] . '</i>';
+            }
             if ($commands[$ic]['LINKED_OBJECT'] != '') {
                $device=SQLSelectOne("SELECT TITLE FROM devices WHERE LINKED_OBJECT='".DBSafe($commands[$ic]['LINKED_OBJECT'])."'");
                if ($device['TITLE']) {
@@ -52,22 +64,13 @@ if ($res[0]['ID']) {
 
                }
             }
-            if ($commands[$ic]['TITLE'] == 'battery_level') {
-               $res[$i]['POWER'] = $commands[$ic]['VALUE'];
-               $res[$i]['POWER_WARNING'] = 'success';
-               if ($res[$i]['POWER']<= 40)
-                  $res[$i]['POWER_WARNING'] = 'warning';
-               if ($res[$i]['POWER']<= 20)
-                  $res[$i]['POWER_WARNING'] = 'danger';
-            }
             $res[$i]['COMMANDS'] .= ";</nobr> ";
-
- if (time()-strtotime($res[$i]['UPDATED'])>3000) {
-  $res[$i]['LOST']='1';}
-
          }
-      }
-   }
+
+
+          
+        }
+    }
 
    $out['RESULT'] = $res;
 }

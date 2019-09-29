@@ -30,7 +30,7 @@
                      <!--#
                      <th>IP</th>
                      #-->
-                     <th><#LANG_UPDATED#></th>
+                     <th></th>
                      <th>&nbsp;</th>
                   </tr>
                   <tbody>
@@ -58,12 +58,21 @@
                      <td style="vertical-align:middle">[#LOCAL_IP#]</td>
                      #-->
 
-                     <td style="vertical-align:middle [#if LOST#] ;color:lightgray;font-weight:bold;[#endif#]">
-                     [#if UPDATED!=""#]
-                        [#UPDATED#]
-                     [#else#]
-                        &nbsp;
-                     [#endif#]
+                     <td style="vertical-align:middle">
+
+		      [#if ONLINE==1#]
+			<span class="label label-success" title="Device Online">Online</span>
+		      [#else#]
+			<span class="label label-warning" title="Device Offline">Offline</span>
+		      [#endif#]
+                     </td>
+                     <td style="vertical-align:middle">
+                      [#if STATE==1#]
+                        <img src="../templates/tuya/img/on-button.png">
+                      [#else#]
+                        <img src="../templates/tuya/img/off-button.png">
+                      [#endif#]
+
                      </td>
                      <td style="vertical-align:middle" width="1%" nowrap>
                         <div style="width:120px">
