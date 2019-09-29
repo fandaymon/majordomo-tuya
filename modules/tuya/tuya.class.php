@@ -136,7 +136,7 @@ class tuya extends module
    {
       $this->getConfig();
 
-      if ((time() - (int)gg('cycle_tuyaRun')) < 15) {
+      if ((time() - (int)gg('cycle_tuyaRun')) < $this->config['TUYA_INTERVAL']) {
          $out['CYCLERUN'] = 1;
       } else {
          $out['CYCLERUN'] = 0;
@@ -374,7 +374,7 @@ class tuya extends module
        $dev_id=substr($device['DEV_ID'],0,$mdev);
        $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP']);
        if ($status!='') { 
-        debmes('Status: '.$status.' '.$device['DEV_IP']);
+       // debmes('Status: '.$status.' '.$device['DEV_IP']);
         $status=json_decode($status);
         $dps=$status->dps;
         foreach ($dps as $k=>$d){
@@ -404,7 +404,7 @@ class tuya extends module
     } else {
      $status=$this->TuyaLocalMsg('STATUS',$device['DEV_ID'],$device['LOCAL_KEY'],$device['DEV_IP']);
      if ($status!='') { 
-      debmes('Status: '.$status.' '.$device['DEV_IP']);
+      //debmes('Status: '.$status.' '.$device['DEV_IP']);
       $status=json_decode($status);
       $dps=$status->dps;
       foreach ($dps as $k=>$d){
