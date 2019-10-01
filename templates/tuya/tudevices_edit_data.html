@@ -25,7 +25,7 @@
                </tr>
                [#begin PROPERTIES#]
                <tr>
-                  <td valign="top">[#TITLE#]</td>
+                  <td valign="top">[#if ALIAS==''#][#TITLE#][#else#][#ALIAS#][#endif ALIAS#]</td>
                   <td valign="top"><div style="width:180px"><div style="word-break:break-all">[#VALUE#]</div></div></td>
                   <td valign="top">
                      [#if SDEVICE_TYPE!=""#]

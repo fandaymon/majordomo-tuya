@@ -367,7 +367,7 @@ class tuya extends module
   }
 
   function requestLocalStatus(){
-   $devices=SQLSelect("SELECT * FROM tudevices WHERE LOCAL_KEY IS NOT NULL and DEV_IP IS NOT NULL ORDER BY DEV_ID");
+   $devices=SQLSelect("SELECT * FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' ORDER BY DEV_ID");
    foreach($devices as $device) {
     $mdev=strpos($device['DEV_ID'],'_');
     if ($mdev>0 and substr($device['DEV_ID'],$mdev+1)==1) {
@@ -429,13 +429,18 @@ class tuya extends module
    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
    socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 2, "usec" => 0));
    $buf='';
+   
    if (socket_connect($socket, $local_ip, 6668)) {
     socket_send($socket, $payload, strlen($payload), 0);
 
     $buf=socket_read (  $socket , 1024 , PHP_BINARY_READ  );
 
 
+   } else {
+   $err = socket_last_error($socket); 
+   echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
    }
+ 
    socket_close($socket);
    return $buf;
   }
@@ -538,6 +543,25 @@ class tuya extends module
 			$cmd_rec = array();
 			$cmd_rec['TITLE'] = $command;
 			$cmd_rec['DEVICE_ID'] = $device_id;
+                        if ($command=='4') {
+                         $cmd_rec['ALIAS']='mA';
+                         } elseif($command=='5'){
+                         $cmd_rec['ALIAS']='W';
+                         $cmd_rec['DIVIDEDBY10']=1;
+                        } elseif($command=='6'){
+                         $cmd_rec['ALIAS']='V';
+                         $cmd_rec['DIVIDEDBY10']=1;
+                        } elseif ($command=='18') {
+                         $cmd_rec['ALIAS']='mA';
+                         } elseif($command=='19'){
+                         $cmd_rec['ALIAS']='W';
+                         $cmd_rec['DIVIDEDBY10']=1;
+                        } elseif($command=='20'){
+                         $cmd_rec['ALIAS']='V';
+                         $cmd_rec['DIVIDEDBY10']=1;
+                        }
+
+
 			$cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
 		}
                 if ($cmd_rec['DIVIDEDBY10']) $value=$value/10;
