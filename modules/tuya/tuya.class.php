@@ -338,6 +338,7 @@ class tuya extends module
    if ($command=='STATUS') {
     $hexByte="0a";
     $json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'"}';
+
    } else {
     $hexByte="07";
     $dps=$data;
@@ -427,15 +428,18 @@ class tuya extends module
 
   function Tuya_send_receive( $payload,$local_ip) {
    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-   socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 2, "usec" => 0));
+   socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 5, "usec" => 0));
+   //socket_set_option($socket, SOL_SOCKET, TCP_NODELAY, 1);
+
    $buf='';
    
    if (socket_connect($socket, $local_ip, 6668)) {
-    socket_send($socket, $payload, strlen($payload), 0);
-
-    $buf=socket_read (  $socket , 1024 , PHP_BINARY_READ  );
-
-
+    $send=socket_send($socket, $payload, strlen($payload), 0);
+    if ($send!=strlen($payload)) {
+      echo date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload);
+    }
+      $reciv=socket_recv ( $socket , $buf , 1024 ,MSG_WAITALL);
+      //echo date('y-m-d h:i:s') . ' recieved '.$reciv ;
    } else {
    $err = socket_last_error($socket); 
    echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
