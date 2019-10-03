@@ -510,12 +510,12 @@ class tuya extends module
     }
    }
 
-   function TuyaRemoteMsg($dev_id,$value){
+   function TuyaRemoteMsg($dev_id,$value,$mode){
     $token=$this->RefreshToken();
     $sURL = 'https://px1.tuyaeu.com/homeassistant/skill';
 
         $header = [
-            'name'           => 'turnOnOff',
+            'name'           => $mode,
             'namespace'      => 'control',
             'payloadVersion' => 1,
         ];
@@ -607,8 +607,11 @@ class tuya extends module
      if ($properties[0]['LOCAL_KEY']==NULL or $properties[0]['DEV_IP']==NULL) {
 
       if ($dps_name=='state') {
-       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value);
+       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'turnOnOff');
+      } else  if ($dps_name=='brightness') {
+       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'brightnessSet');
       }
+	     
      } else {
       $mdev=strpos($properties[0]['DEV_ID'],'_');
       if ($mdev>0) {
