@@ -627,8 +627,8 @@ class tuya extends module
       $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
       SQLExec("UPDATE tudevices SET BUSY=0 WHERE ID=".$properties[0]['DEVICE_ID']);
      }
-     $rec=SQLSelect("select * from tucommands where ID=".$properties[0]['ID']);
-     $rec[$property]=$value;
+     $rec=SQLSelectOne("select * from tucommands where ID=".$properties[0]['ID']);
+     $rec['value']=$value;
      SQLUpdate('tucommands',$rec);
 
    //  }
