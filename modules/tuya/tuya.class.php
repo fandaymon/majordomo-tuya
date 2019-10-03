@@ -373,7 +373,11 @@ class tuya extends module
     $mdev=strpos($device['DEV_ID'],'_');
     if ($mdev>0 and substr($device['DEV_ID'],$mdev+1)==1) {
        $dev_id=substr($device['DEV_ID'],0,$mdev);
-       $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP']);
+       $busy=SQLSelectOne("select BUSY from tudevices WHERE ID=" . $device['ID']);
+       $status='';
+       if ($busy['BUSY']==0) {
+        $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP']);
+       }
        if ($status!='') { 
        // debmes('Status: '.$status.' '.$device['DEV_IP']);
         $status=json_decode($status);
@@ -616,8 +620,9 @@ class tuya extends module
       }
 
       $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
-
+      SQLExec("UPDATE tudevices SET BUSY=1 WHERE ID=".$properties[0]['DEVICE_ID']);
       $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
+      SQLExec("UPDATE tudevices SET BUSY=0 WHERE ID=".$properties[0]['DEVICE_ID']);
      }
      $rec=SQLSelect("select * from tucommands where ID=".$properties[0]['ID']);
      $rec[$property]=$value;
@@ -673,6 +678,7 @@ class tuya extends module
  tudevices: DEV_ID varchar(255) NOT NULL DEFAULT ''
  tudevices: LOCAL_KEY varchar(255) NOT NULL DEFAULT ''
  tudevices: DEV_IP varchar(255) NOT NULL DEFAULT ''
+ tudevices: BUSY boolean NOT NULL DEFAULT 0
  tudevices: UPDATED datetime
 
  tucommands: ID int(10) unsigned NOT NULL auto_increment
