@@ -449,10 +449,9 @@ class tuya extends module
      sleep(1);
     }
 
-   } else {   if (socket_connect($socket, $local_ip, 6668)) {
-    $send=s
-   $err = socket_last_error($socket); 
-   echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
+   } else {  
+    $err = socket_last_error($socket); 
+    echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
    }
  
    socket_close($socket);
