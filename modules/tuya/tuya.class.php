@@ -438,13 +438,19 @@ class tuya extends module
    $buf='';
    
    if (socket_connect($socket, $local_ip, 6668)) {
-    $send=socket_send($socket, $payload, strlen($payload), 0);
-    if ($send!=strlen($payload)) {
-      echo date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload);
+    for ($i=0;$i<3;$i++) {
+     $send=socket_send($socket, $payload, strlen($payload), 0);
+     if ($send!=strlen($payload)) {
+       debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload));
+     }
+     $reciv=socket_recv ( $socket , $buf , 1024 ,MSG_WAITALL);
+     //debmes( date('y-m-d h:i:s') . ' recived '.strlen($buf));
+     if ($buf!='') break;
+     sleep(1);
     }
-      $reciv=socket_recv ( $socket , $buf , 1024 ,MSG_WAITALL);
-      //echo date('y-m-d h:i:s') . ' recieved '.$reciv ;
-   } else {
+
+   } else {   if (socket_connect($socket, $local_ip, 6668)) {
+    $send=s
    $err = socket_last_error($socket); 
    echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
    }
@@ -580,6 +586,9 @@ class tuya extends module
 		SQLUpdate('tucommands', $cmd_rec);
 		
 		if ($old_value == $value) return;
+	   
+                if ($command=='state') processSubscriptions('TUSTATUS', array('FIELD' => 'STATE','VALUE' => $value,'ID' =>$device_id));
+                if ($command=='online') processSubscriptions('TUSTATUS', array('FIELD' => 'ONLINE','VALUE' => $value,'ID' =>$device_id));
 
 		if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_PROPERTY']) {
 			setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, array($this->name => '0'));
