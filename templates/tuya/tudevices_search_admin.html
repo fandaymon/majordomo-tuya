@@ -1,5 +1,65 @@
 
 <!-- table tudevices search -->
+ <script type="text/javascript">
+
+  var httpRefreshTimer = 0;
+  var subscribedWebSockets=0;
+  var subscribedWebSocketsTimer;
+  var requestSent = Math.round(+new Date()/1000);
+  function subscribeToStatus() {
+   console.log('Sending devices subscription request...');
+   var payload;
+   payload = new Object();
+   payload.action = 'Subscribe';
+   payload.data = new Object();
+   payload.data.TYPE='events';
+   payload.data.EVENTS='TUSTATUS';
+   wsSocket.send(JSON.stringify(payload));
+   subscribedWebSocketsTimer=setTimeout('subscribeToStatus();', 3000);
+   return false;
+  }
+
+  $.subscribe('wsConnected', function (_) {
+   clearTimeout(httpRefreshTimer);
+   subscribeToStatus();
+  });
+
+  $.subscribe('wsData', function (_, response) {
+   if (response.action=='subscribed') {
+    console.log('Subscription to devices confirmed.');
+    clearTimeout(subscribedWebSocketsTimer);
+    subscribedWebSockets=1;
+   }
+   if (response.action=='events') {
+    var obj=jQuery.parseJSON(response.data);
+    var objCnt = obj.EVENT_DATA.VALUE.length;
+    if (obj.EVENT_DATA.VALUE.FIELD=='STATE') {
+     if (obj.EVENT_DATA.VALUE.VALUE=='0') {
+      document.getElementById('tustate'+obj.EVENT_DATA.VALUE.ID).src='../templates/tuya/img/off-button.png';
+     } else {
+      document.getElementById('tustate'+obj.EVENT_DATA.VALUE.ID).src='../templates/tuya/img/on-button.png';
+
+     } 
+     
+    } else if (obj.EVENT_DATA.VALUE.FIELD=='ONLINE') {
+     var online_control=document.getElementById('tuonline'+obj.EVENT_DATA.VALUE.ID)
+     if (obj.EVENT_DATA.VALUE.VALUE=='1') {
+      online_control.className="label label-success";
+      online_control.title="Online";
+      online_control.innerHTML="Online";
+
+     } else {
+      online_control.className="label label-warning";
+      online_control.title="Offline";
+      online_control.innerHTML="Offline";
+
+     } 
+
+    }
+   }
+  });
+
+ </script>
 <table width=100% border=0>
    <tr>
       <td valign=top>
@@ -62,16 +122,16 @@
                      <td style="vertical-align:middle;text-align:center">
 
 		      [#if ONLINE==1#]
-			<span class="label label-success" title="Device Online">Online</span>
+			<span id="tuonline[#ID#]" class="label label-success" title="Device Online">Online</span>
 		      [#else#]
-			<span class="label label-warning" title="Device Offline">Offline</span>
+			<span id="tuonline[#ID#]" class="label label-warning" title="Device Offline">Offline</span>
 		      [#endif#]
                      </td>
                      <td style="vertical-align:middle;text-align:center">
                       [#if STATE==1#]
-                        <img src="../templates/tuya/img/on-button.png">
+                        <img id="tustate[#ID#]" src="../templates/tuya/img/on-button.png">
                       [#else#]
-                        <img src="../templates/tuya/img/off-button.png">
+                        <img id="tustate[#ID#]" src="../templates/tuya/img/off-button.png">
                       [#endif#]
 
                      </td>
