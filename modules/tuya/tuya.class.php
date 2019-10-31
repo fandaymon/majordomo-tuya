@@ -313,7 +313,7 @@ class tuya extends module
 	    array(
 	    'method'  => 'GET', 
 	    'header'  => 'Content-type: application/x-www-form-urlencoded',
-	    'content' => $sPd
+	    'content' => $sPD
 	  )
       );
       $context = stream_context_create($aHTTP);
