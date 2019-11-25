@@ -625,6 +625,10 @@ class tuya extends module
        $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'turnOnOff');
       } else  if ($dps_name=='brightness') {
        $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'brightnessSet');
+      } else  if ($dps_name=='color_temp') {
+       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'colorTemperatureSet');
+      } else  if ($dps_name=='color_mode') {
+       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'colorModeSet');
       }
 	     
      } else {
