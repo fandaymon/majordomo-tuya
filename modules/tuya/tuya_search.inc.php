@@ -18,7 +18,7 @@ if ($save_qry) {
 
 if (!$qry) $qry = '1';
 
-$sortby_tudevices = 'tudevices.TITLE';
+$sortby_tudevices = 'tudevices.DEV_ID';
 
 $out['SORTBY'] = $sortby_tudevices;
 
