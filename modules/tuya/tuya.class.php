@@ -613,7 +613,7 @@ class tuya extends module
 
    function propertySetHandle($object, $property, $value) {
 
-    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.LOCAL_KEY,tudevices.DEV_IP FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
 
     $total = count($properties);
    
@@ -641,7 +641,11 @@ class tuya extends module
        $dev_id=$properties[0]['DEV_ID'];
       }
 
-      $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
+      if ($properties[0]['TYPE']=='cover') {
+       $dps='{"'.$dps_name.'":'.$value.'}';
+      } else {
+       $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
+      }
       SQLExec("UPDATE tudevices SET BUSY=1 WHERE ID=".$properties[0]['DEVICE_ID']);
       $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
       SQLExec("UPDATE tudevices SET BUSY=0 WHERE ID=".$properties[0]['DEVICE_ID']);
