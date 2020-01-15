@@ -145,6 +145,9 @@ class tuya extends module
       $out['TUYA_USERNAME'] = $this->config['TUYA_USERNAME'];
       $out['TUYA_PASSWD'] = $this->config['TUYA_PASSWD'];
       $out['TUYA_INTERVAL'] = $this->config['TUYA_INTERVAL'];
+      $out['TUYA_BZTYPE'] = $this->config['TUYA_BZTYPE'];
+      $out['TUYA_CCODE'] = $this->config['TUYA_CCODE'];
+      
 
 
       if ($this->view_mode=='update_settings') {
@@ -157,10 +160,21 @@ class tuya extends module
 
          global $tuya_interval;
          $this->config['TUYA_INTERVAL'] = $tuya_interval;
+         
+         global $tuya_bztype;
+         $this->config['TUYA_BZTYPE'] = $tuya_bztype;
+
+         global $tuya_ccode;
+         $this->config['TUYA_CCODE'] = $tuya_ccode;
+
 
         
-         $token=json_decode($this->getToken($tuya_username,$tuya_passwd));
-
+         $token=json_decode($this->getToken($tuya_username,$tuya_passwd,$tuya_bztype,$tuya_ccode));
+         //debmes($token->responseStatus);
+         if (isset($token->responseStatus) && $token->responseStatus === 'error') {
+            $message = $token->responseMsg;
+            debmes($message);
+         }
          $this->config['TUYA_ACCESS_TOKEN']=$token->access_token;
          $this->config['TUYA_REFRESH_TOKEN']=$token->refresh_token;
          $this->config['TUYA_TIME']=time()+$token->expires_in;
@@ -284,9 +298,9 @@ class tuya extends module
 
 
 
-   function getToken($username,$passwd) {
+   function getToken($username,$passwd,$bztype,$ccode) {
     $sURL = 'https://px1.tuyaeu.com/homeassistant/auth.do';
-    $sPD = "userName=".$username."&password=".$passwd."&countryCode=eu&bizType=&from=tuya"; 
+    $sPD = "userName=".$username."&password=".$passwd."&countryCode=".$ccode."&bizType=".$bztype."&from=tuya"; 
     $aHTTP = array(
 	  'http' => 
 	    array(
@@ -297,6 +311,7 @@ class tuya extends module
      );
      $context = stream_context_create($aHTTP);
      $contents = file_get_contents($sURL, false, $context);
+     
      return $contents;
    }
 
@@ -320,6 +335,11 @@ class tuya extends module
       $contents = file_get_contents($sURL, false, $context);
         
       $token=json_decode($contents);
+      
+      if (isset($token->responseStatus) && $token->responseStatus === 'error') {
+            $message = $token->responseMsg;
+            debmes($message);
+      }
 
       $this->config['TUYA_ACCESS_TOKEN']=$token->access_token;
       $this->config['TUYA_REFRESH_TOKEN']=$token->refresh_token;
@@ -557,58 +577,63 @@ class tuya extends module
 
    function processCommand($device_id, $command, $value, $params = 0) {
 		
-		$cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$device_id." AND TITLE LIKE '".DBSafe($command)."'");
+	$cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$device_id." AND TITLE LIKE '".DBSafe($command)."'");
 		
-		if (!$cmd_rec['ID']) {
-			$cmd_rec = array();
-			$cmd_rec['TITLE'] = $command;
-			$cmd_rec['DEVICE_ID'] = $device_id;
-                        if ($command=='4') {
-                         $cmd_rec['ALIAS']='mA';
-                         } elseif($command=='5'){
-                         $cmd_rec['ALIAS']='W';
-                         $cmd_rec['DIVIDEDBY10']=1;
-                        } elseif($command=='6'){
-                         $cmd_rec['ALIAS']='V';
-                         $cmd_rec['DIVIDEDBY10']=1;
-                        } elseif ($command=='18') {
-                         $cmd_rec['ALIAS']='mA';
-                         } elseif($command=='19'){
-                         $cmd_rec['ALIAS']='W';
-                         $cmd_rec['DIVIDEDBY10']=1;
-                        } elseif($command=='20'){
-                         $cmd_rec['ALIAS']='V';
-                         $cmd_rec['DIVIDEDBY10']=1;
-                        }
+	if (!$cmd_rec['ID']) {
+	  $cmd_rec = array();
+	  $cmd_rec['TITLE'] = $command;
+	  $cmd_rec['DEVICE_ID'] = $device_id;
+          if ($command=='4') {
+            $cmd_rec['ALIAS']='mA';
+          } elseif($command=='5'){
+            $cmd_rec['ALIAS']='W';
+            $cmd_rec['DIVIDEDBY10']=1;
+          } elseif($command=='6'){
+            $cmd_rec['ALIAS']='V';
+            $cmd_rec['DIVIDEDBY10']=1;
+          } elseif ($command=='18') {
+            $cmd_rec['ALIAS']='mA';
+          } elseif($command=='19'){
+            $cmd_rec['ALIAS']='W';
+            $cmd_rec['DIVIDEDBY10']=1;
+          } elseif($command=='20'){
+            $cmd_rec['ALIAS']='V';
+            $cmd_rec['DIVIDEDBY10']=1;
+          } elseif($command=='current_temperature'){
+            $cmd_rec['DIVIDEDBY2']=1;
+          }
 
 
-			$cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
-		}
-                if ($cmd_rec['DIVIDEDBY10']) $value=$value/10;
-		$old_value = $cmd_rec['VALUE'];
-
-		$cmd_rec['VALUE'] = $value;
-		$cmd_rec['UPDATED'] = date('Y-m-d H:i:s');
-		SQLUpdate('tucommands', $cmd_rec);
-		
-		if ($old_value == $value) return;
-	   
-                if ($command=='state') processSubscriptions('TUSTATUS', array('FIELD' => 'STATE','VALUE' => $value,'ID' =>$device_id));
-                if ($command=='online') processSubscriptions('TUSTATUS', array('FIELD' => 'ONLINE','VALUE' => $value,'ID' =>$device_id));
-
-		if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_PROPERTY']) {
-			setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, array($this->name => '0'));
-		}
-		
-		if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_METHOD']) {
-			if (!is_array($params)) {
-				$params = array();
-			}
-			$params['VALUE'] = $value;
-			callMethodSafe($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_METHOD'], $params);
-		}
-
+	  $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
 	}
+      
+        if ($cmd_rec['DIVIDEDBY10']) $value=$value/10;
+        if ($cmd_rec['DIVIDEDBY2']) $value=$value/2;
+
+	$old_value = $cmd_rec['VALUE'];
+
+	$cmd_rec['VALUE'] = $value;
+	$cmd_rec['UPDATED'] = date('Y-m-d H:i:s');
+	SQLUpdate('tucommands', $cmd_rec);
+		
+	if ($old_value == $value) return;
+	   
+        if ($command=='state') processSubscriptions('TUSTATUS', array('FIELD' => 'STATE','VALUE' => $value,'ID' =>$device_id));
+        if ($command=='online') processSubscriptions('TUSTATUS', array('FIELD' => 'ONLINE','VALUE' => $value,'ID' =>$device_id));
+
+	if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_PROPERTY']) {
+	  setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, array($this->name => '0'));
+	}
+		
+	if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_METHOD']) {
+	  if (!is_array($params)) {
+	    $params = array();
+	  }
+	  $params['VALUE'] = $value;
+	  callMethodSafe($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_METHOD'], $params);
+	}
+
+   }
 
 
    function propertySetHandle($object, $property, $value) {
@@ -706,6 +731,9 @@ class tuya extends module
  tudevices: DEV_IP varchar(255) NOT NULL DEFAULT ''
  tudevices: BUSY boolean NOT NULL DEFAULT 0
  tudevices: UPDATED datetime
+ tudevices: REMOTE_CONTROL boolean NOT NULL DEFAULT 0
+ tudevices: ONLY_LOCAL boolean NOT NULL DEFAULT 0
+ 
 
  tucommands: ID int(10) unsigned NOT NULL auto_increment
  tucommands: TITLE varchar(100) NOT NULL DEFAULT ''
@@ -717,6 +745,7 @@ class tuya extends module
  tucommands: LINKED_PROPERTY varchar(100) NOT NULL DEFAULT ''
  tucommands: LINKED_METHOD varchar(100) NOT NULL DEFAULT ''
  tucommands: DIVIDEDBY10 boolean NOT NULL DEFAULT 0
+ tucommands: DIVIDEDBY2 boolean NOT NULL DEFAULT 0
  tucommands: UPDATED datetime
 
 EOD;
