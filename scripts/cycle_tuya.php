@@ -46,12 +46,29 @@ while (1) {
 	if ((time()-$latest_check) >= $tuya_interval) {
 		$latest_check = time();
 		setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
+		$tuya_module->requestLocalStatus();
                 if ($tuya_module->config['TUYA_REFRESH_TOKEN']!=NULL) {
-                 $token=$tuya_module->RefreshToken();
-                 $tuya_module->Tuya_Discovery_Devices($token);
-                 $tuya_module->requestLocalStatus();
-                }
+                  $token=$tuya_module->RefreshToken();
+                  $tuya_module->Tuya_Discovery_Devices($token);
+                 } else {
+		  $tuya_username = $this->config['TUYA_USERNAME'];
+                  $tuya_passwd = $this->config['TUYA_PASSWD'];
+                  $tuya_bztype = $this->config['TUYA_BZTYPE'];
+                  $tuya_ccode = $this->config['TUYA_CCODE'] ;
+        
+                  $token=json_decode($this->getToken($tuya_username,$tuya_passwd,$tuya_bztype,$tuya_ccode));
+                  if (isset($token->responseStatus) && $token->responseStatus === 'error') {
+                    $message = $token->responseMsg;
+                    debmes($message);
+                   } else {
+                    $this->config['TUYA_ACCESS_TOKEN']=$token->access_token;
+		    $this->config['TUYA_REFRESH_TOKEN']=$token->refresh_token;
+                    $this->config['TUYA_TIME']=time()+$token->expires_in;
+                    $this->Tuya_Discovery_Devices($token->access_token);      
 
+                    $this->saveConfig();
+		   }
+                 }
 	}
 	if (file_exists('./reboot') || IsSet($_GET['onetime'])) {
 		$db->Disconnect();
