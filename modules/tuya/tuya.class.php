@@ -580,29 +580,41 @@ class tuya extends module
 	$cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$device_id." AND TITLE LIKE '".DBSafe($command)."'");
 		
 	if (!$cmd_rec['ID']) {
+	  $device = SQLSelectOne("SELECT * FROM tudevices WHERE ID=".(int)$device_id);
 	  $cmd_rec = array();
 	  $cmd_rec['TITLE'] = $command;
 	  $cmd_rec['DEVICE_ID'] = $device_id;
-          if ($command=='4') {
-            $cmd_rec['ALIAS']='mA';
-          } elseif($command=='5'){
-            $cmd_rec['ALIAS']='W';
-            $cmd_rec['DIVIDEDBY10']=1;
-          } elseif($command=='6'){
-            $cmd_rec['ALIAS']='V';
-            $cmd_rec['DIVIDEDBY10']=1;
-          } elseif ($command=='18') {
-            $cmd_rec['ALIAS']='mA';
-          } elseif($command=='19'){
-            $cmd_rec['ALIAS']='W';
-            $cmd_rec['DIVIDEDBY10']=1;
-          } elseif($command=='20'){
-            $cmd_rec['ALIAS']='V';
-            $cmd_rec['DIVIDEDBY10']=1;
-          } elseif($command=='current_temperature'){
-            $cmd_rec['DIVIDEDBY2']=1;
+          if ($device['TYPE']=='switch') {
+            if ($command=='4') {
+              $cmd_rec['ALIAS']='mA';
+            } elseif($command=='5'){
+              $cmd_rec['ALIAS']='W';
+              $cmd_rec['DIVIDEDBY10']=1;
+            } elseif($command=='6'){
+              $cmd_rec['ALIAS']='V';
+              $cmd_rec['DIVIDEDBY10']=1;
+            } elseif ($command=='18') {
+              $cmd_rec['ALIAS']='mA';
+            } elseif($command=='19'){
+              $cmd_rec['ALIAS']='W';
+              $cmd_rec['DIVIDEDBY10']=1;
+            } elseif($command=='20'){
+              $cmd_rec['ALIAS']='V';
+              $cmd_rec['DIVIDEDBY10']=1;
+            } 
+          } elseif ($device['TYPE']=='climate') {
+            if ($command=='current_temperature') {
+              $cmd_rec['DIVIDEDBY2']=1;
+            } elseif($command=='3'){
+              $cmd_rec['ALIAS']='current_temperature';
+              $cmd_rec['DIVIDEDBY2']=1;
+            } elseif($command=='2'){
+              $cmd_rec['ALIAS']='temperature';
+              $cmd_rec['DIVIDEDBY2']=1;
+            } elseif ($command=='102') {
+              $cmd_rec['DIVIDEDBY2']=1;
+            } 
           }
-
 
 	  $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
 	}
