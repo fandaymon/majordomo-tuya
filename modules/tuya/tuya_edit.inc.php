@@ -32,12 +32,19 @@
 
          global $dev_ip;
          $rec['DEV_IP'] = $dev_ip;
+         
+         global $remote_control;
+         $rec['REMOTE_CONTROL'] = $remote_control;
+         
+         global $only_local;
+         $rec['ONLY_LOCAL'] = $only_local;
 
 
       }
 
       //UPDATING RECORD
       if ($ok) {
+         $rec['UPDATED']=date('y-m-d H:j:s',time());
          if ($rec['ID']) {
             SQLUpdate($table_name, $rec);
          } else {
