@@ -336,17 +336,17 @@ class tuya extends module
         
       $token=json_decode($contents);
       
-      if (isset($token->responseStatus) && $token->responseStatus === 'error') {
-            $message = $token->responseMsg;
-            debmes($message);
+      if ($token->access_token) {
+         $this->config['TUYA_ACCESS_TOKEN'] = $token->access_token;
+         $this->config['TUYA_REFRESH_TOKEN'] = $token->refresh_token;
+         $this->config['TUYA_TIME'] = time() + $token->expires_in;
+
+         $this->saveConfig();
+       } else {
+         debmes("Tuya: get token error with message '" . $token->errorMsg . "'");
+       }
       }
 
-      $this->config['TUYA_ACCESS_TOKEN']=$token->access_token;
-      $this->config['TUYA_REFRESH_TOKEN']=$token->refresh_token;
-      $this->config['TUYA_TIME']=time()+$token->expires_in;
-
-      $this->saveConfig();
-     }
      return $this->config['TUYA_ACCESS_TOKEN'];
    }
 
@@ -461,7 +461,7 @@ class tuya extends module
     for ($i=0;$i<3;$i++) {
      $send=socket_send($socket, $payload, strlen($payload), 0);
      if ($send!=strlen($payload)) {
-       debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload));
+       debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip);
      }
      $reciv=socket_recv ( $socket , $buf , 1024 ,MSG_WAITALL);
      //debmes( date('y-m-d h:i:s') . ' recived '.strlen($buf));
@@ -509,38 +509,39 @@ class tuya extends module
   // debmes('Tuya Web content:'.$contents);
    foreach ($result->payload->devices as $device) {
     
-    $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device->id.'"');
+      $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device->id.'"');
 
-    if ($rec==NULL) {
-     $rec['TITLE']=$device->name;
-     $rec['DEV_ICON']= $device->icon;
-     $rec['DEV_ID']= $device->id;
-     $rec['TYPE']=$device->dev_type;
+      if ($rec==NULL) {
+         $rec['TITLE']=$device->name;
+         $rec['DEV_ICON']= $device->icon;
+         $rec['DEV_ID']= $device->id;
+         $rec['TYPE']=$device->dev_type;
 
-     $rec['ID']=SQLInsert('tudevices',$rec);
-    }
-
-    $data='';
-    foreach($device->data as $key => $value) {
-      if (is_bool($value)) {
-       $value=(($value) ? 1:0);
-       $data.=$key.':'.(($value) ? 1:0).' ';
-      } else if ($value=='true') {
-         $value=1;
-         $data.=$key.':'.$value.' ';
-      } else if ($value=='false') {
-
-         $value=0;
-         $data.=$key.':'.$value.' ';
-      } else {
-       $data.=$key.':'.$value.' ';
+         $rec['ID']=SQLInsert('tudevices',$rec);
       }
-      $this->processCommand($rec['ID'], $key, $value);
-    }
 
+      $data='';
+      if ($rec['LOCAL_ONLY']==0) {
+         foreach($device->data as $key => $value) {
+            if (is_bool($value)) {
+               $value=(($value) ? 1:0);
+               $data.=$key.':'.(($value) ? 1:0).' ';
+            } else if ($value=='true') {
+               $value=1;
+               $data.=$key.':'.$value.' ';
+            } else if ($value=='false') {
+
+               $value=0;
+               $data.=$key.':'.$value.' ';
+            } else {
+               $data.=$key.':'.$value.' ';
+            }
+            $this->processCommand($rec['ID'], $key, $value);
+         }
+      }
     
-    }
    }
+  }
 
    function TuyaRemoteMsg($dev_id,$value,$mode){
     $token=$this->RefreshToken();
@@ -656,7 +657,7 @@ class tuya extends module
    
     if ($total) {
      $dps_name=$properties[0]['TITLE'];
-     if ($properties[0]['LOCAL_KEY']==NULL or $properties[0]['DEV_IP']==NULL) {
+     if ($properties[0]['LOCAL_KEY']==NULL or $properties[0]['DEV_IP']==NULL or $properties[0]['REMOTE_CONTROL']==1) {
 
       if ($dps_name=='state') {
        $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'turnOnOff');
@@ -690,9 +691,7 @@ class tuya extends module
      $rec=SQLSelectOne("select * from tucommands where ID=".$properties[0]['ID']);
      $rec['value']=$value;
      SQLUpdate('tucommands',$rec);
-
-   //  }
-      
+    
     }
    }
 
