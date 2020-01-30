@@ -657,8 +657,6 @@ class tuya extends module
    
     if ($total) {
      $dps_name=$properties[0]['TITLE'];
-     if ($properties[0]['DIVIDEDBY10']) $value=(int)$value*10;
-     if ($properties[0]['DIVIDEDBY2']) $value=(int)$value*2;
      if ($properties[0]['LOCAL_KEY']==NULL or $properties[0]['DEV_IP']==NULL or $properties[0]['REMOTE_CONTROL']==1) {
 
       if ($dps_name=='state') {
