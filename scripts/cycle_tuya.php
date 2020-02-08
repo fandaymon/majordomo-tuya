@@ -66,7 +66,7 @@ while (1) {
 
                 $tuya_module->saveConfig();
             } else {
-                debmes("Tuya: get token error with message '" . $token->errorMsg . "'");
+                debmes("Tuya: get token error with message '" . $token->errorMsg . ' ' . $token->responseMsg . "'");
             }
         }
     }
