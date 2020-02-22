@@ -51,24 +51,8 @@ while (1) {
         if ($tuya_module->config['TUYA_REFRESH_TOKEN'] != null) {
             $token = $tuya_module->RefreshToken();
             $tuya_module->Tuya_Discovery_Devices($token);
-        } else {
-            $tuya_username = $tuya_module->config['TUYA_USERNAME'];
-            $tuya_passwd = $tuya_module->config['TUYA_PASSWD'];
-            $tuya_bztype = $tuya_module->config['TUYA_BZTYPE'];
-            $tuya_ccode = $tuya_module->config['TUYA_CCODE'];
-
-            $token = json_decode($tuya_module->getToken($tuya_username, $tuya_passwd, $tuya_bztype, $tuya_ccode));
-            if($token->access_token) {
-                $tuya_module->config['TUYA_ACCESS_TOKEN'] = $token->access_token;
-                $tuya_module->config['TUYA_REFRESH_TOKEN'] = $token->refresh_token;
-                $tuya_module->config['TUYA_TIME'] = time() + $token->expires_in;
-                $tuya_module->Tuya_Discovery_Devices($token->access_token);
-
-                $tuya_module->saveConfig();
-            } else {
-                debmes("Tuya: get token error with message '" . $token->errorMsg . ' ' . $token->responseMsg . "'");
-            }
-        }
+        } 
+        
     }
     if (file_exists('./reboot') || IsSet($_GET['onetime'])) {
         $db->Disconnect();
