@@ -343,7 +343,24 @@ class tuya extends module
 
          $this->saveConfig();
        } else {
-         debmes("Tuya: get token error with message '" . $token->errorMsg . "'");
+         $tuya_username = $this->config['TUYA_USERNAME'];
+         $tuya_passwd = $this->config['TUYA_PASSWD'];
+         $tuya_interval = $this->config['TUYA_INTERVAL'];
+         $tuya_bztype = $this->config['TUYA_BZTYPE'] ;
+         $tuya_ccode = $this->config['TUYA_CCODE'];
+	      
+         $token=json_decode($this->getToken($tuya_username,$tuya_passwd,$tuya_bztype,$tuya_ccode));
+         //debmes($token->responseStatus);
+         if (isset($token->responseStatus) && $token->responseStatus === 'error') {
+            $message = $token->responseMsg;
+            debmes("Can't get tooken: ". $message);
+         }
+         $this->config['TUYA_ACCESS_TOKEN']=$token->access_token;
+         $this->config['TUYA_REFRESH_TOKEN']=$token->refresh_token;
+         $this->config['TUYA_TIME']=time()+$token->expires_in;
+         $this->Tuya_Discovery_Devices($token->access_token);      
+
+         $this->saveConfig();
        }
       }
 
