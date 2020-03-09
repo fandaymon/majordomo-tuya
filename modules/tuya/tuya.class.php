@@ -428,8 +428,8 @@ class tuya extends module
           $k='state';
           $this->processCommand($device['ID'],$k,$d);
          } elseif ($k<8) {
-          $k='state';
           $dev_k=SQLSelectOne('SELECT ID FROM tudevices WHERE DEV_ID="' . $dev_id .'_' .$k.'"');
+          $k='state';
           $this->processCommand($dev_k['ID'],$k,$d);
          } else {
           $this->processCommand($device['ID'],$k,$d);
