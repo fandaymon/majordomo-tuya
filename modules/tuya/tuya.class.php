@@ -396,7 +396,8 @@ class tuya extends module
    $buffer=bin2hex($buffer);
    $buffer1=strtoupper(substr($buffer,0,-16));
 
-   $hex_crc = dechex(crc32(hex2bin($buffer1))) ;
+   $hex_crc = dechex(crc32(hex2bin($buffer1)));
+   $hex_crc=str_pad($hex_crc,8,"0",STR_PAD_LEFT);
    $buffer=substr($buffer,0,-16) .($hex_crc).substr($buffer,-8);
    $data=$this->Tuya_send_receive(hex2bin($buffer),$local_ip);
    $result = substr($data,20,-8);
