@@ -39,7 +39,8 @@
          global $only_local;
          $rec['ONLY_LOCAL'] = $only_local;
 
-
+         global $type;
+         $rec['TYPE'] = $type;
       }
 
       //UPDATING RECORD
