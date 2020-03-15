@@ -123,6 +123,12 @@
             $properties[$i]['LINKED_PROPERTY']=trim(${'linked_property'.$properties[$i]['ID']});
             global ${'linked_method'.$properties[$i]['ID']};
             $properties[$i]['LINKED_METHOD']=trim(${'linked_method'.$properties[$i]['ID']});
+            global ${'alias'.$properties[$i]['ID']};
+            $properties[$i]['ALIAS']=trim(${'alias'.$properties[$i]['ID']});
+            global ${'dividedby10'.$properties[$i]['ID']};
+            $properties[$i]['DIVIDEDBY10']=${'dividedby10'.$properties[$i]['ID']}; 
+            global ${'dividedby2'.$properties[$i]['ID']};
+            $properties[$i]['DIVIDEDBY2']=${'dividedby2'.$properties[$i]['ID']};
             SQLUpdate('tucommands', $properties[$i]);
             if ($old_linked_object && $old_linked_object!=$properties[$i]['LINKED_OBJECT'] && $old_linked_property && $old_linked_property!=$properties[$i]['LINKED_PROPERTY']) {
              removeLinkedProperty($old_linked_object, $old_linked_property, $this->name);
