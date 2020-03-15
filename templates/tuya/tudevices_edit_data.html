@@ -1,3 +1,14 @@
+<script language="javascript">
+ function ShowHideAdd(El) {
+    var r_el = document.getElementById(El);
+    if (r_el.style.display =='none') {
+       r_el.style.display='';
+       
+    } else {
+       r_el.style.display='none';
+    }
+ }
+</script>
 
 <form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
    [#if OK#]
@@ -25,7 +36,7 @@
                </tr>
                [#begin PROPERTIES#]
                <tr>
-                  <td valign="top">[#if ALIAS==''#][#TITLE#][#else#][#ALIAS#][#endif ALIAS#]</td>
+                  <td valign="top" onclick="ShowHideAdd('add[#ID#]')">[#if ALIAS==''#][#TITLE#][#else#][#ALIAS#][#endif ALIAS#]</td>
                   <td valign="top"><div style="width:180px"><div style="word-break:break-all">[#VALUE#]</div></div></td>
                   <td valign="top">
                      [#if SDEVICE_TYPE!=""#]
@@ -43,6 +54,12 @@
                      <a href="?id=<#ID#>&tab=<#TAB#>&view_mode=<#VIEW_MODE#>&delete_id=[#ID#]" onClick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default" title="Удалить">
                      <i class="glyphicon glyphicon-remove"></i>
                   </td>
+               </tr>
+               <tr id="add[#ID#]" style="display:none;" bgcolor="lightgray">
+                  <td>Alias:</td>
+                  <td valign="top"><input type="text" name="alias[#ID#]" id="alias[#ID#]" value="[#ALIAS#]"></td>
+                  <td valign="top"><input type="checkbox" name="dividedby10[#ID#]" id="dividedby10[#ID#]" value="1" [#if DIVIDEDBY10=='1'#]checked[#endif DIVIDEDBY10#]><label for="dividedby10[#ID#]"> /10</label></td>
+                  <td valign="top"><input type="checkbox" name="dividedby2[#ID#]" id="dividedby2[#ID#]" value="1" [#if DIVIDEDBY2=='1'#]checked[#endif DIVIDEDBY2#]><label for="dividedby2[#ID#]"> /2</label></td>
                </tr>
                [#end PROPERTIES#]
             </table> 
