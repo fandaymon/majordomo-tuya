@@ -675,7 +675,7 @@ class tuya extends module
    
     if ($total) {
      $dps_name=$properties[0]['TITLE'];
-     if (!isset($properties[0]['LOCAL_KEY']) or !isset($properties[0]['DEV_IP']) or $properties[0]['REMOTE_CONTROL']==1) {
+     if (strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0 or $properties[0]['REMOTE_CONTROL']==1) {
 
       if ($dps_name=='state') {
        $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'turnOnOff');
