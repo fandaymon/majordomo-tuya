@@ -26,16 +26,29 @@ $tuya_module->getConfig();
 echo date('H:i:s') . ' Running ' . basename(__FILE__) . PHP_EOL;
 
 $latest_check = 0;
+$latest_check_web = 0;
+
 $latest_disc = 0;
 
 $cycle_debug = false;
 
 $tuya_interval = 30;
+$tuya_web_interval = 30;
+$tuya_web = false;
 
 
 if ($tuya_module->config['TUYA_INTERVAL']) {
     $tuya_interval = $tuya_module->config['TUYA_INTERVAL'];
 }
+
+if ($tuya_module->config['TUYA_WEB_INTERVAL']) {
+    $tuya_web_interval = $tuya_module->config['TUYA_WEB_INTERVAL'];
+}
+
+if ($tuya_module->config['TUYA_WEB']) {
+    $tuya_web = $tuya_module->config['TUYA_WEB'];
+}
+
 
 echo date('H:i:s') . ' Init Tuya ' . PHP_EOL;
 echo date('H:i:s') . " Discover period - $tuya_interval seconds" . PHP_EOL;
@@ -54,6 +67,14 @@ while (1) {
         } 
         
     }
+
+    if ((time() - $latest_check_web) >= $tuya_web_interval) {
+        $latest_check_web = time();
+
+        $tuya_module->Tuya_Web_Status();
+      
+    }
+    
     if (file_exists('./reboot') || IsSet($_GET['onetime'])) {
         $db->Disconnect();
         echo date('H:i:s') . ' Stopping by command REBOOT or ONETIME' . basename(__FILE__) . PHP_EOL;

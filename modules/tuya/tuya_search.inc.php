@@ -45,9 +45,9 @@ if ($res[0]['ID']) {
                continue;
             }
             if ($commands[$ic]['ALIAS']=='') {
-             $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['TITLE'] . ': <i>' . $commands[$ic]['VALUE'] . '</i>';
+             $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['TITLE'] . ': <i>' . $commands[$ic]['VALUE'] . ' ' . $commands[$ic]['VALUE_UNIT'] . '</i>';
             } else {
-             $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['ALIAS'] . ': <i>' . $commands[$ic]['VALUE'] . '</i>';
+             $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['ALIAS'] . ': <i>' . $commands[$ic]['VALUE'] .  ' ' . $commands[$ic]['VALUE_UNIT'] . '</i>';
             }
             if ($commands[$ic]['LINKED_OBJECT'] != '') {
                $device=SQLSelectOne("SELECT TITLE FROM devices WHERE LINKED_OBJECT='".DBSafe($commands[$ic]['LINKED_OBJECT'])."'");
