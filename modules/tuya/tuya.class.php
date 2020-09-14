@@ -691,9 +691,12 @@ class tuya extends module
      $token = $result["result"]["token"];
 
      $data=md5($this->config['TUYA_PASSWD']);
-     $a=exec('python3 '. __DIR__ .'/pow_python.py ' .$n . ' ' . $e . ' ' .$data);
-     $encryptedPass=substr($a,2,strlen($a)-3);
-
+     if (extension_loaded('bcmath')) {
+      $encryptedPass = bcpowmod($n, $e, $data);
+     } else {   
+      $a=exec('python3 '. __DIR__ .'/pow_python.py ' .$n . ' ' . $e . ' ' .$data);
+      $encryptedPass=substr($a,2,strlen($a)-3);
+     }
      $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.user.email.password.login',
                                           'data'=> ['countryCode'=> $region,
                                                  'email'=>$email,
