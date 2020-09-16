@@ -197,7 +197,7 @@ class tuya extends module
          $this->saveConfig();
          
          if ($this->config['TUYA_WEB']) {
-            if ($this->config['TUYA_WEB_ENDPOINT']==NULL || $this->config['TUYA_WEB_ENDPOINT']=='') {
+            if ($this->config['TUYA_WEB_ENDPOINT']==NULL || $this->config['TUYA_WEB_ENDPOINT']=='' || $this->config['TUYA_WEB_ENDPOINT']=='/api.json') {
                $this->config['TUYA_WEB_ENDPOINT']='https://a1.tuyaeu.com/api.json';
             }
             if ($this->config['TUYA_SID']==NULL || $this->config['TUYA_SID']=='') {
@@ -390,7 +390,34 @@ class tuya extends module
      return $this->config['TUYA_ACCESS_TOKEN'];
    }
 
+  function TuyaLocalEncrypt($command, $data, $local_key) {
+   $prefix="000055aa00000000000000";
+   $suffix="000000000000aa55";
+   
+   $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
 
+   if ($command != "0a") {
+    $json_payload = hex2bin("332E33000000000000000000000000" . bin2hex($json_payload));
+   }
+
+
+   $postfix_payload = hex2bin(bin2hex($json_payload) . $suffix);
+   $postfix_payload_hex_len = dechex(strlen($postfix_payload));
+
+   $buffer = hex2bin($prefix . $hexByte . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
+   $buffer=bin2hex($buffer);
+   $buffer1=strtoupper(substr($buffer,0,-16));
+
+   $hex_crc = dechex(crc32(hex2bin($buffer1)));
+   $hex_crc=str_pad($hex_crc,8,"0",STR_PAD_LEFT);
+   $buffer=substr($buffer,0,-16) .($hex_crc).substr($buffer,-8);
+   return $buffer;
+  }
+  
+  function TuyaLocalDecrypt() {
+     return __DIR__;
+  }   
+       
   function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='') {
 
    $prefix="000055aa00000000000000";
@@ -692,7 +719,9 @@ class tuya extends module
 
      $data=md5($this->config['TUYA_PASSWD']);
      if (extension_loaded('bcmath')) {
-      $encryptedPass = bcpowmod($n, $e, $data);
+      $data_dec=$this->bytes_to_int($data);  
+      $encryptedPass = bcpowmod($data_dec, $e, $n);
+      $encryptedPass = str_pad($this->bcdechex($encryptedPass),256,'0',STR_PAD_LEFT);
      } else {   
       $a=exec('python3 '. __DIR__ .'/pow_python.py ' .$n . ' ' . $e . ' ' .$data);
       $encryptedPass=substr($a,2,strlen($a)-3);
@@ -705,7 +734,10 @@ class tuya extends module
                                                  'options'=> ['group'=> 1],
                                                  'token'=> $token],
                                           'requiresSID'=> 0]);
-     $result=json_decode($apiResult , true);                                     
+     $result=json_decode($apiResult , true); 
+     if (!$result['success']) {
+        debmes($result['errCode']);
+     }   
      $this->config['TUYA_SID']=$result['result']['sid'];
      $this->config['TUYA_WEB_ENDPOINT']=$result['result'] ['domain']['mobileApiUrl'] . '/api.json';
      $this->saveConfig();
@@ -739,6 +771,39 @@ class tuya extends module
     return $sc;
   
    }
+   
+
+   function bchexdec($hex) {
+        if(strlen($hex) == 1) {
+            return hexdec($hex);
+        } else {
+            $remain = substr($hex, 0, -1);
+            $last = substr($hex, -1);
+            return bcadd(bcmul(16, $this->bchexdec($remain)), hexdec($last));
+        }
+    }
+
+
+   function bytes_to_int($bytes) {
+      $result = '0';
+      for ($i = 0; $i < strlen($bytes); $i++) {
+        $b=strval(ord($bytes[$i]));
+        $result = bcadd(bcmul($result ,256) ,$b);
+      }
+      return $result;
+   }
+   
+   
+   function bcdechex($dec) {
+        $last = bcmod($dec, 16);
+        $remain = bcdiv(bcsub($dec, $last), 16);
+
+        if($remain == 0) {
+            return dechex($last);
+        } else {
+            return $this->bcdechex($remain).dechex($last);
+        }
+    }
    
    function Tuya_Web_Status() {
       $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.location.list',
