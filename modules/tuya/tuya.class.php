@@ -197,8 +197,9 @@ class tuya extends module
          $this->saveConfig();
          
          if ($this->config['TUYA_WEB']) {
-            if ($this->config['TUYA_WEB_ENDPOINT']==NULL || $this->config['TUYA_WEB_ENDPOINT']=='' || $this->config['TUYA_WEB_ENDPOINT']=='/api.json') {
+            if (is_null($this->config['TUYA_WEB_ENDPOINT']) or $this->config['TUYA_WEB_ENDPOINT']=='' or $this->config['TUYA_WEB_ENDPOINT']!='https://a1.tuyaeu.com/api.json') {
                $this->config['TUYA_WEB_ENDPOINT']='https://a1.tuyaeu.com/api.json';
+               $this->saveConfig();
             }
             if ($this->config['TUYA_SID']==NULL || $this->config['TUYA_SID']=='') {
                $result=$this->Tuya_Web_Login();
@@ -713,6 +714,10 @@ class tuya extends module
                                           'requiresSID'=> 0]);
 
      $result=json_decode($apiResult , true);
+     if (!$result['success']) {
+         debmes('Ошибка получения PublicKey:' . $result['errCode']);
+         return;
+     }    
      $n= $result["result"]["publicKey"];
      $e = $result["result"]["exponent"];
      $token = $result["result"]["token"];
@@ -736,11 +741,12 @@ class tuya extends module
                                           'requiresSID'=> 0]);
      $result=json_decode($apiResult , true); 
      if (!$result['success']) {
-        debmes($result['errCode']);
-     }   
-     $this->config['TUYA_SID']=$result['result']['sid'];
-     $this->config['TUYA_WEB_ENDPOINT']=$result['result'] ['domain']['mobileApiUrl'] . '/api.json';
-     $this->saveConfig();
+         debmes('Не смог полуить СИД. Ошибка:' . $result['errCode']);
+      } else {  
+         $this->config['TUYA_SID']=$result['result']['sid'];
+         $this->config['TUYA_WEB_ENDPOINT']=$result['result'] ['domain']['mobileApiUrl'] . '/api.json';
+         $this->saveConfig();
+      }
      return $result;
    }   
    
