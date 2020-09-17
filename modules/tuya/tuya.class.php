@@ -715,7 +715,7 @@ class tuya extends module
 
      $result=json_decode($apiResult , true);
      if (!$result['success']) {
-         debmes('Ошибка получения PublicKey:' . $result['errCode']);
+         debmes('Ошибка получения PublicKey:' . $result['errorCode']);
          return;
      }    
      $n= $result["result"]["publicKey"];
@@ -729,6 +729,10 @@ class tuya extends module
       $encryptedPass = str_pad($this->bcdechex($encryptedPass),256,'0',STR_PAD_LEFT);
      } else {   
       $a=exec('python3 '. __DIR__ .'/pow_python.py ' .$n . ' ' . $e . ' ' .$data);
+      if ($a=='') {
+         debmes('Питон не отработал');
+         return;
+      }   
       $encryptedPass=substr($a,2,strlen($a)-3);
      }
      $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.user.email.password.login',
@@ -741,7 +745,7 @@ class tuya extends module
                                           'requiresSID'=> 0]);
      $result=json_decode($apiResult , true); 
      if (!$result['success']) {
-         debmes('Не смог полуить СИД. Ошибка:' . $result['errCode']);
+         debmes('Не смог получить СИД. Ошибка:' . $result['errorCode']);
       } else {  
          $this->config['TUYA_SID']=$result['result']['sid'];
          $this->config['TUYA_WEB_ENDPOINT']=$result['result'] ['domain']['mobileApiUrl'] . '/api.json';
