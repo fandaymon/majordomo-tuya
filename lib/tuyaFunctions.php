@@ -9,9 +9,7 @@ function Tuya_Web_Stats($device_id,$gw_id='') {
 	}
 	
 	$dp_id=17;
-	echo $device_id . '<BR>';
-	echo $gw_id . '<BR>';
-	echo $dp_id . '<BR>';
+
 	$apiResult = $tuya_module->TuyaWebRequest(['action'=> 'tuya.m.location.list',
                                           'requiresSID'=> 1]);
 
