@@ -1,6 +1,6 @@
 <?php
 
-function Tuya_Web_Stats($device_id,$gw_id='') {
+function Tuya_Web_Stats($device_id, $dp_id=17, $gw_id='') {
 	include_once(DIR_MODULES . 'tuya/tuya.class.php');
 	$tuya_module = new tuya();
 
@@ -8,8 +8,6 @@ function Tuya_Web_Stats($device_id,$gw_id='') {
 		$gw_id = $device_id;
 	}
 	
-	$dp_id=17;
-
 	$apiResult = $tuya_module->TuyaWebRequest(['action'=> 'tuya.m.location.list',
                                           'requiresSID'=> 1]);
 

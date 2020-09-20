@@ -770,6 +770,7 @@ class tuya extends module
             $sc[$scheme['id']][$dp['id']]['max']=$dp['property']['max'];
             $sc[$scheme['id']][$dp['id']]['scale']=$dp['property']['scale'];
             $sc[$scheme['id']][$dp['id']]['unit']=$dp['property']['unit'];
+            $sc[$scheme['id']][$dp['id']]['type']=$dp['property']['type'];
 
             foreach ($dp['property']['range'] as $key => $value) {
                $sc[$scheme['id']][$dp['id']]['range'][$key]=$value;
@@ -839,22 +840,37 @@ class tuya extends module
                $rec['DEV_ICON']= $device['iconUrl'];
                $rec['DEV_ID']= $device['devId'];
                $rec['TYPE']=$device['category'];
+               $rec['LOCAL_KEY']=$device['localKey'];
+               $rec['PRODUCT_ID']=$device['productId'];
+               $rec['GID_ID']=$gid;
+               $rec['MESH_ID']=$device['meshId'];               
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
-               if ($rec['LOCAL_KEY']!=$device['localKey'] && $rec['PRODUCT_ID']!=$device['productId'] ) {
+               if ($rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY']=$device['localKey'];
                  $rec['PRODUCT_ID']=$device['productId'];
+                 $rec['GID_ID']=$gid;
+                 $rec['MESH_ID']=$device['meshId'];
+                 
                  $rec['ID']=SQLUpdate('tudevices',$rec);
                }
             }
 
             $data='';
-            if ($device['moduleMap']['wifi']['isOnline'] ) {
-              $this->processCommand($rec['ID'], 'online', 1);
-            } else {
-              $this->processCommand($rec['ID'], 'online', 0);
-            }
+            if (substr($device['categoryCode'],0,3)=='wf_') {
+               if ($device['moduleMap']['wifi']['isOnline'] ) {
+                  $this->processCommand($rec['ID'], 'online', 1);
+               } else {
+                  $this->processCommand($rec['ID'], 'online', 0);
+               }
+            } else if (substr($device['categoryCode'],0,4)=='zig_') {
+               if ($device['moduleMap']['zigbee']['isOnline'] ) {
+                  $this->processCommand($rec['ID'], 'online', 1);
+               } else {
+                  $this->processCommand($rec['ID'], 'online', 0);
+               }
+            }       
 			
             if ($rec['ONLY_LOCAL']==0) {
                foreach($device['dps'] as $key => $value) {
@@ -905,23 +921,37 @@ class tuya extends module
                $rec['DEV_ICON']= $device['iconUrl'];
                $rec['DEV_ID']= $device['devId'];
                $rec['TYPE']=$device['category'];
+               $rec['LOCAL_KEY']=$device['localKey'];
                $rec['PRODUCT_ID']=$device['productId'];
+               $rec['GID_ID']=$gid;
+               $rec['MESH_ID']=$device['meshId'];               
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
-               if ($rec['LOCAL_KEY']!=$device['localKey'] || $rec['PRODUCT_ID']!=$device['productId'] ) {
+               if ($rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY']=$device['localKey'];
                  $rec['PRODUCT_ID']=$device['productId'];
+                 $rec['GID_ID']=$gid;
+                 $rec['MESH_ID']=$device['meshId'];
+                 
                  $rec['ID']=SQLUpdate('tudevices',$rec);
                }
             }
 
             $data='';
-            if ($device['moduleMap']['wifi']['isOnline'] ) {
-              $this->processCommand($rec['ID'], 'online', 1);
-            } else {
-              $this->processCommand($rec['ID'], 'online', 0);
-            }
+            if (substr($device['categoryCode'],0,3)=='wf_') {
+               if ($device['moduleMap']['wifi']['isOnline'] ) {
+                  $this->processCommand($rec['ID'], 'online', 1);
+               } else {
+                  $this->processCommand($rec['ID'], 'online', 0);
+               }
+            } else if (substr($device['categoryCode'],0,4)=='zig_') {
+               if ($device['moduleMap']['zigbee']['isOnline'] ) {
+                  $this->processCommand($rec['ID'], 'online', 1);
+               } else {
+                  $this->processCommand($rec['ID'], 'online', 0);
+               }
+            }       
 			
             if ($rec['ONLY_LOCAL']==0) {
 				foreach($device['dps'] as $key => $value) {
@@ -934,6 +964,7 @@ class tuya extends module
 					  $cmd_rec['MODE'] = $sc[$device['productId']][$key]['mode'];
 					  $cmd_rec['ALIAS'] = $sc[$device['productId']][$key]['code'];
 					  $cmd_rec['VALUE_UNIT'] = $sc[$device['productId']][$key]['unit'];
+					  $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
 
 					  $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
 					  $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
@@ -950,6 +981,8 @@ class tuya extends module
 					  $cmd_rec['VALUE_UNIT'] = $sc[$device['productId']][$key]['unit'];
 					  $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
 					  $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
+					  $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
+
 					  $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
 					}
 					foreach ($sc[$device['productId']][$key]['range'] as  $range_key => $range_value) {	   
@@ -984,7 +1017,33 @@ class tuya extends module
         }
 	  }
    } 
+   
+   function Tuya_Web_DP($device_id, $value, $dps_name, $gid, $gw_id) {
+      if (is_null($gw_id) or $gw_id=='') {
+         $gw_id=$device_id;
+      } 
+      
+      $rec=SQLSelectOne("select VALUE_TYPE from tucommands tc inner join tudevices td ON tc.DEVICE_ID=td.ID where tc.TITLE='" . $dps_name . "' and td.DEV_ID='" . $device_id ."'");
+      
+      if ($rec['VALUE_TYPE']=='bool') {
+         $value=(($value==1)?'true':'false'); 
+      } else if ($rec['VALUE_TYPE']=='value') {
+         $value=(int)$value;
+      } else if ($rec['VALUE_TYPE']=='string' or $rec['VALUE_TYPE']=='enum' or !is_numeric($value)) { 
+         $value="'$value'";
+      } 
 
+
+      $dps='{'.$dps_name.':'.$value.'}';
+
+      $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.device.dp.publish',
+                                         'gid'=>$gid,
+                                         'data'=> ['devId'=> $device_id,
+                                                 'gwId'=> $gw_id,
+                                                 'dps'=> $dps ],
+                                          'requiresSID'=> 1]);
+      return $apiResult;
+   } 
    
    function TuyaRemoteMsg($dev_id,$value,$mode){
     $token=$this->RefreshToken();
@@ -1099,7 +1158,7 @@ class tuya extends module
 
    function propertySetHandle($object, $property, $value) {
 
-    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
 
     $total = count($properties);
    
@@ -1108,18 +1167,22 @@ class tuya extends module
      if (strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0 or $properties[0]['REMOTE_CONTROL']==1) {
 
       if ($dps_name=='state') {
-       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'turnOnOff');
+         if ($properties[0]['REMOTE_CONTROL_2']==1) {
+            $this->Tuya_Web_DP($properties[0]['DEV_ID'],$value,'1',$properties[0]['GID_ID'],$properties[0]['MESH_ID']);
+         } else {    
+            $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'turnOnOff');
+         }
       } else  if ($dps_name=='brightness') {
-       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'brightnessSet');
+         $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'brightnessSet');
       } else  if ($dps_name=='color_temp') {
-       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'colorTemperatureSet');
+         $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'colorTemperatureSet');
       } else  if ($dps_name=='color_mode') {
-       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'colorModeSet');
-      }
-      else  if ($dps_name=='temperature') {
-       $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'temperatureSet');
-      }
-	     
+         $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'colorModeSet');
+      } else  if ($dps_name=='temperature') {
+         $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'temperatureSet');
+      } else if ($properties[0]['REMOTE_CONTROL_2']==1) {
+         $this->Tuya_Web_DP($properties[0]['DEV_ID'],$value,$dps_name,$properties[0]['GID_ID'],$properties[0]['MESH_ID']);
+	   }  
      } else {
       $mdev=strpos($properties[0]['DEV_ID'],'_');
       if ($mdev>0) {
@@ -1196,8 +1259,11 @@ class tuya extends module
  tudevices: REMOTE_CONTROL boolean NOT NULL DEFAULT 0
  tudevices: ONLY_LOCAL boolean NOT NULL DEFAULT 0
  tudevices: PRODUCT_ID varchar(30) DEFAULT ''
- 
+ tudevices: GID_ID varchar(30) DEFAULT '' 
+ tudevices: REMOTE_CONTROL_2 boolean NOT NULL DEFAULT 0
+ tudevices: MESH_ID varchar(30) DEFAULT ''
 
+ 
  tucommands: ID int(10) unsigned NOT NULL auto_increment
  tucommands: TITLE varchar(100) NOT NULL DEFAULT ''
  tucommands: VALUE varchar(255) NOT NULL DEFAULT ''
@@ -1211,6 +1277,7 @@ class tuya extends module
  tucommands: DIVIDEDBY2 boolean NOT NULL DEFAULT 0
  tucommands: DIVIDEDBY100 boolean DEFAULT 0
  tucommands: MODE varchar(10) DEFAULT ''
+ tucommands: VALUE_TYPE varchar(10) DEFAULT ''
  tucommands: VALUE_MIN varchar(10) DEFAULT '0'
  tucommands: VALUE_MAX varchar(10) DEFAULT '0'
  tucommands: VALUE_SCALE int(10) DEFAULT 0
