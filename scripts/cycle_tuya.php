@@ -53,7 +53,7 @@ if ($tuya_module->config['TUYA_WEB']) {
 echo date('H:i:s') . ' Init Tuya ' . PHP_EOL;
 echo date('H:i:s') . " Discover period - $tuya_interval seconds" . PHP_EOL;
 
-if $tuya_module->config['TUYA_WEB'] {
+if ($tuya_web) {
     $latest_check_web = time();
 
     $tuya_module->Tuya_Web_Discovery_Devices();
@@ -76,7 +76,7 @@ while (1) {
         
     }
 
-    if ((time() - $latest_check_web) >= $tuya_web_interval and $tuya_module->config['TUYA_WEB'] ) {
+    if ((time() - $latest_check_web) >= $tuya_web_interval and $tuya_web] ) {
         $latest_check_web = time();
 
         $tuya_module->Tuya_Web_Status();
