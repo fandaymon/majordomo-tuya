@@ -76,7 +76,7 @@ while (1) {
         
     }
 
-    if ((time() - $latest_check_web) >= $tuya_web_interval and $tuya_web] ) {
+    if ((time() - $latest_check_web) >= $tuya_web_interval and $tuya_web ) {
         $latest_check_web = time();
 
         $tuya_module->Tuya_Web_Status();
