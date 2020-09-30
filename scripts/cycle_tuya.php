@@ -67,7 +67,7 @@ while (1) {
         $latest_check = time();
         setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
 
-        $tuya_module->requestLocalStatus();
+        #$tuya_module->requestLocalStatus();
 
         if ($tuya_module->config['TUYA_REFRESH_TOKEN'] != null) {
             $token = $tuya_module->RefreshToken();

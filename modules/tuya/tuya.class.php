@@ -136,15 +136,22 @@ class tuya extends module
    {
       $this->getConfig();
 
-      if ((time() - (int)gg('cycle_tuyaRun')) < $this->config['TUYA_INTERVAL']) {
+      if ((time() - (int)gg('cycle_tuyaRun')) < $this->config['TUYA_INTERVAL']+30) {
          $out['CYCLERUN'] = 1;
       } else {
          $out['CYCLERUN'] = 0;
+      }
+      
+      if ((time() - (int)gg('cycle_local_tuyaRun')) < $this->config['TUYA_LOCAL_INTERVAL'] * 2) {
+         $out['LOCAL_CYCLERUN'] = 1;
+      } else {
+         $out['LOCAL_CYCLERUN'] = 0;
       }
 
       $out['TUYA_USERNAME'] = $this->config['TUYA_USERNAME'];
       $out['TUYA_PASSWD'] = $this->config['TUYA_PASSWD'];
       $out['TUYA_INTERVAL'] = $this->config['TUYA_INTERVAL'];
+      $out['TUYA_LOCAL_INTERVAL'] = $this->config['TUYA_LOCAL_INTERVAL'];
       $out['TUYA_BZTYPE'] = $this->config['TUYA_BZTYPE'];
       $out['TUYA_CCODE'] = $this->config['TUYA_CCODE'];
       $out['TUYA_SID'] = $this->config['TUYA_SID'];
@@ -164,6 +171,9 @@ class tuya extends module
          global $tuya_interval;
          $this->config['TUYA_INTERVAL'] = $tuya_interval;
          
+         global $tuya_local_interval;
+         $this->config['TUYA_LOCAL_INTERVAL'] = $tuya_local_interval;
+
          global $tuya_bztype;
          $this->config['TUYA_BZTYPE'] = $tuya_bztype;
 
@@ -208,6 +218,8 @@ class tuya extends module
          }         
 
          setGlobal('cycle_tuyaControl', 'restart');
+         setGlobal('cycle_local_tuyaControl', 'restart');
+
 
          $this->redirect('?');
       }
@@ -391,7 +403,7 @@ class tuya extends module
      return $this->config['TUYA_ACCESS_TOKEN'];
    }
 
-  function TuyaLocalEncrypt($command, $data, $local_key) {
+  function TuyaLocalEncrypt($command, $json, $local_key) {
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
    
@@ -405,19 +417,16 @@ class tuya extends module
    $postfix_payload = hex2bin(bin2hex($json_payload) . $suffix);
    $postfix_payload_hex_len = dechex(strlen($postfix_payload));
 
-   $buffer = hex2bin($prefix . $hexByte . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
+   $buffer = hex2bin($prefix . $command . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
    $buffer=bin2hex($buffer);
    $buffer1=strtoupper(substr($buffer,0,-16));
 
    $hex_crc = dechex(crc32(hex2bin($buffer1)));
    $hex_crc=str_pad($hex_crc,8,"0",STR_PAD_LEFT);
    $buffer=substr($buffer,0,-16) .($hex_crc).substr($buffer,-8);
-   return $buffer;
+   return hex2bin($buffer);
   }
   
-  function TuyaLocalDecrypt() {
-     return __DIR__;
-  }   
        
   function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='') {
 
@@ -462,11 +471,9 @@ class tuya extends module
     $mdev=strpos($device['DEV_ID'],'_');
     if ($mdev>0 and substr($device['DEV_ID'],$mdev+1)==1) {
        $dev_id=substr($device['DEV_ID'],0,$mdev);
-       $busy=SQLSelectOne("select BUSY from tudevices WHERE ID=" . $device['ID']);
        $status='';
-       if ($busy['BUSY']==0) {
-        $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP']);
-       }
+       $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP']);
+       
        if ($status!='') { 
        // debmes('Status: '.$status.' '.$device['DEV_IP']);
         $status=json_decode($status);
@@ -521,7 +528,7 @@ class tuya extends module
 
   function Tuya_send_receive( $payload,$local_ip) {
    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-   socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 5, "usec" => 0));
+   socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
    //socket_set_option($socket, SOL_SOCKET, TCP_NODELAY, 1);
 
    $buf='';
@@ -530,9 +537,9 @@ class tuya extends module
     for ($i=0;$i<3;$i++) {
      $send=socket_send($socket, $payload, strlen($payload), 0);
      if ($send!=strlen($payload)) {
-       debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip);
+       //debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip);
      }
-     $reciv=socket_recv ( $socket , $buf , 1024 ,MSG_WAITALL);
+     $reciv=socket_recv ( $socket , $buf , 1024 ,0);
      //debmes( date('y-m-d h:i:s') . ' recived '.strlen($buf));
      if ($buf!='') break;
      sleep(1);
@@ -924,15 +931,17 @@ class tuya extends module
                $rec['LOCAL_KEY']=$device['localKey'];
                $rec['PRODUCT_ID']=$device['productId'];
                $rec['GID_ID']=$gid;
-               $rec['MESH_ID']=$device['meshId'];               
+               $rec['MESH_ID']=$device['meshId']; 
+               $rec['MAC'] = $device['mac'];              
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
-               if ($rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
+               if ($rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY']=$device['localKey'];
                  $rec['PRODUCT_ID']=$device['productId'];
                  $rec['GID_ID']=$gid;
                  $rec['MESH_ID']=$device['meshId'];
+                 $rec['MAC'] = $device['mac'];
                  
                  $rec['ID']=SQLUpdate('tudevices',$rec);
                }
@@ -1198,9 +1207,8 @@ class tuya extends module
       } else {
        $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
       }
-      SQLExec("UPDATE tudevices SET BUSY=1 WHERE ID=".$properties[0]['DEVICE_ID']);
+
       $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
-      SQLExec("UPDATE tudevices SET BUSY=0 WHERE ID=".$properties[0]['DEVICE_ID']);
      }
      $rec=SQLSelectOne("select * from tucommands where ID=".$properties[0]['ID']);
      $rec['value']=$value;
@@ -1262,6 +1270,7 @@ class tuya extends module
  tudevices: GID_ID varchar(30) DEFAULT '' 
  tudevices: REMOTE_CONTROL_2 boolean NOT NULL DEFAULT 0
  tudevices: MESH_ID varchar(30) DEFAULT ''
+ tudevices: MAC varchar(30) DEFAULT ''
 
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment

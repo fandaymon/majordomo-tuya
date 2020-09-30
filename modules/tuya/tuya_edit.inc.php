@@ -27,6 +27,9 @@
          global $local_key;
          $rec['LOCAL_KEY'] = $local_key;
  
+         global $mac;
+         $rec['MAC'] = $mac;
+
          global $dev_id;
          $rec['DEV_ID'] = $dev_id;
 
