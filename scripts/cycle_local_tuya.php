@@ -57,7 +57,7 @@ while (1) {
         //echo 'Запуск проверки статуса ' . date('H:i:s') .  PHP_EOL;
 
         foreach ($devices as $device) {
-            echo $device['TITLE'] . PHP_EOL;
+            //echo $device['TITLE'] . PHP_EOL;
             $command = 'STATUS';
 
             $local_key = $device['LOCAL_KEY'];
@@ -80,7 +80,7 @@ while (1) {
             $buf='';
    
             if (socket_connect($socket, $local_ip, 6668)) {
-                //echo 'Connect <BR>' ;
+                //echo 'Connect '.  PHP_EOL ;
                 for ($i=0;$i<1;$i++) {
                     $send=socket_send($socket, $payload, strlen($payload), 0);
                     if ($send!=strlen($payload)) {
@@ -88,7 +88,7 @@ while (1) {
                     }
                     $buf='';
                     $reciv=socket_recv ( $socket , $buf , 2048 ,0);
-                    //echo  date('y-m-d h:i:s') . ' recived '.strlen($buf) . '<BR>';
+                    //echo  date('y-m-d h:i:s') . ' recived '.strlen($buf) .   PHP_EOL;
                     if ($buf!='') break;
                     sleep(1);
                 }
@@ -104,6 +104,60 @@ while (1) {
             //echo $result .  PHP_EOL;
    
             $status=json_decode($result);
+            
+            if ($status=='json obj data unvalid') {
+                $command = 'STATUS';
+
+                $local_key = $device['LOCAL_KEY'];
+                $dev_id = $device['DEV_ID'];
+                $local_ip = $device['DEV_IP'];
+
+                $hexByte="0d";
+                $dps= '{"1": null, "2": null}';
+
+                if ($device['ZIGBEE'] == 0) {
+                    $json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'", "t": "'.time().'", "dps": ' . $dps . '}';
+
+                } else {
+                    $json = '{"dps":'.$dps.', "t": "'.time().'","cid":"'.$device['MAC'].'"}';
+                }        
+
+                $payload =$tuya_module->TuyaLocalEncrypt($hexByte, $json, $local_key);
+
+                $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+                socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
+
+                $buf='';
+       
+                if (socket_connect($socket, $local_ip, 6668)) {
+                    //echo 'Connect '.  PHP_EOL ;
+                    for ($i=0;$i<1;$i++) {
+                        $send=socket_send($socket, $payload, strlen($payload), 0);
+                        if ($send!=strlen($payload)) {
+                            echo  date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip . '<BR>';
+                        }
+                        $buf='';
+                        $reciv=socket_recv ( $socket , $buf , 2048 ,0);
+                        //echo  date('y-m-d h:i:s') . ' recived '.strlen($buf) . '<BR>';
+                        if ($buf!='') break;
+                        sleep(1);
+                    }
+
+                } else {  
+                    $err = socket_last_error($socket); 
+                    echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
+                }
+     
+                socket_close($socket);
+                $result = substr($buf,20,-8);
+                $result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+                echo $result .  PHP_EOL;
+       
+                $status=json_decode($result);
+                    
+                    
+            }    
+            
             $dps=$status->dps;
             foreach ($dps as $k=>$d){
                 if (is_bool($d)) {
