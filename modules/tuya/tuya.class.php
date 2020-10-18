@@ -158,6 +158,8 @@ class tuya extends module
       $out['TUYA_WEB'] = $this->config['TUYA_WEB'];
       $out['TUYA_WEB_INTERVAL'] = $this->config['TUYA_WEB_INTERVAL'];
       $out['TUYA_WEB_ENDPOINT'] = $this->config['TUYA_WEB_ENDPOINT'];
+      $out['TUYA_CYCLE_DEBUG'] = $this->config['TUYA_CYCLE_DEBUG'];
+
       
 
       if ($this->view_mode=='update_settings') {
@@ -191,6 +193,9 @@ class tuya extends module
 
          global $tuya_web_endpoint;
          $this->config['TUYA_WEB_ENDPOINT'] = $tuya_web_endpoint;
+         
+         global $tuya_cycle_debug;
+         $this->config['TUYA_CYCLE_DEBUG'] = $tuya_cycle_debug;
 
         
          $token=json_decode($this->getToken($tuya_username,$tuya_passwd,$tuya_bztype,$tuya_ccode));

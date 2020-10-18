@@ -35,6 +35,11 @@ if ($tuya_module->config['TUYA_LOCAL_INTERVAL']) {
     $tuya_local_interval = $tuya_module->config['TUYA_LOCAL_INTERVAL'];
 }
 
+if ($tuya_module->config['TUYA_CYCLE_DEBUG']) {
+    $cycle_debug = $tuya_module->config['TUYA_CYCLE_DEBUG'];
+}
+
+
 echo date('H:i:s') . ' Init Tuya ' . PHP_EOL;
 echo date('H:i:s') . " Discover period - '.$tuya_local_interval.' seconds" . PHP_EOL;
 
@@ -45,19 +50,28 @@ $save_dsp =array();
 while (1) {
     if ((time() - $latest_disc) >= 5 * 60) {
         $latest_disc = time();
-        $devices = SQLSelect("SELECT ID, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE' FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and ONLY_LOCAL=1 ORDER BY DEV_ID");
-        $gw_devices = SQLSelect("SELECT d.ID, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.ONLY_LOCAL=1");
-        $devices = array_merge($devices ,$gw_devices);     
+        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE' FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and ONLY_LOCAL=1 ORDER BY DEV_ID");
+        $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.ONLY_LOCAL=1");
+        $devices = array_merge($devices ,$gw_devices); 
+        if ($cycle_debug) {
+            debmes(date('H:i:s') . ' Tuya: added ' .count($devices) . ' devices for local monitoring' );
+            echo date('H:i:s') . ' Tuya: added ' .count($devices) . ' devices for local monitoring'  . PHP_EOL;
+
+        }     
     }    
 
     
     if ((time() - $latest_check) >= $tuya_local_interval) {
         $latest_check = time();
         setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
-        //echo 'Запуск проверки статуса ' . date('H:i:s') .  PHP_EOL;
+        echo 'Запуск проверки статуса ' . date('H:i:s') .  PHP_EOL;
 
         foreach ($devices as $device) {
-            //echo $device['TITLE'] . PHP_EOL;
+            if ($cycle_debug) {
+                debmes(date('H:i:s') . ' Tuya: Get Local Status ' .$device['TITLE'] );
+            }    
+            //echo 'Запуск проверки статуса ' . $device['TITLE'].' ' .date('H:i:s') .  PHP_EOL;
+
             $command = 'STATUS';
 
             $local_key = $device['LOCAL_KEY'];
@@ -95,7 +109,7 @@ while (1) {
 
             } else {  
                 $err = socket_last_error($socket); 
-                echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
+                debmes(date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip );
             }
  
             socket_close($socket);
@@ -104,9 +118,15 @@ while (1) {
             //echo $result .  PHP_EOL;
    
             $status=json_decode($result);
+            if ($cycle_debug) {
+                debmes(date('H:i:s') . ' Tuya: Status=' .$result);
+            }    
             
-            if ($status=='json obj data unvalid') {
+            if ($result=='json obj data unvalid') {
                 $command = 'STATUS';
+                if ($cycle_debug) {
+                    debmes(date('H:i:s') . ' Tuya: get alt. status');
+                }    
 
                 $local_key = $device['LOCAL_KEY'];
                 $dev_id = $device['DEV_ID'];
@@ -145,30 +165,38 @@ while (1) {
 
                 } else {  
                     $err = socket_last_error($socket); 
-                    echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
+                    debmes(date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip );
                 }
      
                 socket_close($socket);
                 $result = substr($buf,20,-8);
                 $result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
-                echo $result .  PHP_EOL;
        
                 $status=json_decode($result);
+                
+                if ($cycle_debug) {
+                    debmes(date('H:i:s') . ' Tuya: alt. status=' . $result);
+                }                 
                     
                     
             }    
             
-            $dps=$status->dps;
-            foreach ($dps as $k=>$d){
-                if (is_bool($d)) {
-                  $d=($d)?1:0;
-                } 
-                if (!isset($save_dps[$device['ID']][$k]) or $save_dps[$device['ID']][$k]!=$d) {
-                    //echo 'Saved: ' . $k . '=' .$d .  PHP_EOL;
-                    $save_dps[$device['ID']][$k] = $d;
-                    $tuya_module->processCommand($device['ID'],$k,$d);
+            if (isset($status->dps)) {
+                $dps=$status->dps;
+                foreach ($dps as $k=>$d){
+                    if (is_bool($d)) {
+                      $d=($d)?1:0;
+                    } 
+                    if (!isset($save_dps[$device['ID']][$k]) or $save_dps[$device['ID']][$k]!=$d) {
+                        if ($cycle_debug) {
+                            debmes(date('H:i:s') . ' Tuya: Saved: ' . $k . '=' .$d) ;
+                        }                 
+
+                        $save_dps[$device['ID']][$k] = $d;
+                        $tuya_module->processCommand($device['ID'],$k,$d);
+                     }
                  }
-             }  
+            }
         } 
       
     }
