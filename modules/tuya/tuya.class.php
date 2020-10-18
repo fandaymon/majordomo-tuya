@@ -1207,12 +1207,11 @@ class tuya extends module
        $dev_id=$properties[0]['DEV_ID'];
       }
 
-      if ($properties[0]['TYPE']=='cover') {
-       $dps='{"'.$dps_name.'":'.$value.'}';
+      if ($properties[0]['VALUE_TYPE']=='bool') {
+         $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
       } else {
-       $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
+       $dps='{"'.$dps_name.'":'.$value.'}';
       }
-
       $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
      }
      $rec=SQLSelectOne("select * from tucommands where ID=".$properties[0]['ID']);
