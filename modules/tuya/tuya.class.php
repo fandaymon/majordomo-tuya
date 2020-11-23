@@ -1231,6 +1231,8 @@ class tuya extends module
    function install($data = '')
    {
       setGlobal('cycle_tuyaControl', 'restart');
+      setGlobal('cycle_local_tuyaControl', 'restart');
+
       parent::install();
    }
 
