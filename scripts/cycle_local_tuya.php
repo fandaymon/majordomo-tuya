@@ -44,8 +44,8 @@ echo date('H:i:s') . ' Init Tuya ' . PHP_EOL;
 echo date('H:i:s') . " Discover period - '.$tuya_local_interval.' seconds" . PHP_EOL;
 
      
-$cycle_debug = 1;
 $save_dsp =array();
+$dps_null = array();
 
 while (1) {
     if ((time() - $latest_disc) >= 5 * 60) {
@@ -132,7 +132,20 @@ while (1) {
 					}    
 
 					$hexByte="0d";
-					$dps= '{"1": null, "2": null}';
+                    
+                    if (isset($dps_null[$device['DEV_ID']])) {
+                        $dps = $dps_null[$device['DEV_ID']];   
+                    } else {    
+                        $sql = "SELECT TITLE from tucommands WHERE DEVICE_ID='" . $device['ID']. "' AND TITLE!='state' AND TITLE!='report' AND TITLE!='online' ORDER BY CAST(TITLE AS UNSIGNED)";
+                        $command = SQLSelect($sql);
+
+                        $dps='';
+                        foreach ($command as $d) {
+                            $dps.= ','.'"'.$d['TITLE'] .'":null';
+                        }
+                        $dps = '{'.substr($dps,2).'}';
+                        $dps_null[$device['DEV_ID']] = $dps;
+                    }
 
 					if ($device['ZIGBEE'] == 0) {
 						$json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'", "t": "'.time().'", "dps": ' . $dps . '}';
@@ -152,8 +165,7 @@ while (1) {
 					$buf='';
 					$reciv=socket_recv ( $socket , $buf , 2048 ,0);
 		 
-					socket_close($socket);
-					$result = substr($buf,20,-8);
+					$result = substr($buf,35,-8);
 					$result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
 		   
 					$status=json_decode($result);
