@@ -145,6 +145,9 @@ while (1) {
                         }
                         $dps = '{'.substr($dps,2).'}';
                         $dps_null[$device['DEV_ID']] = $dps;
+                        if ($cycle_debug) {
+                            debmes('Dps:' . $dps);
+                        }    
                     }
 
 					if ($device['ZIGBEE'] == 0) {
@@ -171,6 +174,8 @@ while (1) {
 					$status=json_decode($result);
 					
 					if ($cycle_debug) {
+                        debmes('Result:' . bin2hex($buf));
+                        debmes('Local key:' . $local_key);
 						debmes(date('H:i:s') . ' Tuya: alt. status=' . $result);
 					}                 
 						
