@@ -941,6 +941,10 @@ class tuya extends module
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
+               if (is_null($rec['MAC'])) $rec['MAC'] =''; 
+               if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
+               if (is_null($rec['MAC'])) $rec['MAC'] =''; 
+
                if ($rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY']=$device['localKey'];
                  $rec['PRODUCT_ID']=$device['productId'];

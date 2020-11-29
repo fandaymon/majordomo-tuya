@@ -136,7 +136,7 @@ while (1) {
                     if (isset($dps_null[$device['DEV_ID']])) {
                         $dps = $dps_null[$device['DEV_ID']];   
                     } else {    
-                        $sql = "SELECT TITLE from tucommands WHERE DEVICE_ID='" . $device['ID']. "' AND TITLE!='state' AND TITLE!='report' AND TITLE!='online' ORDER BY CAST(TITLE AS UNSIGNED)";
+                        $sql = "SELECT TITLE from tucommands WHERE DEVICE_ID='" . $device['ID']. "' AND ceil(TITLE)!=0 ORDER BY CAST(TITLE AS UNSIGNED)";
                         $command = SQLSelect($sql);
 
                         $dps='';
