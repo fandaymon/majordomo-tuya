@@ -151,7 +151,8 @@ while (1) {
                     }
 
 					if ($device['ZIGBEE'] == 0) {
-						$json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'", "t": "'.time().'", "dps": ' . $dps . '}';
+                        $json='{"devId":"'.$dev_id.'","uid":"","t":"'.time().'","dps": ' . $dps . '}';
+						//$json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'", "t": "'.time().'", "dps": ' . $dps . '}';
 
 					} else {
 						$json = '{"dps":'.$dps.', "t": "'.time().'","cid":"'.$device['MAC'].'"}';
