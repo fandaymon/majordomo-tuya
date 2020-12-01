@@ -143,7 +143,7 @@ while (1) {
                         foreach ($command as $d) {
                             $dps.= ','.'"'.$d['TITLE'] .'":null';
                         }
-                        $dps = '{'.substr($dps,2).'}';
+                        $dps = '{'.substr($dps,1).'}';
                         $dps_null[$device['DEV_ID']] = $dps;
                     }
                     
