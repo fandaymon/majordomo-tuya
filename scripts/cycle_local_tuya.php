@@ -145,10 +145,12 @@ while (1) {
                         }
                         $dps = '{'.substr($dps,2).'}';
                         $dps_null[$device['DEV_ID']] = $dps;
-                        if ($cycle_debug) {
-                            debmes('Dps:' . $dps);
-                        }    
                     }
+                    
+                    if ($cycle_debug) {
+                        debmes('Dps:' . $dps);
+                    }    
+
 
 					if ($device['ZIGBEE'] == 0) {
                         $json='{"devId":"'.$dev_id.'","uid":"","t":"'.time().'","dps": ' . $dps . '}';
