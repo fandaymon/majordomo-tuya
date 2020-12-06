@@ -69,7 +69,7 @@ while (1) {
 
         #$tuya_module->requestLocalStatus();
 
-        if ($tuya_module->config['TUYA_REFRESH_TOKEN'] != null and !$tuya_web) {
+        if ($tuya_module->config['TUYA_REFRESH_TOKEN'] != null ) {
             $token = $tuya_module->RefreshToken();
             $tuya_module->Tuya_Discovery_Devices($token);
         } 

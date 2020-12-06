@@ -1041,6 +1041,7 @@ class tuya extends module
          $gw_id=$device_id;
       } 
       
+ 
       $rec=SQLSelectOne("select VALUE_TYPE from tucommands tc inner join tudevices td ON tc.DEVICE_ID=td.ID where tc.TITLE='" . $dps_name . "' and td.DEV_ID='" . $device_id ."'");
       
       if ($rec['VALUE_TYPE']=='bool') {
@@ -1060,6 +1061,13 @@ class tuya extends module
                                                  'gwId'=> $gw_id,
                                                  'dps'=> $dps ],
                                           'requiresSID'=> 1]);
+                                          
+      $result=json_decode($apiResult , true);
+      if (!$result['success']) {
+         debmes('Ошибка изменени статуса:' . $result['errorCode']);
+      
+      }   
+      
       return $apiResult;
    } 
    
@@ -1176,12 +1184,13 @@ class tuya extends module
 
    function propertySetHandle($object, $property, $value) {
 
-    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.REMOTE_CONTROL,tudevices.REMOTE_CONTROL_2,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
 
     $total = count($properties);
    
     if ($total) {
      $dps_name=$properties[0]['TITLE'];
+
      if (strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0 or $properties[0]['REMOTE_CONTROL']==1) {
 
       if ($dps_name=='state') {
@@ -1211,7 +1220,7 @@ class tuya extends module
        $dev_id=$properties[0]['DEV_ID'];
       }
 
-      if ($properties[0]['VALUE_TYPE']=='bool') {
+      if ($properties[0]['VALUE_TYPE']=='bool' or $properties[0]['TITLE']=='state') {
          $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
       } else {
        $dps='{"'.$dps_name.'":'.$value.'}';
