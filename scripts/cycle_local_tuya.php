@@ -50,7 +50,7 @@ $dps_null = array();
 while (1) {
     if ((time() - $latest_disc) >= 5 * 60) {
         $latest_disc = time();
-        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE' FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and ONLY_LOCAL=1 ORDER BY DEV_ID");
+        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE', SEND12, FLAGS12 FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and ONLY_LOCAL=1 ORDER BY DEV_ID");
         $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.ONLY_LOCAL=1");
         $devices = array_merge($devices ,$gw_devices); 
         if ($cycle_debug) {
@@ -99,6 +99,11 @@ while (1) {
 	   
 				if (socket_connect($socket, $local_ip, 6668)) {
 					//echo 'Connect '.  PHP_EOL ;
+                    if ($device['SEND12']) {
+                     $payload_12 = $tuya_module->TuyaLocalEncrypt('12', $device['FLAGS12'], $local_key);   
+                     $send=socket_send($socket, $payload_12, strlen($payload_12), 0);
+
+                    }    
 					for ($i=0;$i<1;$i++) {
 						$send=socket_send($socket, $payload, strlen($payload), 0);
 						if ($send!=strlen($payload)) {

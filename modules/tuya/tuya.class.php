@@ -414,7 +414,7 @@ class tuya extends module
    
    $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
 
-   if ($command != "0a") {
+   if ($command != "0a" and $command != "12") {
     $json_payload = hex2bin("332E33000000000000000000000000" . bin2hex($json_payload));
    }
 
@@ -1290,6 +1290,9 @@ class tuya extends module
  tudevices: REMOTE_CONTROL_2 boolean NOT NULL DEFAULT 0
  tudevices: MESH_ID varchar(30) DEFAULT ''
  tudevices: MAC varchar(30) DEFAULT ''
+ tudevices: SEND12 boolean NOT NULL DEFAULT 0
+ tudevices: FLAGS12 varchar(30) DEFAULT ''
+ 
 
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment

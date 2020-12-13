@@ -47,6 +47,13 @@
 
          global $type;
          $rec['TYPE'] = $type;
+
+         global $send12;
+         $rec['SEND12'] = $send12;
+
+         global $flags12;
+         $rec['FLAGS12'] = $flags12;
+
       }
 
       //UPDATING RECORD
