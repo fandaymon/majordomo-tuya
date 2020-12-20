@@ -886,10 +886,12 @@ class tuya extends module
 
             $data='';
             if (substr($device['categoryCode'],0,3)=='wf_') {
-               if ($device['moduleMap']['wifi']['isOnline'] ) {
-                  $this->processCommand($rec['ID'], 'online', 1);
-               } else {
-                  $this->processCommand($rec['ID'], 'online', 0);
+               if ($rec['ONLY_LOCAL']==0) {
+                  if ($device['moduleMap']['wifi']['isOnline'] ) {
+                     $this->processCommand($rec['ID'], 'online', 1);
+                  } else {
+                     $this->processCommand($rec['ID'], 'online', 0);
+                  }
                }
             } else if (substr($device['categoryCode'],0,4)=='zig_') {
                if ($device['moduleMap']['zigbee']['isOnline'] ) {

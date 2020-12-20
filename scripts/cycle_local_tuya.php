@@ -82,6 +82,15 @@ while (1) {
             $local_ip = $device['DEV_IP'];
 
             if (ping($local_ip)) {
+
+                if (!isset($save_dps[$device['ID']]['online']) or $save_dps[$device['ID']]['online']==0) {
+                    if ($cycle_debug) {
+                        debmes('Device '.$device['TITLE'].' online');
+                    }
+                    $save_dps[$device['ID']]['online'] = 1;
+                    $tuya_module->processCommand($device['ID'],'online',1);
+                }
+
 				$hexByte="0a";
 				if ($device['ZIGBEE'] == 0) {
 					$json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'"}';
@@ -207,6 +216,16 @@ while (1) {
 						 }
 					 }
 				}
+            } else {
+
+                if (!isset($save_dps[$device['ID']]['online']) or $save_dps[$device['ID']]['online']==1) {
+                    if ($cycle_debug) {
+                        debmes('Device '.$device['TITLE'].' offline');
+                    }
+                    $save_dps[$device['ID']]['online'] = 0;
+                    $tuya_module->processCommand($device['ID'],'online',0);
+                }
+
 			}
         } 
       
