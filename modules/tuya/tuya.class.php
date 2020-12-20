@@ -433,7 +433,7 @@ class tuya extends module
   }
   
        
-  function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='') {
+  function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='',$cid='') {
 
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
@@ -443,8 +443,12 @@ class tuya extends module
 
    } else {
     $hexByte="07";
-    $dps=$data;
-    $json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'", "t": "'.time().'", "dps": ' . $dps . '}';
+    if ($cid=='') {
+      $dps=$data;
+      $json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'", "t": "'.time().'", "dps": ' . $dps . '}';
+    } else {
+      $json='{"dps":'.$data.',"cid":"'.$cid.'","t":'.time().'}';
+    }     
    }
 
   
@@ -587,7 +591,10 @@ class tuya extends module
    $context = stream_context_create($aHTTP);
    $contents = file_get_contents($sURL, false, $context);
    $result=json_decode($contents);
-  // debmes('Tuya Web content:'.$contents);
+   if ($result->header->code != 'SUCCESS') {
+    debmes('Tuya HA Web Error:'.$result->header->msg);
+    return;
+   } 
    foreach ($result->payload->devices as $device) {
     
       $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device->id.'"');
@@ -783,11 +790,12 @@ class tuya extends module
             $sc[$scheme['id']][$dp['id']]['scale']=$dp['property']['scale'];
             $sc[$scheme['id']][$dp['id']]['unit']=$dp['property']['unit'];
             $sc[$scheme['id']][$dp['id']]['type']=$dp['property']['type'];
-
-            foreach ($dp['property']['range'] as $key => $value) {
-               $sc[$scheme['id']][$dp['id']]['range'][$key]=$value;
+            
+            if (isset($dp['property']['range'])) {
+               foreach ($dp['property']['range'] as $key => $value) {
+                  $sc[$scheme['id']][$dp['id']]['range'][$key]=$value;
+               }
             }
-
          }
     }
     
@@ -855,18 +863,25 @@ class tuya extends module
                $rec['LOCAL_KEY']=$device['localKey'];
                $rec['PRODUCT_ID']=$device['productId'];
                $rec['GID_ID']=$gid;
-               $rec['MESH_ID']=$device['meshId'];               
+               $rec['MESH_ID']=$device['meshId'];
+               $rec['MAC'] = $device['mac'];
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
-               if ($rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
+               if (is_null($rec['MAC'])) $rec['MAC'] =''; 
+               if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
+               if (is_null($rec['MAC'])) $rec['MAC'] =''; 
+
+               if ($rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY']=$device['localKey'];
                  $rec['PRODUCT_ID']=$device['productId'];
                  $rec['GID_ID']=$gid;
                  $rec['MESH_ID']=$device['meshId'];
+                 $rec['MAC'] = $device['mac'];
                  
                  $rec['ID']=SQLUpdate('tudevices',$rec);
                }
+
             }
 
             $data='';
@@ -1184,14 +1199,14 @@ class tuya extends module
 
    function propertySetHandle($object, $property, $value) {
 
-    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.REMOTE_CONTROL,tudevices.REMOTE_CONTROL_2,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.REMOTE_CONTROL,tudevices.REMOTE_CONTROL_2,tudevices.ONLY_LOCAL,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID,tudevices.MAC FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
 
     $total = count($properties);
    
     if ($total) {
      $dps_name=$properties[0]['TITLE'];
 
-     if (strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0 or $properties[0]['REMOTE_CONTROL']==1) {
+     if (((strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0) and (strlen($properties[0]['MAC'])==0 or strlen($properties[0]['MESH_ID'])==0)) or $properties[0]['ONLY_LOCAL']==0) {
 
       if ($dps_name=='state') {
          if ($properties[0]['REMOTE_CONTROL_2']==1) {
@@ -1225,7 +1240,13 @@ class tuya extends module
       } else {
        $dps='{"'.$dps_name.'":'.$value.'}';
       }
-      $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
+      
+      if (strlen($properties[0]['MESH_ID'])==0) {
+         $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
+      } else {
+         $gw=SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" .$properties[0]['MESH_ID']."'");
+         $this->TuyaLocalMsg('SET',$dev_id,$gw['LOCAL_KEY'],$gw['DEV_IP'],$dps,$properties[0]['MAC']);
+      }
      }
      $rec=SQLSelectOne("select * from tucommands where ID=".$properties[0]['ID']);
      $rec['value']=$value;
