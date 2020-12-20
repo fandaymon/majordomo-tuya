@@ -1120,6 +1120,72 @@ class tuya extends module
     $result=json_decode($contents);
     return $result;
    }
+   
+   function RGB_to_Tuya ($RGB)  
+   {                                 
+      $R=hexdec(substr($RGB,0,2));
+      $G=hexdec(substr($RGB,2,2));
+      $B=hexdec(substr($RGB,4,2));
+
+      $HSL = array();
+
+      $var_R = ($R / 255);
+      $var_G = ($G / 255);
+      $var_B = ($B / 255);
+
+      $var_Min = min($var_R, $var_G, $var_B);
+      $var_Max = max($var_R, $var_G, $var_B);
+      $del_Max = $var_Max - $var_Min;
+
+      $V = $var_Max;
+
+      if ($del_Max == 0)
+      {
+         $H = 0;
+         $S = 0;
+      }
+      else
+      {
+         $S = $del_Max / $var_Max;
+
+         $del_R = ( ( ( $var_Max - $var_R ) / 6 ) + ( $del_Max / 2 ) ) / $del_Max;
+         $del_G = ( ( ( $var_Max - $var_G ) / 6 ) + ( $del_Max / 2 ) ) / $del_Max;
+         $del_B = ( ( ( $var_Max - $var_B ) / 6 ) + ( $del_Max / 2 ) ) / $del_Max;
+
+         if      ($var_R == $var_Max) $H = $del_B - $del_G;
+         else if ($var_G == $var_Max) $H = ( 1 / 3 ) + $del_R - $del_B;
+         else if ($var_B == $var_Max) $H = ( 2 / 3 ) + $del_G - $del_R;
+
+         if ($H<0) $H++;
+         if ($H>1) $H--;
+      }
+
+      $HSL['H'] = dechex((int)($H*360));
+      $HSL['S'] = dechex((int)($S*255));
+      $HSL['V'] = dechex((int)($V*255));
+
+     $Tuya_Color=$RGB.'00';
+     if (strlen($HSL['H'])==1) {
+      $Tuya_Color .= '0'. $HSL['H'];
+     } else {
+      $Tuya_Color .= $HSL['H'];    
+    }
+
+     if (strlen($HSL['S'])==1) {
+      $Tuya_Color .= '0'. $HSL['S'];
+     } else {
+      $Tuya_Color .= $HSL['S'];    
+    }
+
+     if (strlen($HSL['V'])==1) {
+      $Tuya_Color .= '0'. $HSL['V'];
+     } else {
+      $Tuya_Color .= $HSL['V'];    
+    }
+
+
+      return $Tuya_Color;
+   }
 
    function processCommand($device_id, $command, $value, $params = 0) {
 		
@@ -1170,8 +1236,10 @@ class tuya extends module
          if ($cmd_rec['DIVIDEDBY2']) $value=$value/2;
          if ($cmd_rec['DIVIDEDBY100']) $value=$value/100;
       } else {
-         $value=$value / (10** $cmd_rec['VALUE_SCALE']);
-      }   
+         $value = $value / (10** $cmd_rec['VALUE_SCALE']);
+      } 
+      
+  
       $old_value = $cmd_rec['VALUE'];
 
       $cmd_rec['VALUE'] = $value;
@@ -1185,7 +1253,10 @@ class tuya extends module
            if ($command=='online') processSubscriptions('TUSTATUS', array('FIELD' => 'ONLINE','VALUE' => $value,'ID' =>$device_id));
 
       if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_PROPERTY']) {
-        setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, array($this->name => '0'));
+         if  ($cmd_rec['COLOR_CONVERT']==1) {   
+            $value = substr($value,0,6);
+         }  
+         setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, array($this->name => '0'));
       }
          
       if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_METHOD']) {
@@ -1206,7 +1277,12 @@ class tuya extends module
     $total = count($properties);
    
     if ($total) {
-     $dps_name=$properties[0]['TITLE'];
+     $dps_name = $properties[0]['TITLE'];
+     
+     if ($properties[0]['COLOR_CONVERT']) {
+      $value = $this->RGB_to_Tuya($value);
+      debmes('New color value:' . $value);
+     }   
 
      if (((strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0) and (strlen($properties[0]['MAC'])==0 or strlen($properties[0]['MESH_ID'])==0)) or $properties[0]['ONLY_LOCAL']==0) {
 
@@ -1240,10 +1316,11 @@ class tuya extends module
       if ($properties[0]['VALUE_TYPE']=='bool' or $properties[0]['TITLE']=='state') {
          $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
       } else {
-       $dps='{"'.$dps_name.'":'.$value.'}';
+       $dps='{"'.$dps_name.'":"'.$value.'"}';
       }
       
       if (strlen($properties[0]['MESH_ID'])==0) {
+         debmes('Tuya: dps=' .$dps);
          $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
       } else {
          $gw=SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" .$properties[0]['MESH_ID']."'");
@@ -1336,6 +1413,7 @@ class tuya extends module
  tucommands: VALUE_MAX varchar(10) DEFAULT '0'
  tucommands: VALUE_SCALE int(10) DEFAULT 0
  tucommands: VALUE_UNIT varchar(10) DEFAULT ''
+ tucommands: COLOR_CONVERT boolean DEFAULT 0
  tucommands: UPDATED datetime
 
  turange: ID int(10) unsigned NOT NULL auto_increment

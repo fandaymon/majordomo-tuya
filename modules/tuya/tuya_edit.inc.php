@@ -138,6 +138,8 @@
             $properties[$i]['LINKED_METHOD']=trim(${'linked_method'.$properties[$i]['ID']});
             global ${'alias'.$properties[$i]['ID']};
             $properties[$i]['ALIAS']=trim(${'alias'.$properties[$i]['ID']});
+            global ${'color_convert'.$properties[$i]['ID']};
+            $properties[$i]['COLOR_CONVERT']=${'color_convert'.$properties[$i]['ID']}; 
             global ${'dividedby10'.$properties[$i]['ID']};
             $properties[$i]['DIVIDEDBY10']=${'dividedby10'.$properties[$i]['ID']}; 
             global ${'dividedby2'.$properties[$i]['ID']};
