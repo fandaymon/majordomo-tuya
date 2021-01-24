@@ -27,6 +27,7 @@ echo date('H:i:s') . ' Running ' . basename(__FILE__) . PHP_EOL;
 
 $latest_check = 0;
 $latest_check_web = 0;
+$latest_discovery = 0;
 
 $latest_disc = 0;
 
@@ -35,6 +36,7 @@ $cycle_debug = false;
 $tuya_interval = 30;
 $tuya_web_interval = 30;
 $tuya_web = false;
+$latest_cycle_check = 0;
 
 
 if ($tuya_module->config['TUYA_INTERVAL']) {
@@ -63,10 +65,13 @@ if ($tuya_web) {
 
 
 while (1) {
+    if ((time() - $latest_cycle_check) >= 20) {
+        $latest_cycle_check = time();
+        setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
+    }
+    
     if ((time() - $latest_check) >= $tuya_interval) {
         $latest_check = time();
-        setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
-
         #$tuya_module->requestLocalStatus();
 
         if ($tuya_module->config['TUYA_REFRESH_TOKEN'] != null ) {
@@ -79,7 +84,12 @@ while (1) {
     if ((time() - $latest_check_web) >= $tuya_web_interval and $tuya_web ) {
         $latest_check_web = time();
 
-        $tuya_module->Tuya_Web_Status();
+        if ((time() - $latest_discovery) >= 60*60) {
+            $latest_discovery = time();
+            $tuya_module->Tuya_Web_Discovery_Devices();
+        } else {    
+            $tuya_module->Tuya_Web_Status();
+        }    
       
     }
     

@@ -54,6 +54,9 @@
          global $flags12;
          $rec['FLAGS12'] = $flags12;
 
+         global $ver_3_1;
+         $rec['VER_3_1'] = $ver_3_1;
+
       }
 
       //UPDATING RECORD

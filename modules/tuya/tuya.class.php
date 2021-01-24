@@ -169,6 +169,9 @@ class tuya extends module
 
          global $tuya_passwd;
          $this->config['TUYA_PASSWD'] = $tuya_passwd;
+         
+         global $tuya_ha;
+         $this->config['TUYA_HA'] = $tuya_ha;
 
          global $tuya_interval;
          $this->config['TUYA_INTERVAL'] = $tuya_interval;
@@ -197,19 +200,20 @@ class tuya extends module
          global $tuya_cycle_debug;
          $this->config['TUYA_CYCLE_DEBUG'] = $tuya_cycle_debug;
 
-        
-         $token=json_decode($this->getToken($tuya_username,$tuya_passwd,$tuya_bztype,$tuya_ccode));
-         //debmes($token->responseStatus);
-         if (isset($token->responseStatus) && $token->responseStatus === 'error') {
-            $message = $token->responseMsg;
-            debmes($message);
-         }
-         $this->config['TUYA_ACCESS_TOKEN']=$token->access_token;
-         $this->config['TUYA_REFRESH_TOKEN']=$token->refresh_token;
-         $this->config['TUYA_TIME']=time()+$token->expires_in;
-         $this->Tuya_Discovery_Devices($token->access_token);      
+         if ($this->config['TUYA_HA']) {
+            $token=json_decode($this->getToken($tuya_username,$tuya_passwd,$tuya_bztype,$tuya_ccode));
+            //debmes($token->responseStatus);
+            if (isset($token->responseStatus) && $token->responseStatus === 'error') {
+               $message = $token->responseMsg;
+               debmes($message);
+            }
+            $this->config['TUYA_ACCESS_TOKEN']=$token->access_token;
+            $this->config['TUYA_REFRESH_TOKEN']=$token->refresh_token;
+            $this->config['TUYA_TIME']=time()+$token->expires_in;
+            $this->Tuya_Discovery_Devices($token->access_token);      
 
-         $this->saveConfig();
+            $this->saveConfig();
+         }
          
          if ($this->config['TUYA_WEB']) {
             if (is_null($this->config['TUYA_WEB_ENDPOINT']) or $this->config['TUYA_WEB_ENDPOINT']=='' or $this->config['TUYA_WEB_ENDPOINT']!='https://a1.tuyaeu.com/api.json') {
@@ -433,7 +437,7 @@ class tuya extends module
   }
   
        
-  function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='',$cid='') {
+  function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='',$cid='',$ver_3_1=False) {
 
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
@@ -1020,17 +1024,20 @@ class tuya extends module
 
 					  $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
 					}
-					foreach ($sc[$device['productId']][$key]['range'] as  $range_key => $range_value) {	   
-					   $rng_rec = SQLSelectOne("SELECT * FROM  turange WHERE COMMAND_ID=".(int)$cmd_rec['ID']." AND RANGE_VALUE='" . $range_key . "'");
-					   if (!$rng_rec['ID']) {
-						   $rng_rec = array();
-						   $rng_rec['COMMAND_ID']=$cmd_rec['ID'];
-						   $rng_rec['RANGE_VALUE']=$range_key;
-						   $rng_rec['RANGE_DESCRIPTION']=$range_value;
-			   
-						   $rng_rec['ID'] = SQLInsert('turange', $rng_rec);
-					   }
-					}
+               
+               if (isset($sc[$device['productId']][$key]['range']) and $sc[$device['productId']][$key]['range']) { 
+                  foreach ($sc[$device['productId']][$key]['range'] as  $range_key => $range_value) {	   
+                     $rng_rec = SQLSelectOne("SELECT * FROM  turange WHERE COMMAND_ID=".(int)$cmd_rec['ID']." AND RANGE_VALUE='" . $range_key . "'");
+                     if (!$rng_rec['ID']) {
+                        $rng_rec = array();
+                        $rng_rec['COMMAND_ID']=$cmd_rec['ID'];
+                        $rng_rec['RANGE_VALUE']=$range_key;
+                        $rng_rec['RANGE_DESCRIPTION']=$range_value;
+               
+                        $rng_rec['ID'] = SQLInsert('turange', $rng_rec);
+                     }
+                  }
+               }
 					if (is_bool($value)) {
 					   $value=(($value) ? 1:0);
 					   $data.=$key.':'.(($value) ? 1:0).' ';
@@ -1315,7 +1322,9 @@ class tuya extends module
 
       if ($properties[0]['VALUE_TYPE']=='bool' or $properties[0]['TITLE']=='state') {
          $dps='{"'.$dps_name.'":'.(($value==1)?'true':'false').'}';
-      } else {
+      } else if ($properties[0]['VALUE_TYPE']=='value') {
+       $dps='{"'.$dps_name.'":'.$value.'}';
+      } else {    
        $dps='{"'.$dps_name.'":"'.$value.'"}';
       }
       
@@ -1392,6 +1401,7 @@ class tuya extends module
  tudevices: MAC varchar(30) DEFAULT ''
  tudevices: SEND12 boolean NOT NULL DEFAULT 0
  tudevices: FLAGS12 varchar(30) DEFAULT ''
+ tudevices: VER_3_1 boolean NOT NULL DEFAULT 0
  
 
  

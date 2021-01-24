@@ -67,7 +67,17 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Интервал обновлений
+                  Использовать HA облако
+                  <span class='support-hover' tabindex="1" data-title="Использовать облако HA"><i class="glyphicon glyphicon-info-sign"></i></span>
+               </label>
+               <div class="col-lg-4">
+                 <input type="checkbox" name="tuya_ha" id="tuya_ha" value="1" [#if TUYA_HA=='1'#]checked[#endif TUYA_HA#]> 
+               </div>
+            </div>
+
+            <div class="form-group">
+               <label class="control-label col-lg-6">
+                  Интервал обновлений (сек)
                   <span class='support-hover' tabindex="1" data-title="Интервал между обновлениями состяния устройств "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
@@ -76,7 +86,7 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Интервал локальнх обновлений
+                  Интервал локальных обновлений (сек)
                   <span class='support-hover' tabindex="1" data-title="Интервал между локальными обновлениями состяния устройств "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
@@ -113,8 +123,8 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Интервал обновлений из облака
-                  <span class='support-hover' tabindex="1" data-title="Интервал между обновлениями состяния устройств из облака "><i class="glyphicon glyphicon-info-sign"></i></span>
+                  Интервал обновлений из облака (сек) 
+                  <span class='support-hover' tabindex="1" data-title="Интервал между обновлениями состяния устройств из оригинального облака в секундах."><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_web_interval" value="<#TUYA_WEB_INTERVAL#>" class="form-control" placeholder="">

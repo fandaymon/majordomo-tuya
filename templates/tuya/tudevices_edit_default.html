@@ -81,6 +81,15 @@
      </span>
     </div>
    </div>
+
+   <div class="form-group ">
+    <label class="col-lg-4 control-label">Версия 3.1: </label>
+    <div class="col-lg-4">
+     <input type="radio" name="ver_3_1" value="1"[#if VER_3_1!="0"#] checked[#endif#]> <#LANG_YES#>
+     <input type="radio" name="ver_3_1" value="0"[#if (VER_3_1=="0") || (VER_3_1=="")#] checked[#endif#]> <#LANG_NO#>
+     </span>
+    </div>
+   </div>
    
    <div class="form-group ">
     <label class="col-lg-4 control-label">Посылать доп.пакет для изменения статуса: </label>
