@@ -51,6 +51,10 @@ if ($tuya_module->config['TUYA_WEB']) {
     $tuya_web = $tuya_module->config['TUYA_WEB'];
 }
 
+if ($tuya_module->config['TUYA_HA']) {
+    $tuya_ha = $tuya_module->config['TUYA_HA'];
+}
+
 
 echo date('H:i:s') . ' Init Tuya ' . PHP_EOL;
 echo date('H:i:s') . " Discover period - $tuya_interval seconds" . PHP_EOL;
@@ -70,7 +74,7 @@ while (1) {
         setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
     }
     
-    if ((time() - $latest_check) >= $tuya_interval) {
+    if ((time() - $latest_check) >= $tuya_interval and $tuya_ha) {
         $latest_check = time();
         #$tuya_module->requestLocalStatus();
 

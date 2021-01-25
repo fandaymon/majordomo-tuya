@@ -671,7 +671,7 @@ class tuya extends module
 
 
      $pairs['et'] = '0.0.1';
-     $pairs['ttid'] = 'tuya';
+     $pairs['ttid'] = $this->config['TUYA_BZTYPE'];
      $pairs['appVersion'] = '3.8.5';
 
 
