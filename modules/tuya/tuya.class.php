@@ -212,8 +212,9 @@ class tuya extends module
             $this->config['TUYA_TIME']=time()+$token->expires_in;
             $this->Tuya_Discovery_Devices($token->access_token);      
 
-            $this->saveConfig();
+
          }
+         $this->saveConfig();
          
          if ($this->config['TUYA_WEB']) {
             if (is_null($this->config['TUYA_WEB_ENDPOINT']) or $this->config['TUYA_WEB_ENDPOINT']=='' or $this->config['TUYA_WEB_ENDPOINT']!='https://a1.tuyaeu.com/api.json') {
