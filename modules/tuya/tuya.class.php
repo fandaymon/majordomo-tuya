@@ -641,10 +641,17 @@ class tuya extends module
      $sid=$this->config['TUYA_SID'];
      $endpoint = $this->config['TUYA_WEB_ENDPOINT'];
      $d = time();
-     $key = '3fjrekuxank9eaej3gcx';
-     $secret ='aq7xvqcyqcnegvew793pqjmhv77rneqc';
-     $secret2='vay9g59g9g99qf3rtqptmc3emhkanwkx';
-     $certSign='93:21:9F:C2:73:E2:20:0F:4A:DE:E5:F7:19:1D:C6:56:BA:2A:2D:7B:2F:F5:D2:4C:D5:5C:4B:61:55:00:1E:40';
+     if ($this->config['TUYA_BZTYPE'] == 'tuya') {
+      $key = '3fjrekuxank9eaej3gcx';
+      $secret ='aq7xvqcyqcnegvew793pqjmhv77rneqc';
+      $secret2='vay9g59g9g99qf3rtqptmc3emhkanwkx';
+      $certSign='93:21:9F:C2:73:E2:20:0F:4A:DE:E5:F7:19:1D:C6:56:BA:2A:2D:7B:2F:F5:D2:4C:D5:5C:4B:61:55:00:1E:40';
+     } else {
+      $key = 'ekmnwp9f5pnh3trdtpgy';
+      $secret ='r3me7ghmxjevrvnpemwmhw3fxtacphyg';
+      $secret2='jfg5rs5kkmrj5mxahugvucrsvw43t48x';
+      $certSign='0F:C3:61:99:9C:C0:C3:5B:A8:AC:A5:7D:AA:55:93:A2:0C:F5:57:27:70:2E:A8:5A:D7:B3:22:89:49:F8:88:FE';
+     }             
      $keyHmac = $certSign . '_' . $secret2 . '_' . $secret;
      if ($options['deviceID']) {
        $deviceID=$options['deviceID'];
