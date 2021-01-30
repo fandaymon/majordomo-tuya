@@ -108,6 +108,21 @@
                         <b>[#TITLE#]</b>
 
                         [#if COMMANDS!=""#]<div>[#COMMANDS#]</div>[#endif#]
+                      [#if IS_MULTI ==1 #]
+                       <div style="border: solid; display: inline-block; height: 40px; vertical-align:middle; padding: 5px;">
+                       [#begin SUBDEV#]
+                           <div style="display: inline;">
+                           [#if SWITCH_STATE==1#]
+                              <img id="tustate[#ID#]" src="../templates/tuya/img/on-button.png">
+                           [#else#]
+                              <img id="tustate[#ID#]" src="../templates/tuya/img/off-button.png">
+                           [#endif#]
+
+                           </div>
+                           <div style="display: inline;">[#SWITCH_NAME#]</div>
+                        [#end SUBDEV#]
+                        </div>
+                     [#endif IS_MULTI #]
                      </td>
 
                      <td style="vertical-align:middle [#if LOST#] ;color:lightgray;font-weight:bold;[#endif#]">[#TYPE#]</td>
@@ -124,20 +139,35 @@
 
                      <td style="vertical-align:middle;text-align:center">
 
-		      [#if ONLINE==1#]
-			<span id="tuonline[#ID#]" class="label label-success" title="Device Online">Online</span>
-		      [#else#]
-			<span id="tuonline[#ID#]" class="label label-warning" title="Device Offline">Offline</span>
-		      [#endif#]
+                     [#if ONLINE==1#]
+                        <span id="tuonline[#ID#]" class="label label-success" title="Device Online">Online</span>
+                     [#else#]
+                        <span id="tuonline[#ID#]" class="label label-warning" title="Device Offline">Offline</span>
+                     [#endif#]
+
                      </td>
+
                      <td style="vertical-align:middle;text-align:center">
+                     [#if IS_STATE==1#]   
                       [#if STATE==1#]
                         <img id="tustate[#ID#]" src="../templates/tuya/img/on-button.png">
                       [#else#]
                         <img id="tustate[#ID#]" src="../templates/tuya/img/off-button.png">
                       [#endif#]
-
+                     [#endif#]
+                     [#if IS_LAMP==1#]
+                      [#if LAMP==1#]
+                          <img id="tulamp[#ID#]" src="../templates/tuya/img/lamp_on.png" width=20px hight=20px>
+                      [#else#]
+                          <img id="tulamp[#ID#]" src="../templates/tuya/img/lamp_off.png" width=20px hight=20px>
+                      [#endif#]
+ 
+                     [#endif#]     
                      </td>
+
+
+ 
+ 
                      <td style="vertical-align:middle" width="1%" nowrap>
                         <div style="width:120px">
                            [#if "<#ACTION#>"=="admin"#]
@@ -147,6 +177,7 @@
                            [#endif ACTION#]
                         </div>
                      </td>
+
                   </tr>
                   [#end RESULT#]
                   </tbody>
