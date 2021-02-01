@@ -911,7 +911,13 @@ class tuya extends module
                } else {
                   $this->processCommand($rec['ID'], 'online', 0);
                }
-            }       
+            } else if (substr($device['categoryCode'],0,4)=='sub_') {
+               if ($device['moduleMap']['subpieces']['isOnline'] ) {
+                  $this->processCommand($rec['ID'], 'online', 1);
+               } else {
+                  $this->processCommand($rec['ID'], 'online', 0);
+               }
+            }           
 			
             if ($rec['ONLY_LOCAL']==0) {
                foreach($device['dps'] as $key => $value) {
