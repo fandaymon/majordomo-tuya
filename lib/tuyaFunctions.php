@@ -73,12 +73,22 @@ function Tuya_Door_Log($device_id, $dp_id=1, $gw_id='',$limit=50, $offset=0) {
 	$apiResult = $tuya_module->TuyaWebRequest(['action'=> 'm.smart.scale.history.get.list',
                                          'gid'=>$gid,
                                          'data'=> ['devId'=> $device_id,
-                                                 'dpIds'=> $dp_id,
-                                                 'gwId'=>  $gw_id,
-                                                 'limit'=> $limit,
-                                                 'offset'=>$offset,
+                                                 'dpIds'=> "",
+                                                 'offset'=> $offset,
+                                                 'limit'=> $limit
                                                  ],
                                           'requiresSID'=> 1]);
+
+
+//	$apiResult = $tuya_module->TuyaWebRequest(['action'=> 'm.smart.scale.history.get.list',
+//                                         'gid'=>$gid,
+ //                                        'data'=> ['devId'=> $device_id,
+//                                                 'dpIds'=> $dp_id,
+//                                                 'gwId'=>  $gw_id,
+//                                                 'limit'=> $limit,
+//                                                 'offset'=>$offset,
+//                                                 ],
+//                                          'requiresSID'=> 1]);
 	$result=json_decode($apiResult , true);
 	return $result['result'];
 }	

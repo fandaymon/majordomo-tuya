@@ -1027,7 +1027,9 @@ class tuya extends module
 					  $cmd_rec['ALIAS'] = $sc[$device['productId']][$key]['code'];
 					  $cmd_rec['VALUE_UNIT'] = $sc[$device['productId']][$key]['unit'];
 					  $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
-					  $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
+                 if ($cmd_rec['DIVIDEDBY2'] == 0) {
+					   $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
+                 } 
 					  $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
 
 					  $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
@@ -1264,8 +1266,8 @@ class tuya extends module
          
       if ($old_value == $value) return;
          
-           if ($command=='state') processSubscriptions('TUSTATUS', array('FIELD' => 'STATE','VALUE' => $value,'ID' =>$device_id));
-           if ($command=='online') processSubscriptions('TUSTATUS', array('FIELD' => 'ONLINE','VALUE' => $value,'ID' =>$device_id));
+      if ($command=='state' or $command=='switch_1' or $command=='power' or $command=='Power' or $command=='switch_on') processSubscriptions('TUSTATUS', array('FIELD' => 'STATE','VALUE' => $value,'ID' =>$device_id));
+      if ($command=='online') processSubscriptions('TUSTATUS', array('FIELD' => 'ONLINE','VALUE' => $value,'ID' =>$device_id));
 
       if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_PROPERTY']) {
          if  ($cmd_rec['COLOR_CONVERT']==1) {   
@@ -1296,7 +1298,7 @@ class tuya extends module
      
      if ($properties[0]['COLOR_CONVERT']) {
       $value = $this->RGB_to_Tuya($value);
-      debmes('New color value:' . $value);
+      //debmes('New color value:' . $value);
      }   
 
      if (((strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0) and (strlen($properties[0]['MAC'])==0 or strlen($properties[0]['MESH_ID'])==0)) or $properties[0]['ONLY_LOCAL']==0) {
@@ -1337,7 +1339,7 @@ class tuya extends module
       }
       
       if (strlen($properties[0]['MESH_ID'])==0) {
-         debmes('Tuya: dps=' .$dps);
+         //debmes('Tuya: dps=' .$dps);
          $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
       } else {
          $gw=SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" .$properties[0]['MESH_ID']."'");

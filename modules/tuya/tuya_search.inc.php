@@ -57,7 +57,7 @@ if ($res[0]['ID']) {
                $res[$i]['IS_LAMP'] = 1;
              }
                 
-             if ($commands[$ic]['ALIAS']=='power' OR $commands[$ic]['ALIAS']=='switch_1') {
+             if ($commands[$ic]['ALIAS']=='power' OR $commands[$ic]['ALIAS']=='switch_1' OR $commands[$ic]['ALIAS']=='switch_on' OR $commands[$ic]['ALIAS']=='Power') {
                $res[$i]['STATE'] = (int)$commands[$ic]['VALUE'];
                $res[$i]['IS_STATE'] = 1;
              }
