@@ -1307,6 +1307,22 @@ class tuya extends module
       //debmes('New color value:' . $value);
      }   
 
+     if ($properties[0]['DIVIDEDBY2']) {
+      $value = $value*2;
+     }   
+
+     if ($properties[0]['DIVIDEDBY10']) {
+      $value = $value*10;
+     }   
+
+     if ($properties[0]['DIVIDEDBY100']) {
+      $value = $value*100;
+     } 
+     
+     if ($properties[0]['VALUE_SCALE'] >0) {
+      $value = $value * (10** $properties[0]['VALUE_SCALE']);
+     }    
+
      if (((strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0) and (strlen($properties[0]['MAC'])==0 or strlen($properties[0]['MESH_ID'])==0)) or $properties[0]['ONLY_LOCAL']==0) {
 
       if ($dps_name=='state') {
