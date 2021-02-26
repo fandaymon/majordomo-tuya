@@ -1,0 +1,41 @@
+
+<div style="margin-top: 10px;"></div>
+<form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
+   <fieldset>
+      <div class="form-group">
+         <div>
+            <table  align=center class="table table-striped">
+               <tr>
+                  <th><#LANG_TITLE#></th>
+                  <th><#LANG_DEVICE#></th>
+                  <th>Команда на выполнение</th>
+                  <th>&nbsp;</th>
+               </tr>
+               [#begin RESULT#]
+               <tr>
+                  <td valign="top">[#TITLE#]</td>
+                  <td valign="top">[#DEV_ID#]</td>
+                  <td valign="top">TuyaScene('[#DEV_ID#]');</td>
+                  
+                  <td>
+                     <div onClick="$.ajax({url: '/ajax/tuya.html?op=run_scene&dev_id=[#DEV_ID#]'});" class="btn btn-default" title="Запустить сцену"><i class="glyphicon glyphicon-flash"></i></div>
+                     <a href="?id=[#ID#]&view_mode=delete_tudevices" onClick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default" title="Удалить">
+                     <i class="glyphicon glyphicon-remove"></i>
+                  </td>
+               </tr>
+               
+               [#end RESULT#]
+            </table> 
+         </div>
+      </div>
+      <div class="form-group">
+         <div class="col-lg-offset-3 col-lg-4">
+            <input type="hidden" name="view_mode" value="<#VIEW_MODE#>">
+            <input type="hidden" name="edit_mode" value="<#EDIT_MODE#>">
+            <input type="hidden" name="mode" value="update">
+            <input type="hidden" name="data_source" value="<#DATA_SOURCE#>">
+            <input type="hidden" name="tab" value="<#TAB#>">
+         </div>
+      </div>
+   </fieldset>
+</form>

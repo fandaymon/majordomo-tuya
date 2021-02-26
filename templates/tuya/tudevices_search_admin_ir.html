@@ -1,0 +1,39 @@
+<style>
+   .ir_device {
+         background-color: tomato;
+         color: white;
+         border: 2px solid black;
+         margin: 20px;
+         padding: 20px;
+   }
+</style>
+
+<div style="margin-top: 10px;"></div>
+
+    
+[#begin RESULT#]
+   <div class="row">
+      <div class="col-md-2 ir_device">[#TITLE#]</div>
+   </div>
+   <div class="row">
+      <div class="col-md-6 ">Команда на выполнение: TuyaIR('[#DEV_ID#]', 'Название клавиши');</div>
+   </div>
+   <div class="row">
+      <div class="col-md-12">
+         [#begin CODES#]
+            <div onClick="$.ajax({url: '/ajax/tuya.html?op=run_ir&dev_id=[#DEV_ID#]&id=[#ID#]'});" class="btn btn-default" title="[#TITLE#]" style="display:inline-block;">[#TITLE#]</div>
+         [#end CODES#]
+      </div>   
+   </div>               
+[#end RESULT#]
+<form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
+   <div class="form-group">
+      <div class="col-lg-offset-3 col-lg-4">
+         <input type="hidden" name="view_mode" value="<#VIEW_MODE#>">
+         <input type="hidden" name="edit_mode" value="<#EDIT_MODE#>">
+         <input type="hidden" name="mode" value="update">
+         <input type="hidden" name="data_source" value="<#DATA_SOURCE#>">
+         <input type="hidden" name="tab" value="<#TAB#>">
+      </div>
+   </div>
+</form>

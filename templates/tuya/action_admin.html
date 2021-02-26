@@ -149,7 +149,31 @@
       </form>
    </div>
    &nbsp;
-   [#inc tudevices_search_admin.html#]
+   
+   <ul class="nav nav-tabs">
+      <li[#if TAB=""#] class="active"[#endif#]>
+         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab=">Устройства</a>
+      </li>
+      <li[#if TAB="scene"#] class="active"[#endif#]>
+         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab=scene">Сцены</a>
+      </li>
+      <li[#if TAB="ir"#] class="active"[#endif#]>
+         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab=ir">Пульты</a>
+      </li>
+   </ul>
+
+
+   [#if TAB=""#]
+      [#inc tudevices_search_admin.html#]
+   [#endif TAB#]
+   [#if TAB="scene"#]
+      [#inc tudevices_search_admin_scene.html#]
+   [#endif TAB#]
+   [#if TAB="ir"#]
+      [#inc tudevices_search_admin_ir.html#]
+   [#endif TAB#]
+   
+      
 [#endif VIEW_MODE#]
 
 <!-- / table tudevices search -->

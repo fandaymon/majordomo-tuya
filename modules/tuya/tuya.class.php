@@ -159,6 +159,7 @@ class tuya extends module
       $out['TUYA_WEB_INTERVAL'] = $this->config['TUYA_WEB_INTERVAL'];
       $out['TUYA_WEB_ENDPOINT'] = $this->config['TUYA_WEB_ENDPOINT'];
       $out['TUYA_CYCLE_DEBUG'] = $this->config['TUYA_CYCLE_DEBUG'];
+      $out['TUYA_HA'] = $this->config['TUYA_HA'];
 
       
 
@@ -233,13 +234,14 @@ class tuya extends module
 
          $this->redirect('?');
       }
-
       if (isset($this->data_source) && !$_GET['data_source'] && !$_POST['data_source']) {
          $out['SET_DATASOURCE'] = 1;
       }
 
       if ($this->data_source == 'tudevices' || $this->data_source == '') {
          if ($this->view_mode == '' || $this->view_mode == 'search_tudevices') {
+            if (isset($this->tab) and $this->tab == 'scene') $this->getScenes();
+
             $this->search_tudevices($out);
          }
          if ($this->view_mode == 'edit_tudevices') {
@@ -247,7 +249,7 @@ class tuya extends module
          }
          if ($this->view_mode == 'delete_tudevices') {
             $this->delete_tudevices($this->id);
-            $this->redirect("?data_source=tudevices");
+            $this->redirect("?data_source=tudevices&tab=". $this->tab);
          }
       }
 
@@ -276,6 +278,24 @@ class tuya extends module
    {
       if ($this->ajax) {
          global $op;
+            if ($op == 'scan') {
+               $this->ScanDevices();
+               exit;
+            }
+            if ($op == 'run_scene') {
+               global $dev_id;
+               TuyaScene($dev_id);
+               exit;
+            }    
+            if ($op == 'run_ir') {
+               global $dev_id;
+               global $id;
+               
+               $rec = SQLSelectOne("SELECT TITLE FROM tuircommand WHERE ID=" .$id);
+               TuyaIR($dev_id, $rec['TITLE']);
+               exit;
+            }    
+
  //        if ($op == 'process') {
  //           global $message;
  //           global $ip;
@@ -341,8 +361,90 @@ class tuya extends module
       require(DIR_MODULES . $this->name . '/tucommands_edit.inc.php');
    }
 
+ 
+   function ScanDevices() {
+      $udp_key = md5( 'yGAdlopoPVldABfn');
+      $udp_key = hex2bin($udp_key);
+
+      $devices=array();
+
+      $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+      socket_bind($socket, "0.0.0.0", 6667);
+      
+      echo '<H4>В локальной сети найдены следующие устройства:</H2>';
+      echo '<table>';
+
+      for ($i = 1; $i <= 20; $i++) {
+
+         $from = '';
+         $port = 0;
+         socket_recvfrom($socket, $buf, 2048, 0, $from, $port);
+
+         $data = substr($buf,20,-8);
+         $result = openssl_decrypt(($data), 'AES-128-ECB', $udp_key,OPENSSL_RAW_DATA);
+         $result = json_decode($result, true);
+
+         if (in_array($result['gwId'], $devices) == false) {
+            echo '<tr>';
+            array_push($devices, $result['gwId']);
+            
+            if ($result['version'] == '3.3') {
+               $version = false;
+            } else {
+               $version = true;
+            }   
+            $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
+            if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
+               $rec['DEV_IP'] = $result['ip'];
+               $rec['VER_3_1'] = $version;
+               SQLUpdate('tudevices', $rec);
+             }
+            echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
+            echo '<td>'.$result['gwId'].'</td>';
+            echo '<td> ('.$result['version'].') </td>';
+            echo '<td>'.$result['ip'].'</td>';
+            echo '</tr>';   
+         }
+      }
+      echo '</table>';
+      socket_close($socket);
+   }
+   
+   function getScenes() {
+      $this->getConfig();
+      if ($this->config['TUYA_WEB']) {
+         $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.location.list',
+                                          'requiresSID'=> 1]);
+
+         $result=json_decode($apiResult , true);
+         $gid= $result['result'][0] ['groupId'];
 
 
+         $action = "tuya.m.linkage.rule.query";
+
+         $apiResult = $this->TuyaWebRequest(['action'=>$action,
+                                                   'gid'=>$gid,
+                                                   'requiresSID'=> 1]);
+         $result=json_decode($apiResult , true);
+         
+         if ($result['result']) {
+            foreach($result['result'] as $scene) {
+               $rec = SQLSelectOne("SELECT * FROM tudevices WHERe DEV_ID='" . $scene['id'] . "' AND TYPE='scene';");
+               if ($rec) {
+                  if ($rec['TITLE'] != $scene['name']) {
+                     $rec['TITLE'] = $csene['name'];
+                     SQLUpdate('tudevices', $rec);
+                  }   
+               } else {
+                  $rec['DEV_ID'] = $scene['id'];
+                  $rec['TITLE'] = $scene['name'];
+                  $rec['TYPE'] = 'scene';
+                  SQLInsert('tudevices', $rec);
+               }
+            }   
+         }   
+      }   
+   }
 
    function getToken($username,$passwd,$bztype,$ccode) {
     $sURL = 'https://px1.tuyaeu.com/homeassistant/auth.do';
@@ -636,7 +738,7 @@ class tuya extends module
    }
   }
    
-    function TuyaWebRequest($options) {
+    function TuyaWebRequest($options, $v='1.0') {
      $this->getConfig();  
      $sid=$this->config['TUYA_SID'];
      $endpoint = $this->config['TUYA_WEB_ENDPOINT'];
@@ -665,7 +767,7 @@ class tuya extends module
                  'deviceId'=> $deviceID,
                  'os'=> 'Linux',
                  'lang' => 'en',
-                 'v' => '1.0',
+                 'v' => $v,
                  'clientId' => $key,
                  'time' => $d];
 
@@ -867,6 +969,12 @@ class tuya extends module
             $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device['devId'].'"');
 
             if ($rec==NULL) {
+               if ($device['categoryCode'] == 'inf_qt' or $device['categoryCode'] == 'wf_qt') {
+                  $ir_flag = True;
+               } else {
+                  $ir_flag = False;
+               }      
+               $rec['IR_FLAG'] = $ir_flag;
 
                $rec['TITLE']=$device['name'] ;
                $rec['DEV_ICON']= $device['iconUrl'];
@@ -882,14 +990,23 @@ class tuya extends module
             } else {
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
-               if (is_null($rec['MAC'])) $rec['MAC'] =''; 
+               if (is_null($rec['MAC'])) $rec['MAC'] ='';
+               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
+               
+               if ($device['categoryCode'] == 'inf_qt' or $device['categoryCode'] == 'wf_qt') {
+                  $ir_flag = True;
+               } else {
+                  $ir_flag = False;
+               }      
+                   
 
-               if ($rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
+               if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY']=$device['localKey'];
                  $rec['PRODUCT_ID']=$device['productId'];
                  $rec['GID_ID']=$gid;
                  $rec['MESH_ID']=$device['meshId'];
                  $rec['MAC'] = $device['mac'];
+                 $rec['IR_FLAG'] = $ir_flag;
                  
                  $rec['ID']=SQLUpdate('tudevices',$rec);
                }
@@ -963,6 +1080,12 @@ class tuya extends module
             $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device['devId'].'"');
 
             if ($rec==NULL) {
+               if ($device['categoryCode'] == 'inf_qt' or $device['categoryCode'] == 'wf_qt') {
+                  $ir_flag = True;
+               } else {
+                  $ir_flag = False;
+               }      
+               $rec['IR_FLAG'] = $ir_flag;
 
                $rec['TITLE']=$device['name'] ;
                $rec['DEV_ICON']= $device['iconUrl'];
@@ -976,16 +1099,26 @@ class tuya extends module
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
+
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
+               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
+               
+               if ($device['categoryCode'] == 'inf_qt' or $device['categoryCode'] == 'wf_qt') {
+                  $ir_flag = True;
+               } else {
+                  $ir_flag = False;
+               }      
+                   
 
-               if ($rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
+               if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY']=$device['localKey'];
                  $rec['PRODUCT_ID']=$device['productId'];
                  $rec['GID_ID']=$gid;
                  $rec['MESH_ID']=$device['meshId'];
                  $rec['MAC'] = $device['mac'];
+                 $rec['IR_FLAG'] = $ir_flag;
                  
                  $rec['ID']=SQLUpdate('tudevices',$rec);
                }
@@ -1104,7 +1237,7 @@ class tuya extends module
                                           
       $result=json_decode($apiResult , true);
       if (!$result['success']) {
-         debmes('Ошибка изменени статуса:' . $result['errorCode']);
+         debmes('Ошибка изменения статуса:' . $result['errorCode']);
       
       }   
       
@@ -1434,7 +1567,7 @@ class tuya extends module
  tudevices: SEND12 boolean NOT NULL DEFAULT 0
  tudevices: FLAGS12 varchar(30) DEFAULT ''
  tudevices: VER_3_1 boolean NOT NULL DEFAULT 0
- 
+ tudevices: IR_FLAG boolean NOT NULL DEFAULT 0
 
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment
@@ -1463,6 +1596,11 @@ class tuya extends module
  turange: RANGE_VALUE varchar(10) NOT NULL DEFAULT ''
  turange: RANGE_DESCRIPTION varchar(50) NOT NULL DEFAULT ''
 
+ tuircommand: ID int(10) unsigned NOT NULL auto_increment
+ tuircommand: DEVICE_ID int(10) unsigned NOT NULL 
+ tuircommand: TITLE varchar(20) NOT NULL DEFAULT ''
+ tuircommand: COMPRESSPULSE varchar(50) NOT NULL DEFAULT ''
+ tuircommand: EXTS varchar(100) NOT NULL DEFAULT ''
 
 
 EOD;

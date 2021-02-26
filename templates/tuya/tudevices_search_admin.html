@@ -60,9 +60,42 @@
   });
 
  </script>
-<p>
-<a href="?view_mode=edit_tudevices&data_source=<#DATA_SOURCE#>" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> <#LANG_ADD#></a>
-</p>
+ 
+<div style="text-align:right; margin-top: 10px;margin-bottom: 10px;">
+   <a href="javascript:scan();" class="btn btn-default"><i class="glyphicon glyphicon-search"></i> Сканировать</a>
+   <a href="?view_mode=edit_tudevices&data_source=<#DATA_SOURCE#>" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> <#LANG_ADD#></a>
+</div>
+
+<div id="scanInfo" style="display:none;">
+				<div id="info" style="word-wrap:break-word"></div>
+			<div style="text-align: left; margin-top: 10px; margin-bottom: 10px;">
+				<button id="scanButton" type="button" class="btn btn-success" onclick="javascript:hideScanInfo();" style="display:none;">Закрыть</button>
+			</div>
+</div>
+
+<script type="text/javascript">
+	function scan(){
+      var scan = document.getElementById("scanInfo");
+      scan.style.display = "block";
+      
+	    var url="/ajax/tuya.html?op=scan";
+		$("#info").html('Сканируем сеть');
+        $.ajax({
+            url: url
+        }).done(function(data) {
+            $('#info').html(data);
+            var scan = document.getElementById("scanButton");
+            scan.style.display = "block";
+        });
+	}
+   
+   function hideScanInfo(){
+      var scan = document.getElementById("scanInfo");
+      scan.style.display = "none";
+	}
+
+ </script>
+
 <table width=100% border=0>
    <tr>
       <td valign=top>
@@ -209,3 +242,5 @@
       </td>
    </tr>
 </table>
+
+

@@ -91,4 +91,51 @@ function Tuya_Door_Log($device_id, $dp_id=1, $gw_id='',$limit=50, $offset=0) {
 //                                          'requiresSID'=> 1]);
 	$result=json_decode($apiResult , true);
 	return $result['result'];
-}	
+}
+
+function TuyaScene($rule_id) {
+	include_once(DIR_MODULES . 'tuya/tuya.class.php');
+	$tuya_module = new tuya();
+
+	$apiResult = $tuya_module->TuyaWebRequest(['action'=> 'tuya.m.location.list',
+										  'requiresSID'=> 1]);
+	
+	$result=json_decode($apiResult , true);
+	$gid= $result['result'][0] ['groupId'];
+
+
+	$action = "tuya.m.linkage.rule.trigger";
+
+	$apiResult = $tuya_module->TuyaWebRequest(['action'=>$action,
+										 'gid'=>$gid,
+										 'data'=> ['ruleId'=> $rule_id,
+												 ],
+										  'requiresSID'=> 1]);
+}
+
+function TuyaIR($dev_id, $command) {
+	include_once(DIR_MODULES . 'tuya/tuya.class.php');
+	$tuya_module = new tuya();
+
+	$dev_info = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $dev_id . "';");
+	
+	if ($dev_info) {
+		$gw_info = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" .$dev_info['MESH_ID'] ."';");
+		
+		if ($gw_info) {
+			$code = SQLSelectOne("SELECT * FROM tuircommand WHERE DEVICE_ID=" . $dev_info['ID'] . " AND TITLE='" . $command ."';");
+			$dps='{"1":"send_ir","13":0,"3":"'.$code['EXTS'].'","4":"'. $code['COMPRESSPULSE'] . '","10":300}';
+			
+			if ($gw_info['DEV_IP'] !='' and $gw_info['LOCAL_KEY'] !='') {
+				$tuya_module->TuyaLocalMsg('SET', $gw_info['DEV_ID'], $gw_info['LOCAL_KEY'], $gw_info['DEV_IP'], $dps);
+			} else {
+				$apiResult = $tuya_module->TuyaWebRequest(['action'=> 'tuya.m.device.dp.publish',
+															'gid'=>$gw_info['GID_ID'],
+															'data'=> ['devId'=> $gw_info['DEV_ID'],
+																	'gwId'=> $gw_info['DEV_ID'],
+																	'dps'=> $dps ],
+															'requiresSID'=> 1]);			}	
+					
+		}	
+	}	
+}			
