@@ -77,6 +77,38 @@ if ($tab == 'scene') {
                   $exts = str_replace("\\","",$exts);
                   $exts = json_decode($exts , true);
                   $new_code['EXTS'] = $exts['99999'];
+                  $new_code['CPULSE_ALT_FLAG'] =  false;
+                  
+                  SQLInsert('tuircommand', $new_code);
+                  $new_code['DEV_ID'] = $pult['DEV_ID'];
+                  array_push($codes, $new_code); 
+                  unset($new_code['DEV_ID']);
+               }
+            
+            }
+
+            $action = "tuya.m.infrared.learn.get";
+
+            $apiResult = $this->TuyaWebRequest(['action'=>$action,
+                                         'gid'=>$gid,
+                                         'data'=> ['devId'=> $gw_id,
+                                                 'gwId'=>  $gw_id,
+                                                 'subDevId'=> $device_id,
+                                                 'vender'=>'3',
+                                                ],
+                                         'requiresSID'=> 1]);
+
+            $result=json_decode($apiResult , true);
+            
+            $codes = array();
+            
+            if ($result['result']) {
+
+               foreach ($result['result'] as $code) {
+                  $new_code['DEVICE_ID'] = $pult['ID'];
+                  $new_code['TITLE'] = $code['keyName'];
+                  $new_code['CPULSE_ALT'] =  base64_encode(hex2bin($code['compressPulse']));
+                  $new_code['CPULSE_ALT_FLAG'] =  true;
                   
                   SQLInsert('tuircommand', $new_code);
                   $new_code['DEV_ID'] = $pult['DEV_ID'];

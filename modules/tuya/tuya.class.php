@@ -336,6 +336,10 @@ class tuya extends module
    function delete_tudevices($id)
    {
        $rec = SQLSelectOne("SELECT * FROM tudevices WHERE ID='$id'");
+       
+       if ($rec['IR_FLAG'] ) {
+         SQLExec("DELETE FROM tuircommand WHERE DEVICE_ID='" . $rec['ID'] . "'");
+       }   
 
        SQLExec("DELETE FROM tucommands WHERE DEVICE_ID='" . $rec['ID'] . "'");
        SQLExec("DELETE FROM tudevices WHERE ID='" . $rec['ID'] . "'");
@@ -568,7 +572,13 @@ class tuya extends module
    $postfix_payload = hex2bin(bin2hex($json_payload) . $suffix);
    $postfix_payload_hex_len = dechex(strlen($postfix_payload));
 
-   $buffer = hex2bin($prefix . $hexByte . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
+
+   if (strlen($postfix_payload_hex_len)>2) {
+      $buffer = hex2bin($prefix . $hexByte . '00000' . $postfix_payload_hex_len ) . $postfix_payload;
+
+   } else { 
+      $buffer = hex2bin($prefix . $hexByte . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
+   }
    $buffer=bin2hex($buffer);
    $buffer1=strtoupper(substr($buffer,0,-16));
 
@@ -1599,8 +1609,10 @@ class tuya extends module
  tuircommand: ID int(10) unsigned NOT NULL auto_increment
  tuircommand: DEVICE_ID int(10) unsigned NOT NULL 
  tuircommand: TITLE varchar(20) NOT NULL DEFAULT ''
- tuircommand: COMPRESSPULSE varchar(50) NOT NULL DEFAULT ''
- tuircommand: EXTS varchar(100) NOT NULL DEFAULT ''
+ tuircommand: COMPRESSPULSE varchar(150) NOT NULL DEFAULT ''
+ tuircommand: EXTS varchar(150) NOT NULL DEFAULT ''
+ tuircommand: CPULSE_ALT varchar(300) NOT NULL DEFAULT ''
+ tuircommand: CPULSE_ALT_FLAG boolean DEFAULT 0
 
 
 EOD;

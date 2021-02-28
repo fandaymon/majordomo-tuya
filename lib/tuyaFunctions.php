@@ -124,7 +124,11 @@ function TuyaIR($dev_id, $command) {
 		
 		if ($gw_info) {
 			$code = SQLSelectOne("SELECT * FROM tuircommand WHERE DEVICE_ID=" . $dev_info['ID'] . " AND TITLE='" . $command ."';");
-			$dps='{"1":"send_ir","13":0,"3":"'.$code['EXTS'].'","4":"'. $code['COMPRESSPULSE'] . '","10":300}';
+			if ($code['CPULSE_ALT_FLAG']) {
+				$dps='{"1":"study_key","13":3,"3":"","7":"'. $code['CPULSE_ALT'] . '","10":300}';
+			} else {	
+				$dps='{"1":"send_ir","13":0,"3":"'.$code['EXTS'].'","4":"'. $code['COMPRESSPULSE'] . '","10":300}';
+			}
 			
 			if ($gw_info['DEV_IP'] !='' and $gw_info['LOCAL_KEY'] !='') {
 				$tuya_module->TuyaLocalMsg('SET', $gw_info['DEV_ID'], $gw_info['LOCAL_KEY'], $gw_info['DEV_IP'], $dps);

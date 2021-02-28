@@ -6,6 +6,15 @@
          margin: 20px;
          padding: 20px;
    }
+   
+   .ir_command {
+         margin: 10px;
+         text-valign: center;
+   }
+   
+   .ir_command_text {
+      vertical-align: middle;
+   }      
 </style>
 
 <div style="margin-top: 10px;"></div>
@@ -15,8 +24,13 @@
    <div class="row">
       <div class="col-md-2 ir_device">[#TITLE#]</div>
    </div>
-   <div class="row">
-      <div class="col-md-6 ">Команда на выполнение: TuyaIR('[#DEV_ID#]', 'Название клавиши');</div>
+   <div class="row ir_command">
+      <div class="col-md-5 ir_command_text">Команда на выполнение: TuyaIR('[#DEV_ID#]', 'Название клавиши');</div>
+      <div class="col=md-2 ir_command_text">
+         <a href="?id=[#ID#]&view_mode=delete_tudevices" onClick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default" title="Удалить">
+         <i class="glyphicon glyphicon-remove"></i></a>
+      </div>   
+
    </div>
    <div class="row">
       <div class="col-md-12">
