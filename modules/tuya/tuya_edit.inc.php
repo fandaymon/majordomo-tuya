@@ -151,6 +151,13 @@
             $properties[$i]['DIVIDEDBY100']=${'dividedby100'.$properties[$i]['ID']};
             global ${'value_scale'.$properties[$i]['ID']};
             $properties[$i]['VALUE_SCALE']=${'value_scale'.$properties[$i]['ID']};
+            global ${'replace_list'.$properties[$i]['ID']};
+            $properties[$i]['REPLACE_LIST']=${'replace_list'.$properties[$i]['ID']};
+            
+            if (strlen($properties[$i]['VALUE_SCALE']) == 0) $properties[$i]['VALUE_SCALE'] = 0;
+            if (strlen($properties[$i]['DIVIDEDBY10']) == 0) $properties[$i]['DIVIDEDBY10'] = 0;
+            if (strlen($properties[$i]['DIVIDEDBY2']) == 0) $properties[$i]['DIVIDEDBY2'] = 0;
+            
 
             SQLUpdate('tucommands', $properties[$i]);
             if ($old_linked_object && $old_linked_object!=$properties[$i]['LINKED_OBJECT'] && $old_linked_property && $old_linked_property!=$properties[$i]['LINKED_PROPERTY']) {

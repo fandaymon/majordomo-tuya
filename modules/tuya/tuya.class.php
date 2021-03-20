@@ -377,6 +377,8 @@ class tuya extends module
       
       echo '<H4>В локальной сети найдены следующие устройства:</H2>';
       echo '<table>';
+      
+      $start_time = time();
 
       for ($i = 1; $i <= 20; $i++) {
 
@@ -407,7 +409,8 @@ class tuya extends module
             echo '<td>'.$result['gwId'].'</td>';
             echo '<td> ('.$result['version'].') </td>';
             echo '<td>'.$result['ip'].'</td>';
-            echo '</tr>';   
+            echo '</tr>';  
+            if ((time() - $start_time) >10) break; 
          }
       }
       echo '</table>';
@@ -721,6 +724,10 @@ class tuya extends module
          $rec['DEV_ICON']= $device->icon;
          $rec['DEV_ID']= $device->id;
          $rec['TYPE']=$device->dev_type;
+         $rec['SEND12'] = 0;
+         $rec['VER_3_1'] = 0;   
+         $rec['VER_3_1'] = 0;   
+         $rec['IR_FLAG'] = 0;
 
          $rec['ID']=SQLInsert('tudevices',$rec);
       }
@@ -995,6 +1002,8 @@ class tuya extends module
                $rec['GID_ID']=$gid;
                $rec['MESH_ID']=$device['meshId'];
                $rec['MAC'] = $device['mac'];
+               $rec['SEND12'] = 0;
+               $rec['VER_3_1'] = 0;   
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
@@ -1105,7 +1114,9 @@ class tuya extends module
                $rec['PRODUCT_ID']=$device['productId'];
                $rec['GID_ID']=$gid;
                $rec['MESH_ID']=$device['meshId']; 
-               $rec['MAC'] = $device['mac'];              
+               $rec['MAC'] = $device['mac']; 
+               $rec['SEND12'] = 0;
+               $rec['VER_3_1'] = 0;             
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
@@ -1421,6 +1432,18 @@ class tuya extends module
       if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_PROPERTY']) {
          if  ($cmd_rec['COLOR_CONVERT']==1) {   
             $value = substr($value,0,6);
+         }
+         
+         if ($cmd_rec['REPLACE_LIST'] != '') {
+            $list = explode(',', $cmd_rec['REPLACE_LIST']);
+            foreach ($list as $pair) {
+                $pair = trim($pair);
+                list($new, $old) = explode('=', $pair);
+                if ($value == $new) {
+                    $value = $old;
+                    break;
+                }
+            }
          }  
          setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, array($this->name => '0'));
       }
@@ -1443,6 +1466,18 @@ class tuya extends module
     $total = count($properties);
    
     if ($total) {
+       
+      if ($properties[0]['REPLACE_LIST'] != '') {
+         $list = explode(',', $properties[0]['REPLACE_LIST']);
+         foreach ($list as $pair) {
+             $pair = trim($pair);
+             list($new, $old) = explode('=', $pair);
+             if ($value == $old) {
+                 $value = $new;
+                 break;
+             }
+         }
+     }  
      $dps_name = $properties[0]['TITLE'];
      
      if ($properties[0]['COLOR_CONVERT']) {
@@ -1599,6 +1634,7 @@ class tuya extends module
  tucommands: VALUE_SCALE int(10) DEFAULT 0
  tucommands: VALUE_UNIT varchar(10) DEFAULT ''
  tucommands: COLOR_CONVERT boolean DEFAULT 0
+ tucommands: REPLACE_LIST varchar(255) DEFAULT ''
  tucommands: UPDATED datetime
 
  turange: ID int(10) unsigned NOT NULL auto_increment
