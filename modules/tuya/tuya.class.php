@@ -180,14 +180,23 @@ class tuya extends module
          global $tuya_local_interval;
          $this->config['TUYA_LOCAL_INTERVAL'] = $tuya_local_interval;
 
+         global $tuya_sid;
+         $this->config['TUYA_SID'] = $tuya_sid;
+
          global $tuya_bztype;
+         if (!isset($tuya_bztype) or empty($tuya_bztype)) {
+            $tuya_bztype = 'tuya';
+         } elseif ($tuya_bztype != 'tuya' and $tuya_bztype != 'smart_life') {
+            $tuya_bztype = 'tuya';
+         } 
+         if ($tuya_bztype != $this->config['TUYA_BZTYPE']) {
+            $this->config['TUYA_SID'] = '';
+         }    
          $this->config['TUYA_BZTYPE'] = $tuya_bztype;
 
          global $tuya_ccode;
          $this->config['TUYA_CCODE'] = $tuya_ccode;
 
-         global $tuya_sid;
-         $this->config['TUYA_SID'] = $tuya_sid;
          
          global $tuya_web;
          $this->config['TUYA_WEB'] = $tuya_web;
