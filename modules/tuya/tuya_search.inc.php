@@ -133,7 +133,7 @@ if ($tab == 'scene') {
    if ($qry != '') {
       $qry .= " AND "; 
    } 
-   $qry .= "INSTR(DEV_ID,'_')=0 AND TYPE !='scene' AND IR_FLAG=0";
+   $qry .= "INSTR(DEV_ID,'_')=0 AND TYPE !='scene' AND (IR_FLAG=0 OR IR_FLAG IS NULL)";
 
    $res = SQLSelect("SELECT * FROM tudevices WHERE $qry ORDER BY $sortby_tudevices");
    $last_i = 0;
