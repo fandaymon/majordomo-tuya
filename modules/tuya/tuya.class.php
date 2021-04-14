@@ -659,7 +659,7 @@ class tuya extends module
    $data=$this->Tuya_send_receive(hex2bin($buffer),$local_ip);
    $result = substr($data,20,-8);
    
-   if (substr($result,0,1) == '{' ) {
+   if (mb_substr($result,0,1) == '{' ) {
     return $result;
    } else if ($ver_3_1) {
       $result = openssl_decrypt(base64_decode($result), 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
