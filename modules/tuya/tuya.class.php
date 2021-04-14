@@ -1530,11 +1530,9 @@ class tuya extends module
 
    function propertySetHandle($object, $property, $value) {
 
-    $properties = SQLSelect("SELECT tucommands.*, tudevices.DEV_ID,tudevices.REMOTE_CONTROL,tudevices.REMOTE_CONTROL_2,tudevices.ONLY_LOCAL,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID,tudevices.MAC FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+    $properties = SQLSelect("SELECT tucommands.*, tudevices.VER_3_1, tudevices.DEV_ID,tudevices.REMOTE_CONTROL,tudevices.REMOTE_CONTROL_2,tudevices.ONLY_LOCAL,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID,tudevices.MAC FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
 
-    $total = count($properties);
-   
-    if ($total) {
+    if ($properties) {
        
       if ($properties[0]['REPLACE_LIST'] != '') {
          $list = explode(',', $properties[0]['REPLACE_LIST']);
@@ -1609,7 +1607,7 @@ class tuya extends module
       
       if (strlen($properties[0]['MESH_ID'])==0) {
          //debmes('Tuya: dps=' .$dps);
-         $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps,'', $device['VER_3_1']);
+         $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps,'', $properties[0]['VER_3_1']);
       } else {
          $gw=SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" .$properties[0]['MESH_ID']."'");
          $this->TuyaLocalMsg('SET',$dev_id,$gw['LOCAL_KEY'],$gw['DEV_IP'],$dps,$properties[0]['MAC']);
