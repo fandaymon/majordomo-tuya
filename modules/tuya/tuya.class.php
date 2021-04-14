@@ -569,10 +569,12 @@ class tuya extends module
   function TuyaLocalEncrypt($command, $json, $local_key,$ver_3_1=false) {
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
-   if ($ver_3_1 == false) {
+   if ($ver_3_1) {
+      $json_payload=$json;
+   } else {   
       $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
    }
-   if ($command != "0a" and $command != "12") {
+   if ($command != "0a" and $command != "12" and $ver_3_1 == false) {
     $json_payload = hex2bin("332E33000000000000000000000000" . bin2hex($json_payload));
    }
 
@@ -581,10 +583,10 @@ class tuya extends module
    $postfix_payload_hex_len = dechex(strlen($postfix_payload));
 
    if (strlen($postfix_payload_hex_len)>2) {
-    $buffer = hex2bin($prefix . $hexByte . '00000' . $postfix_payload_hex_len ) . $postfix_payload;
+    $buffer = hex2bin($prefix . $command . '00000' . $postfix_payload_hex_len ) . $postfix_payload;
 
    } else { 
-    $buffer = hex2bin($prefix . $hexByte . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
+    $buffer = hex2bin($prefix . $command . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
    }
 
    $buffer=bin2hex($buffer);
@@ -623,13 +625,15 @@ class tuya extends module
 
    if ($ver_3_1) {
       if ($command != 'STATUS') {
-       $json_payload=base64_encode(openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA));
+       $json_payload = base64_encode(openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA));
        
        $preMd5String = 'data=' . $json_payload . '||lpv=' .   hex2bin("332E31") . '||' . $local_key;
 
        $hexdigest = md5($preMd5String );
        $json_payload = hex2bin("332E31") . substr($hexdigest,8,16) . $json_payload;
-      }
+      } else {
+       $json_payload = $json;
+      }   
    } else {   
     $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
     if ($command != 'STATUS') {

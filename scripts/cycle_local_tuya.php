@@ -97,9 +97,9 @@ while (1) {
 				} else {
 					$json = '{"cid":"'.$device['MAC'].'"}';
 				}        
-
+                
 				$payload =$tuya_module->TuyaLocalEncrypt($hexByte, $json, $local_key,$device['VER_3_1']);
-
+                
 				$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 				socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
 				//socket_set_option($socket, SOL_SOCKET, TCP_NODELAY, 1);
@@ -132,6 +132,7 @@ while (1) {
 	 
 				
 				$result = substr($buf,20,-8);
+                debmes(bin2hex($result));
                 if ($device['VER_3_1'] == false) { 
                     $result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
                 }    
