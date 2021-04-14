@@ -50,7 +50,7 @@ $dps_null = array();
 while (1) {
     if ((time() - $latest_disc) >= 5 * 60) {
         $latest_disc = time();
-        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE', SEND12, FLAGS12 FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and ONLY_LOCAL=1 ORDER BY DEV_ID");
+        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE', SEND12, FLAGS12, VER_3_1 FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and ONLY_LOCAL=1 ORDER BY DEV_ID");
         $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.ONLY_LOCAL=1");
         $devices = array_merge($devices ,$gw_devices); 
         if ($cycle_debug) {
@@ -98,7 +98,7 @@ while (1) {
 					$json = '{"cid":"'.$device['MAC'].'"}';
 				}        
 
-				$payload =$tuya_module->TuyaLocalEncrypt($hexByte, $json, $local_key);
+				$payload =$tuya_module->TuyaLocalEncrypt($hexByte, $json, $local_key,$device['VER_3_1']);
 
 				$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 				socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
@@ -132,7 +132,9 @@ while (1) {
 	 
 				
 				$result = substr($buf,20,-8);
-				$result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+                if ($device['VER_3_1'] == false) { 
+                    $result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+                }    
 				//echo $result .  PHP_EOL;
 	   
 				$status=json_decode($result);

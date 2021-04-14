@@ -383,6 +383,10 @@ class tuya extends module
 
       $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
       socket_bind($socket, "0.0.0.0", 6667);
+
+      $socket1 = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+      socket_bind($socket, "0.0.0.0", 6666);
+
       
       echo '<H4>В локальной сети найдены следующие устройства:</H2>';
       echo '<table>';
@@ -419,11 +423,41 @@ class tuya extends module
             echo '<td> ('.$result['version'].') </td>';
             echo '<td>'.$result['ip'].'</td>';
             echo '</tr>';  
-            if ((time() - $start_time) >10) break; 
          }
+         socket_recvfrom($socket1, $buf, 2048, MSG_DONTWAIT, $from, $port);
+
+         $data = substr($buf,20,-8);
+         $result = json_decode($result, true);
+
+         if (in_array($result['gwId'], $devices) == false) {
+            echo '<tr>';
+            array_push($devices, $result['gwId']);
+            
+            if ($result['version'] == '3.3') {
+               $version = false;
+            } else {
+               $version = true;
+            }   
+            $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
+            if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
+               $rec['DEV_IP'] = $result['ip'];
+               $rec['VER_3_1'] = $version;
+               SQLUpdate('tudevices', $rec);
+             }
+            echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
+            echo '<td>'.$result['gwId'].'</td>';
+            echo '<td> ('.$result['version'].') </td>';
+            echo '<td>'.$result['ip'].'</td>';
+            echo '</tr>';  
+         }
+         
+         if ((time() - $start_time) >10) break; 
+         
       }
       echo '</table>';
       socket_close($socket);
+      socket_close($socket1);
+
    }
    
    function getScenes() {
@@ -452,6 +486,7 @@ class tuya extends module
                      SQLUpdate('tudevices', $rec);
                   }   
                } else {
+                  $rec = array();
                   $rec['DEV_ID'] = $scene['id'];
                   $rec['TITLE'] = $scene['name'];
                   $rec['TYPE'] = 'scene';
@@ -531,12 +566,12 @@ class tuya extends module
      return $this->config['TUYA_ACCESS_TOKEN'];
    }
 
-  function TuyaLocalEncrypt($command, $json, $local_key) {
+  function TuyaLocalEncrypt($command, $json, $local_key,$ver_3_1=false) {
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
-   
-   $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
-
+   if ($ver_3_1 == false) {
+      $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+   }
    if ($command != "0a" and $command != "12") {
     $json_payload = hex2bin("332E33000000000000000000000000" . bin2hex($json_payload));
    }
@@ -545,7 +580,13 @@ class tuya extends module
    $postfix_payload = hex2bin(bin2hex($json_payload) . $suffix);
    $postfix_payload_hex_len = dechex(strlen($postfix_payload));
 
-   $buffer = hex2bin($prefix . $command . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
+   if (strlen($postfix_payload_hex_len)>2) {
+    $buffer = hex2bin($prefix . $hexByte . '00000' . $postfix_payload_hex_len ) . $postfix_payload;
+
+   } else { 
+    $buffer = hex2bin($prefix . $hexByte . '000000' . $postfix_payload_hex_len ) . $postfix_payload;
+   }
+
    $buffer=bin2hex($buffer);
    $buffer1=strtoupper(substr($buffer,0,-16));
 
@@ -574,12 +615,24 @@ class tuya extends module
     }     
    }
 
-  
-    $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+   if ($ver_3_1) {
+      if ($command != 'STATUS') {
+       $json_payload=base64_encode(openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA));
+       
+       $preMd5String = 'data=' . $json_payload . '||lpv=' .   hex2bin("332E31") . '||' . $local_key;
 
-   if ($command != 'STATUS') {
-    $json_payload = hex2bin("332E33000000000000000000000000" . bin2hex($json_payload));
+       $hexdigest = md5($preMd5String );
+       $json_payload = hex2bin("332E31") . substr($hexdigest,8,16) . $json_payload;
+      }
+   } else {   
+    $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+    if ($command != 'STATUS') {
+     $json_payload = hex2bin("332E33000000000000000000000000" . bin2hex($json_payload));
+    }
+
    }
+   
+   
 
    $postfix_payload = hex2bin(bin2hex($json_payload) . $suffix);
    $postfix_payload_hex_len = dechex(strlen($postfix_payload));
@@ -599,7 +652,14 @@ class tuya extends module
    $buffer=substr($buffer,0,-16) .($hex_crc).substr($buffer,-8);
    $data=$this->Tuya_send_receive(hex2bin($buffer),$local_ip);
    $result = substr($data,20,-8);
-   $result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+   
+   if (substr($result,0,1) == '{' ) {
+    return $result;
+   } else if ($ver_3_1) {
+      $result = openssl_decrypt(base64_decode($result), 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+   } else {       
+      $result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+   } 
    return $result;
   }
 
@@ -610,7 +670,7 @@ class tuya extends module
     if ($mdev>0 and substr($device['DEV_ID'],$mdev+1)==1) {
        $dev_id=substr($device['DEV_ID'],0,$mdev);
        $status='';
-       $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP']);
+       $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP'],'','',$device['VER_3_1']);
        
        if ($status!='') { 
        // debmes('Status: '.$status.' '.$device['DEV_IP']);
@@ -641,7 +701,7 @@ class tuya extends module
 
   
     } else {
-     $status=$this->TuyaLocalMsg('STATUS',$device['DEV_ID'],$device['LOCAL_KEY'],$device['DEV_IP']);
+     $status=$this->TuyaLocalMsg('STATUS',$device['DEV_ID'],$device['LOCAL_KEY'],$device['DEV_IP'],'','',$device['VER_3_1']);
      if ($status!='') { 
       //debmes('Status: '.$status.' '.$device['DEV_IP']);
       $status=json_decode($status);
@@ -1549,7 +1609,7 @@ class tuya extends module
       
       if (strlen($properties[0]['MESH_ID'])==0) {
          //debmes('Tuya: dps=' .$dps);
-         $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps);
+         $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps,'', $device['VER_3_1']);
       } else {
          $gw=SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" .$properties[0]['MESH_ID']."'");
          $this->TuyaLocalMsg('SET',$dev_id,$gw['LOCAL_KEY'],$gw['DEV_IP'],$dps,$properties[0]['MAC']);
