@@ -597,19 +597,25 @@ class tuya extends module
   }
   
        
-  function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='',$cid='',$ver_3_1=False) {
+  function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='',$cid='',$ver_3_1=false) {
 
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
+   
+   if ($ver_3_1) {
+      $gw_name='uid';
+   } else {
+      $gw_name='gwId';
+   }      
    if ($command=='STATUS') {
     $hexByte="0a";
-    $json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'"}';
+    $json='{"'.$gw_name.'":"'.$dev_id.'","devId":"'.$dev_id.'"}';
 
    } else {
     $hexByte="07";
     if ($cid=='') {
       $dps=$data;
-      $json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'", "t": "'.time().'", "dps": ' . $dps . '}';
+      $json='{"'.$gw_name.'":"'.$dev_id.'","devId":"'.$dev_id.'", "t": "'.time().'", "dps": ' . $dps . '}';
     } else {
       $json='{"dps":'.$data.',"cid":"'.$cid.'","t":'.time().'}';
     }     
@@ -737,7 +743,7 @@ class tuya extends module
      if ($send!=strlen($payload)) {
        //debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip);
      }
-     $reciv=socket_recv ( $socket , $buf , 1024 ,0);
+     $reciv=socket_recv ( $socket , $buf , 2048 ,0);
      //debmes( date('y-m-d h:i:s') . ' recived '.strlen($buf));
      if ($buf!='') break;
      sleep(1);
