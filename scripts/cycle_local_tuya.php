@@ -132,7 +132,7 @@ while (1) {
 	 
 				
 				$result = substr($buf,20,-8);
-                debmes(bin2hex($result));
+
                 if ($device['VER_3_1'] == false) { 
                     $result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
                 }    
