@@ -385,7 +385,7 @@ class tuya extends module
       socket_bind($socket, "0.0.0.0", 6667);
 
       $socket1 = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-      socket_bind($socket, "0.0.0.0", 6666);
+      socket_bind($socket1, "0.0.0.0", 6666);
 
       
       echo '<H4>В локальной сети найдены следующие устройства:</H2>';
@@ -977,6 +977,7 @@ class tuya extends module
          debmes('Не смог получить СИД. Ошибка:' . $result['errorCode']);
       } else {  
          $this->config['TUYA_SID']=$result['result']['sid'];
+         $this->config['TUYA_PUBKEY']=$n;
          $this->config['TUYA_WEB_ENDPOINT']=$result['result'] ['domain']['mobileApiUrl'] . '/api.json';
          $this->saveConfig();
       }
