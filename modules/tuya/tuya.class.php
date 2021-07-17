@@ -424,32 +424,34 @@ class tuya extends module
             echo '<td>'.$result['ip'].'</td>';
             echo '</tr>';  
          }
-         socket_recvfrom($socket1, $buf, 2048, MSG_DONTWAIT, $from, $port);
+         if (socket_recvfrom($socket1, $buf, 2048, MSG_DONTWAIT, $from, $port)) {
 
-         $data = substr($buf,20,-8);
-         $result = json_decode($result, true);
+            $data = substr($buf,20,-8);
+            $result = json_decode($data, true);
 
-         if (in_array($result['gwId'], $devices) == false) {
-            echo '<tr>';
-            array_push($devices, $result['gwId']);
+            if (in_array($result['gwId'], $devices) == false) {
+               echo '<tr>';
+               array_push($devices, $result['gwId']);
+               
+               if ($result['version'] == '3.3') {
+                  $version = false;
+               } else {
+                  $version = true;
+               }   
+               $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
+               if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
+                  $rec['DEV_IP'] = $result['ip'];
+                  $rec['VER_3_1'] = $version;
+                  SQLUpdate('tudevices', $rec);
+                }
+               echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
+               echo '<td>'.$result['gwId'].'</td>';
+               echo '<td> ('.$result['version'].') </td>';
+               echo '<td>'.$result['ip'].'</td>';
+               echo '</tr>';  
+            }
             
-            if ($result['version'] == '3.3') {
-               $version = false;
-            } else {
-               $version = true;
-            }   
-            $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
-            if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
-               $rec['DEV_IP'] = $result['ip'];
-               $rec['VER_3_1'] = $version;
-               SQLUpdate('tudevices', $rec);
-             }
-            echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
-            echo '<td>'.$result['gwId'].'</td>';
-            echo '<td> ('.$result['version'].') </td>';
-            echo '<td>'.$result['ip'].'</td>';
-            echo '</tr>';  
-         }
+         }   
          
          if ((time() - $start_time) >10) break; 
          
