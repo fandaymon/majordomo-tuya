@@ -124,21 +124,49 @@ function TuyaIR($dev_id, $command) {
 		
 		if ($gw_info) {
 			$code = SQLSelectOne("SELECT * FROM tuircommand WHERE DEVICE_ID=" . $dev_info['ID'] . " AND TITLE='" . $command ."';");
-			if ($code['CPULSE_ALT_FLAG']) {
-				$dps='{"1":"study_key","13":3,"3":"","7":"'. $code['CPULSE_ALT'] . '","10":300}';
-			} else {	
-				$dps='{"1":"send_ir","13":0,"3":"'.$code['EXTS'].'","4":"'. $code['COMPRESSPULSE'] . '","10":300}';
-			}
+			$dps_201 = SQLSelectOne("SELECT * FROM tucommands WHERE TITLE='201' AND DEVICE_ID='".$gw_info['ID']."';");
 			
 			if ($gw_info['DEV_IP'] !='' and $gw_info['LOCAL_KEY'] !='') {
-				$tuya_module->TuyaLocalMsg('SET', $gw_info['DEV_ID'], $gw_info['LOCAL_KEY'], $gw_info['DEV_IP'], $dps);
+				if ($code['CPULSE_ALT_FLAG']) {
+					if ($dps_201) {
+						$dps = '{"201":"{\"control\":\"send_ir\",\"head\":\"\",\"key1\":\"1'. $code['CPULSE_ALT'] . '\",\"type\":0,\"delay\":300}"}';
+					} else {	
+						$dps='{"1":"study_key","13":3,"3":"","7":"'. $code['CPULSE_ALT'] . '","10":300}';
+					}	
+				} else {
+					if ($dps_201) {
+						$dps = '{"201":"{\"control\":\"send_ir\",\"head\":\"'.$code['EXTS'].'\",\"key1\":\"0'. $code['COMPRESSPULSE'] . '\",\"type\":0,\"delay\":300}"}';
+					} else {
+						$dps='{"1":"send_ir","13":0,"3":"'.$code['EXTS'].'","4":"'. $code['COMPRESSPULSE'] . '","10":300}';
+					}	
+				}
+
+				$result = $tuya_module->TuyaLocalMsg('SET', $gw_info['DEV_ID'], $gw_info['LOCAL_KEY'], $gw_info['DEV_IP'], $dps);
 			} else {
+				if ($code['CPULSE_ALT_FLAG']) {
+					if ($dps_201) {
+						$dps = '{"201":\'{"control":"send_ir","head":"","key1":"1'. $code['CPULSE_ALT'] . '","type":0,"delay":300}\'}';
+					} else {	
+						$dps='{"1":"study_key","13":3,"3":"","7":"'. $code['CPULSE_ALT'] . '","10":300}';
+					}	
+				} else {
+					if ($dps_201) {
+						$dps = '{"201":\'{"control":"send_ir","head":"'.$code['EXTS'].'","key1":"0'. $code['COMPRESSPULSE'] . '","type":0,"delay":300}\'}';
+					} else {
+						$dps='{"1":"send_ir","13":0,"3":"'.$code['EXTS'].'","4":"'. $code['COMPRESSPULSE'] . '","10":300}';
+					}	
+				}
+
+
 				$apiResult = $tuya_module->TuyaWebRequest(['action'=> 'tuya.m.device.dp.publish',
 															'gid'=>$gw_info['GID_ID'],
 															'data'=> ['devId'=> $gw_info['DEV_ID'],
 																	'gwId'=> $gw_info['DEV_ID'],
 																	'dps'=> $dps ],
-															'requiresSID'=> 1]);			}	
+															'requiresSID'=> 1]);
+				DebMes('Api Result:'.$apiResult);	
+			}	
+														
 					
 		}	
 	}	
