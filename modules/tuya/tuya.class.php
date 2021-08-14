@@ -383,9 +383,13 @@ class tuya extends module
 
       $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
       socket_bind($socket, "0.0.0.0", 6667);
+      socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 2, "usec" => 0));
+
 
       $socket1 = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
       socket_bind($socket1, "0.0.0.0", 6666);
+      socket_set_option($socket1, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
+
 
       
       echo '<H4>В локальной сети найдены следующие устройства:</H2>';
@@ -424,7 +428,7 @@ class tuya extends module
             echo '<td>'.$result['ip'].'</td>';
             echo '</tr>';  
          }
-         if (socket_recvfrom($socket1, $buf, 2048, MSG_DONTWAIT, $from, $port)) {
+         if (socket_recvfrom($socket1, $buf, 2048, 0, $from, $port)) {
 
             $data = substr($buf,20,-8);
             $result = json_decode($data, true);
@@ -973,7 +977,7 @@ class tuya extends module
                                                  'ifencrypt'=> 1,
                                                  'options'=> ['group'=> 1],
                                                  'token'=> $token],
-                                          'requiresSID'=> 0]);
+                                          'requiresSID'=> 0],'2.0');
      $result=json_decode($apiResult , true); 
      if (!$result['success']) {
          debmes('Не смог получить СИД. Ошибка:' . $result['errorCode']);
