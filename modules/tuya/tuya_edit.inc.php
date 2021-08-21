@@ -36,14 +36,11 @@
          global $dev_ip;
          $rec['DEV_IP'] = $dev_ip;
          
-         global $remote_control;
-         $rec['REMOTE_CONTROL'] = $remote_control;
+         global $control;
+         $rec['CONTROL'] = $control;
          
-         global $remote_control_2;
-         $rec['REMOTE_CONTROL_2'] = $remote_control_2;
-
-         global $only_local;
-         $rec['ONLY_LOCAL'] = $only_local;
+         global $status;
+         $rec['STATUS'] = $status;
 
          global $type;
          $rec['TYPE'] = $type;

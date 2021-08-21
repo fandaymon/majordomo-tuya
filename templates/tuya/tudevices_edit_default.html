@@ -58,27 +58,21 @@
    </div>
 
    <div class="form-group ">
-    <label class="col-lg-4 control-label">Управлять через облако: </label>
+    <label class="col-lg-4 control-label">Управлять: </label>
     <div class="col-lg-4">
-     <input type="radio" name="remote_control" value="1"[#if REMOTE_CONTROL!="0"#] checked[#endif#]> <#LANG_YES#>
-     <input type="radio" name="remote_control" value="0"[#if (REMOTE_CONTROL=="0") || (REMOTE_CONTROL=="")#] checked[#endif#]> <#LANG_NO#>
+     <input type="radio" name="control" value="0"[#if CONTROL=="0"#] checked[#endif#]> Через облако
+     <input type="radio" name="control" value="1"[#if CONTROL=="1"#] checked[#endif#]> Локально
+     <input type="radio" name="control" value="2"[#if CONTROL=="2"#] checked[#endif#]> Через MQTT
     </div>
    </div>
    
    <div class="form-group ">
-    <label class="col-lg-4 control-label">Статус только локально: </label>
+    <label class="col-lg-4 control-label">Статус: </label>
     <div class="col-lg-4">
-     <input type="radio" name="only_local" value="1"[#if ONLY_LOCAL!="0"#] checked[#endif#]> <#LANG_YES#>
-     <input type="radio" name="only_local" value="0"[#if (ONLY_LOCAL=="0") || (ONLY_LOCAL=="")#] checked[#endif#]> <#LANG_NO#>
-    </div>
-   </div>
+     <input type="radio" name="status" value="0"[#if STATUS=="0"#] checked[#endif#]> Через облако
+     <input type="radio" name="status" value="1"[#if STATUS=="1"#] checked[#endif#]> Локально
+     <input type="radio" name="status" value="2"[#if STATUS=="2"#] checked[#endif#]> Через MQTT
 
-   <div class="form-group ">
-    <label class="col-lg-4 control-label">Управлять через оригинальное облако: </label>
-    <div class="col-lg-4">
-     <input type="radio" name="remote_control_2" value="1"[#if REMOTE_CONTROL_2!="0"#] checked[#endif#]> <#LANG_YES#>
-     <input type="radio" name="remote_control_2" value="0"[#if (REMOTE_CONTROL_2=="0") || (REMOTE_CONTROL_2=="")#] checked[#endif#]> <#LANG_NO#>
-     </span>
     </div>
    </div>
 

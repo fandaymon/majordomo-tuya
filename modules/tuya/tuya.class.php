@@ -148,6 +148,13 @@ class tuya extends module
          $out['LOCAL_CYCLERUN'] = 0;
       }
 
+      if ((time() - (int)gg('cycle_tuya_iotRun')) < 10 * 2) {
+         $out['IOT_CYCLERUN'] = 1;
+      } else {
+         $out['IOT_CYCLERUN'] = 0;
+      }
+
+
       $out['TUYA_USERNAME'] = $this->config['TUYA_USERNAME'];
       $out['TUYA_PASSWD'] = $this->config['TUYA_PASSWD'];
       $out['TUYA_INTERVAL'] = $this->config['TUYA_INTERVAL'];
@@ -160,8 +167,9 @@ class tuya extends module
       $out['TUYA_WEB_ENDPOINT'] = $this->config['TUYA_WEB_ENDPOINT'];
       $out['TUYA_CYCLE_DEBUG'] = $this->config['TUYA_CYCLE_DEBUG'];
       $out['TUYA_HA'] = $this->config['TUYA_HA'];
-
-      
+      $out['TUYA_IOT'] = $this->config['TUYA_IOT'];
+      $out['TUYA_CLIENT_ID'] = $this->config['TUYA_CLIENT_ID'];
+      $out['TUYA_CLIENT_SECRET'] = $this->config['TUYA_CLIENT_SECRET'];
 
       if ($this->view_mode=='update_settings') {
 
@@ -206,6 +214,14 @@ class tuya extends module
 
          global $tuya_web_endpoint;
          $this->config['TUYA_WEB_ENDPOINT'] = $tuya_web_endpoint;
+
+         global $tuya_iot;
+         $this->config['TUYA_IOT'] = $tuya_iot;
+         global $tuya_client_id;
+         $this->config['TUYA_CLIENT_ID'] = $tuya_client_id;
+         global $tuya_client_secret;
+         $this->config['TUYA_CLIENT_SECRET'] = $tuya_client_secret;
+
          
          global $tuya_cycle_debug;
          $this->config['TUYA_CYCLE_DEBUG'] = $tuya_cycle_debug;
@@ -239,6 +255,7 @@ class tuya extends module
 
          setGlobal('cycle_tuyaControl', 'restart');
          setGlobal('cycle_local_tuyaControl', 'restart');
+         setGlobal('cycle_tuya_iotControl', 'restart');
 
 
          $this->redirect('?');
@@ -982,9 +999,11 @@ class tuya extends module
      if (!$result['success']) {
          debmes('Не смог получить СИД. Ошибка:' . $result['errorCode']);
       } else {  
-         $this->config['TUYA_SID']=$result['result']['sid'];
+         $this->config['TUYA_SID'] = $result['result']['sid'];
+         $this->config['TUYA_UID'] = $result['result']['uid'];
+         $this->config['TUYA_ECODE'] = $result['result']['ecode'];
          $this->config['TUYA_PUBKEY']=$n;
-         $this->config['TUYA_WEB_ENDPOINT']=$result['result'] ['domain']['mobileApiUrl'] . '/api.json';
+         $this->config['TUYA_WEB_ENDPOINT'] = $result['result'] ['domain']['mobileApiUrl'] . '/api.json';
          $this->saveConfig();
       }
      return $result;
@@ -1141,7 +1160,7 @@ class tuya extends module
                }
             }           
 			
-            if ($rec['ONLY_LOCAL']==0) {
+            if ($rec['STATUS']==0) {
                foreach($device['dps'] as $key => $value) {
 
                   if (is_bool($value)) {
@@ -1449,8 +1468,140 @@ class tuya extends module
 
       return $Tuya_Color;
    }
+   
+   function Tuya_IOT_Login() {
+      $this->getConfig();
+      $client_id = $this->config['TUYA_CLIENT_ID'];
+      $secret = $this->config['TUYA_CLIENT_SECRET'];
+      $base = 'https://openapi.tuyaeu.com';
 
-   function processCommand($device_id, $command, $value, $params = 0) {
+      $t = round(microtime(true)*1000,0);
+      $sign = $client_id . $t;
+      $sign = hash_hmac('sha256',$sign,$secret);
+      $sign = strtoupper($sign);
+
+      $pairs = ['client_id: ' . $client_id,
+                 'sign: ' . $sign,
+                 'secret: '. $secret,
+                 't: '.  $t,
+                 'sign_method: HMAC-SHA256'];
+      $result='';
+      
+      $endpoint = $base.'/v1.0/token?grant_type=1';
+
+      $aHTTP = array(
+                       'http' => 
+                                  array(
+                                        'method'  => 'GET', 
+                                        'header'  => $pairs
+                                       )
+                    );
+      $context = stream_context_create($aHTTP);
+      $contents = file_get_contents($endpoint, false, $context);
+ 
+      $token=json_decode($contents);
+      $access_token = $token->result->access_token;
+      $this->config['TUYA_ACCESS_TOKEN'] = $access_token;
+      $this->config['TUYA_REFRESH_TOKEN'] = $token->result->refresh_token;
+      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire_time + time();
+      $this->config['TUYA_IOT_UID'] = $token->result->uid;
+
+      $this->saveConfig();
+      return $contents;   
+   }
+   
+   function Tuya_IOT_Refresh() {
+      $this->getConfig();
+      $refresh_token = $this->config['TUYA_REFRESH_TOKEN'];
+      $url = '/v1.0/iot-03/users/token/'.$refresh_token;
+      $token =  $this->Tuya_IOT_POST($url, '', true);
+
+      $this->config['TUYA_ACCESS_TOKEN'] = $token->result->access_token;
+      $this->config['TUYA_REFRESH_TOKEN'] = $token->result->refresh_token;
+      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire_time + time();
+      $this->saveConfig();
+   }   
+   
+   function Tuya_IOT_POST($url, $data, $refresh=0){
+      $url = 'https://openapi.tuyaeu.com'.$url;
+      $this->getConfig();
+      if (!$refresh and time()>($this->config['TUYA_TOKEN_EXPIRE_TIME']-60)) {
+         $result = $this->Tuya_IOT_Refresh();
+         $this->getConfig();
+      }   
+      $client_id = $this->config['TUYA_CLIENT_ID'];
+      $secret = $this->config['TUYA_CLIENT_SECRET'];
+      $access_token = $this->config['TUYA_ACCESS_TOKEN'];
+      $t = round(microtime(true)*1000,0);
+      $sign = $client_id . $access_token . $t;
+      $sign = hash_hmac('sha256',$sign,$secret);
+      $sign = strtoupper($sign);
+
+      $pairs = [ 'client_id: ' . $client_id,
+                 'access_token: '.$access_token,
+                 'sign: ' . $sign,
+                 'secret: '. $secret,
+                 't: '.  $t,
+                 'sign_method: HMAC-SHA256',
+                 'Content-Type: application/x-www-form-urlencoded'
+               ];
+
+
+      $aHTTP = array('http' => array('method'  => 'POST', 
+                                     'header'  => $pairs,
+                                     'content' => $data
+                                    )
+                     );
+
+
+
+      $context = stream_context_create($aHTTP);
+      $contents = file_get_contents($url, false, $context);
+      $result=json_decode($contents);
+      return $result;
+   }
+
+
+
+   function Tuya_IOT_GET($access_token, $url) {
+
+      $this->getConfig();
+      if (time()>($this->config['TUYA_TOKEN_EXPIRE_TIME']-60)) {
+         $result = $this->Tuya_IOT_Refresh();
+         $this->getConfig();
+      }   
+
+      $client_id = $this->config['TUYA_CLIENT_ID'];
+      $secret = $this->config['TUYA_CLIENT_SECRET'];
+
+      $t = round(microtime(true)*1000,0);
+      $sign = $client_id . $access_token.$t;
+      $sign = hash_hmac('sha256',$sign,$secret);
+      $sign = strtoupper($sign);
+
+      $pairs = [ 'client_id: ' . $client_id,
+                 'access_token: '.$access_token,
+                 'sign: ' . $sign,
+                 'secret: '. $secret,
+                 't: '.  $t,
+                 'sign_method: HMAC-SHA256'];
+      $result='';
+      $endpoint = $base.$url;
+
+      $aHTTP = array('http' => array('method'  => 'GET', 
+                                     'header'  => $pairs
+                                    )
+                    );
+      $context = stream_context_create($aHTTP);
+      $contents = file_get_contents($endpoint, false, $context);
+        
+      $token=json_decode($contents);
+      return $token;
+
+   }
+   
+
+   function processCommand($device_id, $command, $value, $params = 0, $checkOld = true) {
 		
       $cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$device_id." AND TITLE LIKE '".DBSafe($command)."'");
          
@@ -1509,8 +1660,9 @@ class tuya extends module
       $cmd_rec['UPDATED'] = date('Y-m-d H:i:s');
       SQLUpdate('tucommands', $cmd_rec);
       if (is_null($old_value)) $old_value='';
-         
-      if ($old_value == $value) return;
+      if (is_null($value)) $value='';
+      
+      if ($checkOld and $old_value == $value) return;
          
       if ($command=='state' or $command=='switch_1' or $command=='power' or $command=='Power' or $command=='switch_on') processSubscriptions('TUSTATUS', array('FIELD' => 'STATE','VALUE' => $value,'ID' =>$device_id));
       if ($command=='online') processSubscriptions('TUSTATUS', array('FIELD' => 'ONLINE','VALUE' => $value,'ID' =>$device_id));
@@ -1547,7 +1699,7 @@ class tuya extends module
 
    function propertySetHandle($object, $property, $value) {
 
-    $properties = SQLSelect("SELECT tucommands.*, tudevices.VER_3_1, tudevices.DEV_ID,tudevices.REMOTE_CONTROL,tudevices.REMOTE_CONTROL_2,tudevices.ONLY_LOCAL,tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID,tudevices.MAC FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+    $properties = SQLSelect("SELECT tucommands.*, tudevices.VER_3_1, tudevices.DEV_ID,tudevices.CONTROL,tudevices.STATUS, tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID,tudevices.MAC FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
 
     if ($properties) {
        
@@ -1585,10 +1737,10 @@ class tuya extends module
       $value = $value * (10** $properties[0]['VALUE_SCALE']);
      }    
 
-     if (((strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0) and (strlen($properties[0]['MAC'])==0 or strlen($properties[0]['MESH_ID'])==0)) or $properties[0]['ONLY_LOCAL']==0) {
+     if (((strlen($properties[0]['LOCAL_KEY'])==0 or strlen($properties[0]['DEV_IP'])==0) and (strlen($properties[0]['MAC'])==0 or strlen($properties[0]['MESH_ID'])==0)) or $properties[0]['CONTROL']==0) {
 
       if ($dps_name=='state') {
-         if ($properties[0]['REMOTE_CONTROL_2']==1) {
+         if ($properties[0]['CONTROL']==0) {
             $this->Tuya_Web_DP($properties[0]['DEV_ID'],$value,'1',$properties[0]['GID_ID'],$properties[0]['MESH_ID']);
          } else {    
             $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'turnOnOff');
@@ -1601,7 +1753,7 @@ class tuya extends module
          $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'colorModeSet');
       } else  if ($dps_name=='temperature') {
          $this->TuyaRemoteMsg($properties[0]['DEV_ID'],$value,'temperatureSet');
-      } else if ($properties[0]['REMOTE_CONTROL_2']==1) {
+      } else if ($properties[0]['CONTROL']==0) {
          $this->Tuya_Web_DP($properties[0]['DEV_ID'],$value,$dps_name,$properties[0]['GID_ID'],$properties[0]['MESH_ID']);
 	   }  
      } else {
@@ -1646,6 +1798,15 @@ class tuya extends module
     */
    function install($data = '')
    {
+      $table='tudevices';
+      $fields = SQLSelect("SHOW FIELDS FROM `$table`;");
+      $fields = array_column($fields, 'Field');
+      if (!in_array('CONTROL', $fields)) {
+         SQLExec("ALTER TABLE tudevices ADD CONTROL int(10) unsigned NOT NULL DEFAULT 0;");
+         SQLExec("ALTER TABLE tudevices ADD STATUS int(10) unsigned NOT NULL DEFAULT 0;");
+         SQLExec("UPDATE tudevices SET CONTROL=1, STATUS=1 WHERE ONLY_LOCAL=1");
+         SQLExec("ALTER TABLE tuircommand MODIFY CPULSE_ALT varchar(800) NOT NULL DEFAULT '';");
+      }   
       setGlobal('cycle_tuyaControl', 'restart');
       setGlobal('cycle_local_tuyaControl', 'restart');
 
@@ -1697,7 +1858,9 @@ class tuya extends module
  tudevices: FLAGS12 varchar(30) DEFAULT ''
  tudevices: VER_3_1 boolean NOT NULL DEFAULT 0
  tudevices: IR_FLAG boolean NOT NULL DEFAULT 0
-
+ tudevices: CONTROL int(10) unsigned NOT NULL DEFAULT 0
+ tudevices: STATUS int(10) unsigned NOT NULL DEFAULT 0
+ 
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment
  tucommands: TITLE varchar(100) NOT NULL DEFAULT ''
@@ -1731,7 +1894,7 @@ class tuya extends module
  tuircommand: TITLE varchar(20) NOT NULL DEFAULT ''
  tuircommand: COMPRESSPULSE varchar(150) NOT NULL DEFAULT ''
  tuircommand: EXTS varchar(150) NOT NULL DEFAULT ''
- tuircommand: CPULSE_ALT varchar(300) NOT NULL DEFAULT ''
+ tuircommand: CPULSE_ALT varchar(800) NOT NULL DEFAULT ''
  tuircommand: CPULSE_ALT_FLAG boolean DEFAULT 0
 
 

@@ -34,7 +34,7 @@
     var obj=jQuery.parseJSON(response.data);
     var objCnt = obj.EVENT_DATA.VALUE.length;
     if (obj.EVENT_DATA.VALUE.FIELD=='STATE') {
-     if (obj.EVENT_DATA.VALUE.VALUE=='0') {
+     if (obj.EVENT_DATA.VALUE.VALUE==0) {
       document.getElementById('tustate'+obj.EVENT_DATA.VALUE.ID).src='../templates/tuya/img/off-button.png';
      } else {
       document.getElementById('tustate'+obj.EVENT_DATA.VALUE.ID).src='../templates/tuya/img/on-button.png';
@@ -43,7 +43,7 @@
      
     } else if (obj.EVENT_DATA.VALUE.FIELD=='ONLINE') {
      var online_control=document.getElementById('tuonline'+obj.EVENT_DATA.VALUE.ID)
-     if (obj.EVENT_DATA.VALUE.VALUE=='1') {
+     if (obj.EVENT_DATA.VALUE.VALUE==1) {
       online_control.className="label label-success";
       online_control.title="Online";
       online_control.innerHTML="Online";

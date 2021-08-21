@@ -50,8 +50,8 @@ $dps_null = array();
 while (1) {
     if ((time() - $latest_disc) >= 5 * 60) {
         $latest_disc = time();
-        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE', SEND12, FLAGS12, VER_3_1 FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and ONLY_LOCAL=1 ORDER BY DEV_ID");
-        $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.ONLY_LOCAL=1");
+        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE', SEND12, FLAGS12, VER_3_1 FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and STATUS=1 ORDER BY DEV_ID");
+        $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.STATUS=1");
         $devices = array_merge($devices ,$gw_devices); 
         if ($cycle_debug) {
             debmes(date('H:i:s') . ' Tuya: added ' .count($devices) . ' devices for local monitoring' );
@@ -82,6 +82,7 @@ while (1) {
             $local_ip = $device['DEV_IP'];
 
             if (ping($local_ip)) {
+                $save_dps[$device['ID']]['attempt'] = 0;
 
                 if (!isset($save_dps[$device['ID']]['online']) or $save_dps[$device['ID']]['online']==0) {
                     if ($cycle_debug) {
@@ -220,8 +221,13 @@ while (1) {
 					 }
 				}
             } else {
-
-                if (!isset($save_dps[$device['ID']]['online']) or $save_dps[$device['ID']]['online']==1) {
+                
+                if (isset($save_dps[$device['ID']]['attempt'])) {
+                    $save_dps[$device['ID']]['attempt'] += 1;
+                } else {    
+                    $save_dps[$device['ID']]['attempt'] = 1;
+                }
+                if ((!isset($save_dps[$device['ID']]['online']) or $save_dps[$device['ID']]['online']==1) AND $save_dps[$device['ID']]['attempt']==5) {
                     if ($cycle_debug) {
                         debmes('Device '.$device['TITLE'].' offline');
                     }

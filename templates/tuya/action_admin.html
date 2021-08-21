@@ -18,6 +18,12 @@
       [#else#]
          <span class="label label-danger" title="Статус локального цикла">Локальный Цикл остановлен</span>
       [#endif#]
+      [#if IOT_CYCLERUN==1#]
+         <span class="label label-success" title="Статус цикла IOT">Цикл IOT запущен</span>
+      [#else#]
+         <span class="label label-danger" title="Статус цикла IOT">Цикл IOT остановлен</span>
+      [#endif#]
+
       <div class="float-right">&nbsp;&nbsp;&nbsp;&nbsp;</div>
       <button class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#about">О модуле&nbsp;&nbsp;<span class="glyphicon glyphicon-info-sign icon-white"></span></button>
    </div>
@@ -137,6 +143,33 @@
                </label>
                <div class="col-lg-4">
                  <input type="checkbox" name="tuya_cycle_debug" id="tuya_cycle_debug" value="1" [#if TUYA_CYCLE_DEBUG=='1'#]checked[#endif TUYA_CYCLE_DEBUG#]> 
+               </div>
+            </div>
+            <div class="form-group">
+               <label class="control-label col-lg-6">
+                  Использовать IOT облако
+                  <span class='support-hover' tabindex="1" data-title="Использовать IOT облако "><i class="glyphicon glyphicon-info-sign"></i></span>
+               </label>
+               <div class="col-lg-4">
+                 <input type="checkbox" name="tuya_iot" id="tuya_iot" value="1" [#if TUYA_IOT=='1'#]checked[#endif TUYA_IOT#]> 
+               </div>
+            </div>
+            <div class="form-group">
+               <label class="control-label col-lg-6">
+                  Client ID
+                  <span class='support-hover' tabindex="1" data-title="Client ID IOT проекта"><i class="glyphicon glyphicon-info-sign"></i></span>
+               </label>
+               <div class="col-lg-4">
+                 <input type="text" name="tuya_client_id" value="<#TUYA_CLIENT_ID#>" class="form-control" placeholder="">
+               </div>
+            </div>
+            <div class="form-group">
+               <label class="control-label col-lg-6">
+                  Client Secret
+                  <span class='support-hover' tabindex="1" data-title="Client Secret IOT проекта"><i class="glyphicon glyphicon-info-sign"></i></span>
+               </label>
+               <div class="col-lg-4">
+                 <input type="text" name="tuya_client_secret" value="<#TUYA_CLIENT_SECRET#>" class="form-control" placeholder="">
                </div>
             </div>
 
