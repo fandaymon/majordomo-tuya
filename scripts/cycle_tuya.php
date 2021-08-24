@@ -88,7 +88,7 @@ while (1) {
     if ((time() - $latest_check_web) >= $tuya_web_interval and $tuya_web ) {
         $latest_check_web = time();
 
-        if ((time() - $latest_discovery) >= 60*60) {
+        if ((time() - $latest_discovery) >= 5*60) {
             $latest_discovery = time();
             $tuya_module->Tuya_Web_Discovery_Devices();
         } else {    

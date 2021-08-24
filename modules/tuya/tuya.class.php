@@ -1091,7 +1091,7 @@ class tuya extends module
             $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device['devId'].'"');
 
             if ($rec==NULL) {
-               if ($device['categoryCode'] == 'inf_qt' or $device['categoryCode'] == 'wf_qt') {
+               if (isset($device['moduleMap']['infrared'])) {
                   $ir_flag = True;
                } else {
                   $ir_flag = False;
@@ -1114,10 +1114,10 @@ class tuya extends module
             } else {
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
-               if (is_null($rec['MAC'])) $rec['MAC'] ='';
+               if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] ='';
                if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
                
-               if ($device['categoryCode'] == 'inf_qt' or $device['categoryCode'] == 'wf_qt') {
+               if (isset($device['moduleMap']['infrared'])) {
                   $ir_flag = True;
                } else {
                   $ir_flag = False;
@@ -1139,7 +1139,7 @@ class tuya extends module
 
             $data='';
             if (substr($device['categoryCode'],0,3)=='wf_') {
-               if ($rec['ONLY_LOCAL']==0) {
+               if ($rec['STATUS']==0) {
                   if ($device['moduleMap']['wifi']['isOnline'] ) {
                      $this->processCommand($rec['ID'], 'online', 1);
                   } else {
@@ -1204,7 +1204,7 @@ class tuya extends module
             $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device['devId'].'"');
 
             if ($rec==NULL) {
-               if ($device['categoryCode'] == 'inf_qt' or $device['categoryCode'] == 'wf_qt') {
+               if (isset($device['moduleMap']['infrared'])) {
                   $ir_flag = True;
                } else {
                   $ir_flag = False;
@@ -1228,10 +1228,10 @@ class tuya extends module
 
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
-               if (is_null($rec['MAC'])) $rec['MAC'] =''; 
+               if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] =''; 
                if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
                
-               if ($device['categoryCode'] == 'inf_qt' or $device['categoryCode'] == 'wf_qt') {
+               if (isset($device['moduleMap']['infrared'])) {
                   $ir_flag = True;
                } else {
                   $ir_flag = False;
@@ -1239,10 +1239,10 @@ class tuya extends module
                    
 
                if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
-                 $rec['LOCAL_KEY']=$device['localKey'];
-                 $rec['PRODUCT_ID']=$device['productId'];
-                 $rec['GID_ID']=$gid;
-                 $rec['MESH_ID']=$device['meshId'];
+                 $rec['LOCAL_KEY'] = $device['localKey'];
+                 $rec['PRODUCT_ID'] = $device['productId'];
+                 $rec['GID_ID'] = $gid;
+                 $rec['MESH_ID'] = $device['meshId'];
                  $rec['MAC'] = $device['mac'];
                  $rec['IR_FLAG'] = $ir_flag;
                  
@@ -1265,7 +1265,7 @@ class tuya extends module
                }
             }       
 			
-            if ($rec['ONLY_LOCAL']==0) {
+            if ($rec['STATUS']==0) {
 				foreach($device['dps'] as $key => $value) {
 					$cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$rec['ID']." AND TITLE LIKE '".DBSafe($key)."'");
             
@@ -1507,7 +1507,7 @@ class tuya extends module
       $this->config['TUYA_IOT_UID'] = $token->result->uid;
 
       $this->saveConfig();
-      return $contents;   
+      return $token;   
    }
    
    function Tuya_IOT_Refresh() {

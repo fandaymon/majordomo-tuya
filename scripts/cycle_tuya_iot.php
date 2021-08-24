@@ -47,6 +47,7 @@ $mqtt_devices = array_column($mqtt_devices, 'DEV_ID');
 $link_id = uniqid() ;
 $key = '';
 $latest_check = 0;
+$latest_db_check = time();
 
 $client = getMQTTConfig($link_id);
 
@@ -66,7 +67,20 @@ while (1==1) {
         echo 'Expired'.time(); 
 		$client->close();
 		$client = getMQTTConfig($link_id);
-    }    
+    } 
+    
+    if ((time() - $latest_db_check) >= 2*60) {
+	$mqtt_devices = SQLSelect("SELECT ID, DEV_ID FROM tudevices WHERE STATUS=2;");
+
+	if ($mqtt_devices) {
+	    foreach($mqtt_devices as $dev) {
+		$devices[$dev['DEV_ID']] = $dev['ID'];
+	    }
+	}    
+
+	$mqtt_devices = array_column($mqtt_devices, 'DEV_ID');
+	$latest_db_check = time();
+    }
 }
 $client->close();
 
