@@ -1798,6 +1798,9 @@ class tuya extends module
     */
    function install($data = '')
    {
+
+      parent::install();
+      
       $table='tudevices';
       $fields = SQLSelect("SHOW FIELDS FROM `$table`;");
       $fields = array_column($fields, 'Field');
@@ -1809,8 +1812,8 @@ class tuya extends module
       }   
       setGlobal('cycle_tuyaControl', 'restart');
       setGlobal('cycle_local_tuyaControl', 'restart');
+      setGlobal('cycle_tuya_iotControl', 'restart');
 
-      parent::install();
    }
 
    /**
