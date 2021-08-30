@@ -3,8 +3,8 @@
 * Tuya
 * @package project
 * @author <fandaymon@gmail.com>
-* @copyright 2019 (c)
-* @version 2019.09.22
+* @copyright 2019-2021 (c)
+* @version 2021.08.28
 */
 
 
@@ -312,7 +312,13 @@ class tuya extends module
                global $dev_id;
                TuyaScene($dev_id);
                exit;
-            }    
+            }
+            if ($op == 'info_scene') {
+               global $dev_id;
+               $this->InfoScene($dev_id);
+               exit;
+            }
+    
             if ($op == 'run_ir') {
                global $dev_id;
                global $id;
@@ -516,6 +522,39 @@ class tuya extends module
                   SQLInsert('tudevices', $rec);
                }
             }   
+         }   
+      }   
+   }
+
+   function InfoScene($dev_id) {
+      debmes('Info Scene running');
+      $this->getConfig();
+      if ($this->config['TUYA_WEB']) {
+         $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.location.list',
+                                          'requiresSID'=> 1]);
+
+         $result=json_decode($apiResult , true);
+         $gid= $result['result'][0] ['groupId'];
+
+
+         $action = "tuya.m.linkage.rule.query";
+
+         $apiResult = $this->TuyaWebRequest(['action'=>$action,
+                                                   'gid'=>$gid,
+                                                   'requiresSID'=> 1]);
+         $result=json_decode($apiResult , true);
+         
+         if ($result['result']) {
+            foreach($result['result'] as $scene) {
+               debmes('Scene: ' . $scene['id']);
+               if ($scene['id'] == $dev_id) {
+                  foreach($scene['actions'] as $action) {
+                     echo var_dump($action);
+                     echo '<BR>------------------<BR>';
+                  }
+               }
+            }
+            exit;   
          }   
       }   
    }
@@ -786,6 +825,7 @@ class tuya extends module
   }
 
   function Tuya_Discovery_Devices($token){
+   return;  
    $sURL = 'https://px1.tuyaeu.com/homeassistant/skill';
 
    $header = [
@@ -835,7 +875,7 @@ class tuya extends module
       }
 
       $data='';
-      if ($rec['ONLY_LOCAL']==0) {
+      if ($rec['STATUS']==5) {
          foreach($device->data as $key => $value) {
             if (is_bool($value)) {
                $value=(($value) ? 1:0);
@@ -1108,7 +1148,9 @@ class tuya extends module
                $rec['MESH_ID']=$device['meshId'];
                $rec['MAC'] = $device['mac'];
                $rec['SEND12'] = 0;
-               $rec['VER_3_1'] = 0;   
+               $rec['VER_3_1'] = 0;
+               $rec['STATUS'] = 0;
+               $rec['CONTROL'] = 0;      
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
@@ -1221,7 +1263,9 @@ class tuya extends module
                $rec['MESH_ID']=$device['meshId']; 
                $rec['MAC'] = $device['mac']; 
                $rec['SEND12'] = 0;
-               $rec['VER_3_1'] = 0;             
+               $rec['VER_3_1'] = 0;
+               $rec['STATUS'] = 0;
+               $rec['CONTROL'] = 0;             
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
@@ -1563,7 +1607,7 @@ class tuya extends module
 
 
 
-   function Tuya_IOT_GET($access_token, $url) {
+   function Tuya_IOT_GET($url) {
 
       $this->getConfig();
       if (time()>($this->config['TUYA_TOKEN_EXPIRE_TIME']-60)) {
@@ -1573,6 +1617,7 @@ class tuya extends module
 
       $client_id = $this->config['TUYA_CLIENT_ID'];
       $secret = $this->config['TUYA_CLIENT_SECRET'];
+      $access_token = $this->config['TUYA_ACCESS_TOKEN'];
 
       $t = round(microtime(true)*1000,0);
       $sign = $client_id . $access_token.$t;
@@ -1586,7 +1631,7 @@ class tuya extends module
                  't: '.  $t,
                  'sign_method: HMAC-SHA256'];
       $result='';
-      $endpoint = $base.$url;
+      $endpoint = 'https://openapi.tuyaeu.com'.$url;
 
       $aHTTP = array('http' => array('method'  => 'GET', 
                                      'header'  => $pairs
@@ -1798,18 +1843,33 @@ class tuya extends module
     */
    function install($data = '')
    {
+      $rec = SQLSelectOne("SHOW TABLES LIKE 'tudevices';" );
+      if ($rec) {
+         $table='tudevices';
+         $fields = SQLSelect("SHOW FIELDS FROM `$table`;");
+         $fields = array_column($fields, 'Field');
+         if (!in_array('CONTROL', $fields)) {
+            SQLExec("ALTER TABLE tudevices ADD CONTROL int(10) unsigned NOT NULL DEFAULT 0;");
+            SQLExec("ALTER TABLE tudevices ADD STATUS int(10) unsigned NOT NULL DEFAULT 0;");
+            SQLExec("UPDATE tudevices SET CONTROL=1, STATUS=1 WHERE ONLY_LOCAL=1");
+         }   
+         
+      } 
+      
+      $rec = SQLSelectOne("SHOW TABLES LIKE 'tuircommand';" );
+      if ($rec) {
+         $rec = SQLSelect("SHOW COLUMNS FROM tuircommand;" );
 
+         foreach($rec as $field) {
+            if ($field['Field'] == 'CPULSE_ALT') {
+               if ($field['Type'] !=  "varchar(800)") {
+                  SQLExec("ALTER TABLE tuircommand MODIFY CPULSE_ALT varchar(800) NOT NULL DEFAULT '';");
+               }
+            }
+         }  
+      }
       parent::install();
       
-      $table='tudevices';
-      $fields = SQLSelect("SHOW FIELDS FROM `$table`;");
-      $fields = array_column($fields, 'Field');
-      if (!in_array('CONTROL', $fields)) {
-         SQLExec("ALTER TABLE tudevices ADD CONTROL int(10) unsigned NOT NULL DEFAULT 0;");
-         SQLExec("ALTER TABLE tudevices ADD STATUS int(10) unsigned NOT NULL DEFAULT 0;");
-         SQLExec("UPDATE tudevices SET CONTROL=1, STATUS=1 WHERE ONLY_LOCAL=1");
-         SQLExec("ALTER TABLE tuircommand MODIFY CPULSE_ALT varchar(800) NOT NULL DEFAULT '';");
-      }   
       setGlobal('cycle_tuyaControl', 'restart');
       setGlobal('cycle_local_tuyaControl', 'restart');
       setGlobal('cycle_tuya_iotControl', 'restart');
@@ -1827,6 +1887,9 @@ class tuya extends module
    {
       SQLExec('DROP TABLE IF EXISTS tudevices');
       SQLExec('DROP TABLE IF EXISTS tucommands');
+      SQLExec('DROP TABLE IF EXISTS turange');
+      SQLExec('DROP TABLE IF EXISTS tuircommand');
+
       parent::uninstall();
    }
 

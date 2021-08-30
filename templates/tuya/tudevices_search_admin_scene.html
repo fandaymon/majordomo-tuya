@@ -1,3 +1,23 @@
+<script type="text/javascript">
+	function viewSceneInfo(dev_id){
+      var info = document.getElementById("scene"+dev_id);
+      info.style.display = "block";
+      var url="/ajax/tuya.html?op=info_scene&dev_id="+dev_id;
+		
+        $.ajax({
+            url: url
+        }).done(function(data) {
+            var info = document.getElementById("sceneInfo"+dev_id);
+            info.innerHTML = data;
+        });
+	}
+   
+   function hideSceneInfo(dev_id){
+      var info = document.getElementById("scene"+dev_id);
+      info.style.display = "none";
+	}
+
+ </script>
 
 <div style="margin-top: 10px;"></div>
 <form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
@@ -19,9 +39,14 @@
                   
                   <td>
                      <div onClick="$.ajax({url: '/ajax/tuya.html?op=run_scene&dev_id=[#DEV_ID#]'});" class="btn btn-default" title="Запустить сцену"><i class="glyphicon glyphicon-flash"></i></div>
+                     <div onClick="javascript:viewSceneInfo('[#DEV_ID#]');" class="btn btn-default" title="Показать код сцены"><i class="glyphicon glyphicon-eye-open"></i></div>
                      <a href="?id=[#ID#]&view_mode=delete_tudevices&tab=scene" onClick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default" title="Удалить">
                      <i class="glyphicon glyphicon-remove"></i>
                   </td>
+               </tr>
+
+               <tr id="scene[#DEV_ID#]" onClick="javascript:hideSceneInfo('[#DEV_ID#]');" style="display:none;" class="row">
+               <td id="sceneInfo[#DEV_ID#]" class="col-8"></td>
                </tr>
                
                [#end RESULT#]
