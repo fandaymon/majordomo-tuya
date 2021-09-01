@@ -93,6 +93,33 @@ function Tuya_Door_Log($device_id, $dp_id=1, $gw_id='',$limit=50, $offset=0) {
 	return $result['result'];
 }
 
+function TuyaDoorUser($device_id, $id) {
+	include_once(DIR_MODULES . 'tuya/tuya.class.php');
+	$tuya_module = new tuya();
+	
+	$gid  = SQLSelectOne("SELECT GID_ID FROM tudevices WHERE DEV_ID='".$device_id."';");
+	$gid = $gid['GID_ID'];
+	$action = "tuya.m.scale.history.door.user.list";
+
+	$apiResult = $tuya_module->TuyaWebRequest(['action'=>$action,
+										 'gid'=>$gid,
+										 'data'=> [
+                                                   'devId'=>$device_id,
+                                                   'gwId'=> $device_id,
+												 ],
+										  'requiresSID'=> 1], '1.0');
+	$apiResult = json_decode($apiResult, true);
+
+	foreach($apiResult['result']['familyMember'] as $user) {
+		foreach ($user['unlockIds'] as $auth_id) {
+			if ($auth_id == $id) {
+				return $user['userName'];
+			}
+		}
+	}
+	return 'Неизвестный';	
+}	
+
 function TuyaScene($rule_id) {
 	include_once(DIR_MODULES . 'tuya/tuya.class.php');
 	$tuya_module = new tuya();
