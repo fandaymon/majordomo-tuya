@@ -64,9 +64,9 @@ while (1==1) {
     
     usleep(500000);
     if ($expire_time<(time()-60)) {
-        echo 'Expired'.time(); 
-		$client->close();
-		$client = getMQTTConfig($link_id);
+        //echo 'Expired'.time(); 
+	$client->close();
+	$client = getMQTTConfig($link_id);
     } 
     
     if ((time() - $latest_db_check) >= 2*60) {
@@ -96,16 +96,15 @@ function getMQTTConfig($link_id) {
 
     $url = '';
 
-    $data = http_build_query(
-	    array(
+    $data = array(
 		    'uid' => $uid,
 		    'link_id' => $link_id,
 		    'link_type' => 'mqtt',
 		    'topics' => 'device'
-	    )
-    );
+	    );
 
     $r_c = $tuya_module->Tuya_IOT_POST('/v1.0/open-hub/access/config', $data);
+    
     $client_name = $r_c->result->client_id;
     $url = parse_url($r_c->result->url);
     $expire_time = time() + (int)$r_c->result->expire_time;

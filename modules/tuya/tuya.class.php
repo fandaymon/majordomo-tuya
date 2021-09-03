@@ -1515,39 +1515,25 @@ class tuya extends module
    
    function Tuya_IOT_Login() {
       $this->getConfig();
-      $client_id = $this->config['TUYA_CLIENT_ID'];
-      $secret = $this->config['TUYA_CLIENT_SECRET'];
-      $base = 'https://openapi.tuyaeu.com';
-
-      $t = round(microtime(true)*1000,0);
-      $sign = $client_id . $t;
-      $sign = hash_hmac('sha256',$sign,$secret);
-      $sign = strtoupper($sign);
-
-      $pairs = ['client_id: ' . $client_id,
-                 'sign: ' . $sign,
-                 'secret: '. $secret,
-                 't: '.  $t,
-                 'sign_method: HMAC-SHA256'];
-      $result='';
       
-      $endpoint = $base.'/v1.0/token?grant_type=1';
+      $this->config['TUYA_ACCESS_TOKEN'] = '';
+      $this->saveConfig();
+      $this->getConfig();
+      
+      $password = hash('sha256', $this->config['TUYA_PASSWD']);
+      $username = $this->config['TUYA_USERNAME'];
 
-      $aHTTP = array(
-                       'http' => 
-                                  array(
-                                        'method'  => 'GET', 
-                                        'header'  => $pairs
-                                       )
-                    );
-      $context = stream_context_create($aHTTP);
-      $contents = file_get_contents($endpoint, false, $context);
- 
-      $token=json_decode($contents);
+      $data = 	    array(
+                'username' => $username,
+                'password' => $password
+             );
+
+      $url = '/v1.0/iot-03/users/login';
+      $token = $this->Tuya_IOT_POST($url, $data, true);
       $access_token = $token->result->access_token;
       $this->config['TUYA_ACCESS_TOKEN'] = $access_token;
       $this->config['TUYA_REFRESH_TOKEN'] = $token->result->refresh_token;
-      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire_time + time();
+      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire + time();
       $this->config['TUYA_IOT_UID'] = $token->result->uid;
 
       $this->saveConfig();
@@ -1562,47 +1548,59 @@ class tuya extends module
 
       $this->config['TUYA_ACCESS_TOKEN'] = $token->result->access_token;
       $this->config['TUYA_REFRESH_TOKEN'] = $token->result->refresh_token;
-      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire_time + time();
+      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire + time();
       $this->saveConfig();
    }   
    
-   function Tuya_IOT_POST($url, $data, $refresh=0){
-      $url = 'https://openapi.tuyaeu.com'.$url;
+   function Tuya_IOT_POST($url, $data, $token_managment=false){
+      $base = 'https://openapi.tuyaeu.com';
       $this->getConfig();
-      if (!$refresh and time()>($this->config['TUYA_TOKEN_EXPIRE_TIME']-60)) {
+      if (!$token_managment and (time()>($this->config['TUYA_TOKEN_EXPIRE_TIME']-60))) {
          $result = $this->Tuya_IOT_Refresh();
          $this->getConfig();
       }   
       $client_id = $this->config['TUYA_CLIENT_ID'];
       $secret = $this->config['TUYA_CLIENT_SECRET'];
       $access_token = $this->config['TUYA_ACCESS_TOKEN'];
+
+      $data = json_encode($data);
+      $sha256 = hash('sha256', $data);
+      $stringToSign = 'POST'."\n".$sha256."\n"."\n".$url;
+
       $t = round(microtime(true)*1000,0);
-      $sign = $client_id . $access_token . $t;
+
+      $sign = $client_id;
+      if (!$token_managment) {
+       $sign .= $access_token;
+      }
+      $sign .= $t.$stringToSign;
       $sign = hash_hmac('sha256',$sign,$secret);
       $sign = strtoupper($sign);
 
-      $pairs = [ 'client_id: ' . $client_id,
-                 'access_token: '.$access_token,
+      $headers = ['client_id: ' . $client_id,
+               'access_token: '.$access_token,
                  'sign: ' . $sign,
-                 'secret: '. $secret,
                  't: '.  $t,
                  'sign_method: HMAC-SHA256',
-                 'Content-Type: application/x-www-form-urlencoded'
-               ];
+                "Content-Type: application/json"
+              ];
 
-
-      $aHTTP = array('http' => array('method'  => 'POST', 
-                                     'header'  => $pairs,
-                                     'content' => $data
-                                    )
+      $aHTTP = array(
+                     'http' => 
+                              array(
+                                   'method'  => 'POST', 
+                                   'header'  => $headers,
+                                   'content' => $data
+                                   )
                      );
 
 
-
       $context = stream_context_create($aHTTP);
-      $contents = file_get_contents($url, false, $context);
+      $contents = file_get_contents($base.$url, false, $context);
       $result=json_decode($contents);
       return $result;
+
+
    }
 
 
