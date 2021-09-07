@@ -142,7 +142,7 @@ class tuya extends module
          $out['CYCLERUN'] = 0;
       }
       
-      if ((time() - (int)gg('cycle_local_tuyaRun')) < $this->config['TUYA_LOCAL_INTERVAL'] * 2) {
+      if ((time() - (int)gg('cycle_local_tuyaRun')) < 10 * 2) {
          $out['LOCAL_CYCLERUN'] = 1;
       } else {
          $out['LOCAL_CYCLERUN'] = 0;
@@ -1542,14 +1542,21 @@ class tuya extends module
    
    function Tuya_IOT_Refresh() {
       $this->getConfig();
+      $this->config['TUYA_ACCESS_TOKEN'] = '';
+      $this->saveConfig();
       $refresh_token = $this->config['TUYA_REFRESH_TOKEN'];
       $url = '/v1.0/iot-03/users/token/'.$refresh_token;
       $token =  $this->Tuya_IOT_POST($url, '', true);
-
-      $this->config['TUYA_ACCESS_TOKEN'] = $token->result->access_token;
-      $this->config['TUYA_REFRESH_TOKEN'] = $token->result->refresh_token;
-      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire + time();
-      $this->saveConfig();
+      
+      if (!$token->success) {
+         $token = $this->Tuya_IOT_Login();
+      } else {   
+         $this->config['TUYA_ACCESS_TOKEN'] = $token->result->access_token;
+         $this->config['TUYA_REFRESH_TOKEN'] = $token->result->refresh_token;
+         $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire + time();
+         $this->saveConfig();
+      }   
+      return $token;
    }   
    
    function Tuya_IOT_POST($url, $data, $token_managment=false){

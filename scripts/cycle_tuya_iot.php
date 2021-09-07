@@ -33,7 +33,7 @@ if (!$result->success) {
 }    
 
 $cycle_debug = $tuya_module->config['TUYA_CYCLE_DEBUG'];
-$cycle_debug = true;
+//$cycle_debug = true;
 
 $mqtt_devices = SQLSelect("SELECT ID, DEV_ID FROM tudevices WHERE STATUS=2;");
 
@@ -64,7 +64,7 @@ while (1==1) {
     
     usleep(500000);
     if ($expire_time<(time()-60)) {
-        //echo 'Expired'.time(); 
+        echo 'Expired'.time(); 
 	$client->close();
 	$client = getMQTTConfig($link_id);
     } 
@@ -104,7 +104,10 @@ function getMQTTConfig($link_id) {
 	    );
 
     $r_c = $tuya_module->Tuya_IOT_POST('/v1.0/open-hub/access/config', $data);
-    
+    if (!$r_c->success) {
+	debmes("Can't login to IOT cloud.");
+	exit;
+    }        
     $client_name = $r_c->result->client_id;
     $url = parse_url($r_c->result->url);
     $expire_time = time() + (int)$r_c->result->expire_time;
