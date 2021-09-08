@@ -29,7 +29,7 @@ if (!$tuya_module->config['TUYA_IOT'] ) {
 
 $result = $tuya_module->Tuya_IOT_Login();
 if (!$result->success) {
-    debmes("Can't login to IOT cloud.");
+    debmes("Can't login to IOT cloud.".$result->msg);
 }    
 
 $cycle_debug = $tuya_module->config['TUYA_CYCLE_DEBUG'];
@@ -105,7 +105,7 @@ function getMQTTConfig($link_id) {
 
     $r_c = $tuya_module->Tuya_IOT_POST('/v1.0/open-hub/access/config', $data);
     if (!$r_c->success) {
-	debmes("Can't login to IOT cloud.");
+	debmes("Can't get MQTT conf.".$r_c->msg);
 	exit;
     }        
     $client_name = $r_c->result->client_id;
