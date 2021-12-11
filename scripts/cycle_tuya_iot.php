@@ -52,6 +52,10 @@ $latest_db_check = time();
 $client = getMQTTConfig($link_id);
 
 while (1==1) {
+    if ($client->isConnected() == False) {
+	debmes("MQTT Disconnected");
+        $client = getMQTTConfig($link_id);    
+    }
     $client->eventLoop();
     if ((time() - $latest_check) >= 10) {
         $latest_check = time();
@@ -64,7 +68,7 @@ while (1==1) {
     
     usleep(500000);
     if ($expire_time<(time()-60)) {
-        echo 'Expired'.time(); 
+        //echo 'Expired'.time(); 
 	$client->close();
 	$client = getMQTTConfig($link_id);
     } 
@@ -92,7 +96,7 @@ function getMQTTConfig($link_id) {
     global $expire_time;
     
     $tuya_module->getConfig();
-    $uid = $tuya_module->config['TUYA_UID'];
+    $uid = $tuya_module->config['TUYA_IOT_UID'];
 
     $url = '';
 
@@ -103,7 +107,7 @@ function getMQTTConfig($link_id) {
 		    'topics' => 'device'
 	    );
 
-    $r_c = $tuya_module->Tuya_IOT_POST('/v1.0/open-hub/access/config', $data);
+    $r_c = $tuya_module->Tuya_IOT_POST('/v1.0/iot-03/open-hub/access-config', $data);
     if (!$r_c->success) {
 	debmes("Can't get MQTT conf.".$r_c->msg);
 	exit;
