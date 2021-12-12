@@ -321,6 +321,20 @@ class Client {
     /**
      * Loop to process data packets
      */
+     
+    function isConnected() {
+        if($this->socket == null) {
+            return False;
+        }
+
+            // Server closed connection?
+        if(feof($this->socket)) {
+            return False;
+        }
+        return True;    
+        
+    }
+         
     function eventLoop()
     {
         // Socket not connected at all?
