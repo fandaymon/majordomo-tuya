@@ -27,13 +27,23 @@ if (!$tuya_module->config['TUYA_IOT'] ) {
   exit;   
 }    
 
-$result = $tuya_module->Tuya_IOT_Login();
+//$result = $tuya_module->Tuya_IOT_Login();
+$result = $tuya_module->Tuya_IOT_GET('/v1.0/token?grant_type=1', True);
+
 if (!$result->success) {
     debmes("Can't login to IOT cloud.".$result->msg);
-}    
+}
+
+$access_token = $result->result->access_token;
+$tuya_module->config['TUYA_ACCESS_TOKEN'] = $access_token;
+$tuya_module->config['TUYA_REFRESH_TOKEN'] = $result->result->refresh_token;
+$tuya_module->config['TUYA_TOKEN_EXPIRE_TIME'] = $result->result->expire_time + time();
+$tuya_module->config['TUYA_IOT_UID'] = $result->result->uid;
+
+$tuya_module->saveConfig();
 
 $cycle_debug = $tuya_module->config['TUYA_CYCLE_DEBUG'];
-//$cycle_debug = true;
+$cycle_debug = true;
 
 $mqtt_devices = SQLSelect("SELECT ID, DEV_ID FROM tudevices WHERE STATUS=2;");
 
@@ -45,6 +55,7 @@ if ($mqtt_devices) {
 
 $mqtt_devices = array_column($mqtt_devices, 'DEV_ID');
 $link_id = uniqid() ;
+
 $key = '';
 $latest_check = 0;
 $latest_db_check = time();
@@ -96,9 +107,8 @@ function getMQTTConfig($link_id) {
     global $expire_time;
     
     $tuya_module->getConfig();
-    $uid = $tuya_module->config['TUYA_IOT_UID'];
-
-    $url = '';
+    //$uid = $tuya_module->config['TUYA_IOT_UID'];
+    $uid = $tuya_module->config['TUYA_UID'];
 
     $data = array(
 		    'uid' => $uid,
@@ -107,11 +117,14 @@ function getMQTTConfig($link_id) {
 		    'topics' => 'device'
 	    );
 
-    $r_c = $tuya_module->Tuya_IOT_POST('/v1.0/iot-03/open-hub/access-config', $data);
+    //$url = '/v1.0/iot-03/open-hub/access-config';
+    $url = '/v1.0/open-hub/access/config';
+    $r_c = $tuya_module->Tuya_IOT_POST($url, $data, false);
+
     if (!$r_c->success) {
 	debmes("Can't get MQTT conf.".$r_c->msg);
 	exit;
-    }        
+    } 
     $client_name = $r_c->result->client_id;
     $url = parse_url($r_c->result->url);
     $expire_time = time() + (int)$r_c->result->expire_time;
@@ -153,7 +166,8 @@ function procMsg($msg_topic, $msg, $qos) {
                  }
                  if ($cycle_debug) {
                     debmes($result['devId'].'-'.$k.'='.$v);
-                 }   
+                 }
+		 //echo $result['devId'].'-'.$k.'='.$v.$PHP_EOL;   
                  $tuya_module->processCommand($devices[$result['devId']], $k, $v, 0, false);
               }       
             }    

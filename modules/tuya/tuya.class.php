@@ -1529,11 +1529,12 @@ class tuya extends module
              );
 
       $url = '/v1.0/iot-03/users/login';
+      $url = '/v1.0/token?grant_type=1';
       $token = $this->Tuya_IOT_POST($url, $data, true);
       $access_token = $token->result->access_token;
       $this->config['TUYA_ACCESS_TOKEN'] = $access_token;
       $this->config['TUYA_REFRESH_TOKEN'] = $token->result->refresh_token;
-      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire + time();
+      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire_time + time();
       $this->config['TUYA_IOT_UID'] = $token->result->uid;
 
       $this->saveConfig();
@@ -1546,14 +1547,16 @@ class tuya extends module
       $this->saveConfig();
       $refresh_token = $this->config['TUYA_REFRESH_TOKEN'];
       $url = '/v1.0/iot-03/users/token/'.$refresh_token;
-      $token =  $this->Tuya_IOT_POST($url, '', true);
+      $url = '/v1.0/token/'.$refresh_token;
+      
+      $token =  $this->Tuya_IOT_GET($url, '', true);
       
       if (!$token->success) {
          $token = $this->Tuya_IOT_Login();
       } else {   
          $this->config['TUYA_ACCESS_TOKEN'] = $token->result->access_token;
          $this->config['TUYA_REFRESH_TOKEN'] = $token->result->refresh_token;
-         $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire + time();
+         $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $token->result->expire_time + time();
          $this->saveConfig();
       }   
       return $token;
@@ -1607,46 +1610,59 @@ class tuya extends module
       $result=json_decode($contents);
       return $result;
 
-
    }
 
 
 
-   function Tuya_IOT_GET($url) {
-
+   function Tuya_IOT_GET($url, $token_managment=false) {
+      $base = 'https://openapi.tuyaeu.com';
       $this->getConfig();
-      if (time()>($this->config['TUYA_TOKEN_EXPIRE_TIME']-60)) {
+      if (!$token_managment and (time()>($this->config['TUYA_TOKEN_EXPIRE_TIME']-60))) {
          $result = $this->Tuya_IOT_Refresh();
          $this->getConfig();
       }   
-
       $client_id = $this->config['TUYA_CLIENT_ID'];
       $secret = $this->config['TUYA_CLIENT_SECRET'];
       $access_token = $this->config['TUYA_ACCESS_TOKEN'];
 
+      $data = '';
+      $sha256 = hash('sha256', $data);
+      $stringToSign = 'GET'."\n".$sha256."\n"."\n".$url;
+
       $t = round(microtime(true)*1000,0);
-      $sign = $client_id . $access_token.$t;
+
+      $sign = $client_id;
+      if (!$token_managment) {
+       $sign .= $access_token;
+      }
+      $sign .= $t.$stringToSign;
       $sign = hash_hmac('sha256',$sign,$secret);
       $sign = strtoupper($sign);
 
-      $pairs = [ 'client_id: ' . $client_id,
-                 'access_token: '.$access_token,
-                 'sign: ' . $sign,
-                 'secret: '. $secret,
-                 't: '.  $t,
-                 'sign_method: HMAC-SHA256'];
-      $result='';
-      $endpoint = 'https://openapi.tuyaeu.com'.$url;
+      $headers = ['client_id: ' . $client_id,
+                  'access_token: '.$access_token,
+                  'sign: ' . $sign,
+                  't: '.  $t,
+                  'sign_method: HMAC-SHA256',
+                "Content-Type: application/json"
+              ];
 
-      $aHTTP = array('http' => array('method'  => 'GET', 
-                                     'header'  => $pairs
-                                    )
-                    );
+      $aHTTP = array(
+                     'http' => 
+                              array(
+                                   'method'  => 'GET', 
+                                   'header'  => $headers,
+                                   'content' => $data
+                                   )
+                     );
+
+
       $context = stream_context_create($aHTTP);
-      $contents = file_get_contents($endpoint, false, $context);
-        
-      $token=json_decode($contents);
-      return $token;
+      $contents = file_get_contents($base.$url, false, $context);
+      $result=json_decode($contents);
+      return $result;
+
+
 
    }
    
