@@ -1520,6 +1520,23 @@ class tuya extends module
       $this->saveConfig();
       $this->getConfig();
       
+      $result = $this->Tuya_IOT_GET('/v1.0/token?grant_type=1', True);
+
+      if (!$result->success) {
+          debmes("Can't login to IOT cloud.".$result->msg);
+          return;
+      }
+      
+      $access_token = $result->result->access_token;
+      $this->config['TUYA_ACCESS_TOKEN'] = $access_token;
+      $this->config['TUYA_REFRESH_TOKEN'] = $result->result->refresh_token;
+      $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $result->result->expire_time + time();
+      $tuyathis_module->config['TUYA_IOT_UID'] = $result->result->uid;
+
+      $this->saveConfig();
+      
+      return;
+      
       $password = hash('sha256', $this->config['TUYA_PASSWD']);
       $username = $this->config['TUYA_USERNAME'];
 
@@ -1552,6 +1569,7 @@ class tuya extends module
       $token =  $this->Tuya_IOT_GET($url, '', true);
       
       if (!$token->success) {
+         dedmes("Can't refresh token for IOT ".$token->msg);
          $token = $this->Tuya_IOT_Login();
       } else {   
          $this->config['TUYA_ACCESS_TOKEN'] = $token->result->access_token;
@@ -1617,10 +1635,7 @@ class tuya extends module
    function Tuya_IOT_GET($url, $token_managment=false) {
       $base = 'https://openapi.tuyaeu.com';
       $this->getConfig();
-      if (!$token_managment and (time()>($this->config['TUYA_TOKEN_EXPIRE_TIME']-60))) {
-         $result = $this->Tuya_IOT_Refresh();
-         $this->getConfig();
-      }   
+  
       $client_id = $this->config['TUYA_CLIENT_ID'];
       $secret = $this->config['TUYA_CLIENT_SECRET'];
       $access_token = $this->config['TUYA_ACCESS_TOKEN'];

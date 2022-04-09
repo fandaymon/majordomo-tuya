@@ -43,7 +43,7 @@ $tuya_module->config['TUYA_IOT_UID'] = $result->result->uid;
 $tuya_module->saveConfig();
 
 $cycle_debug = $tuya_module->config['TUYA_CYCLE_DEBUG'];
-$cycle_debug = true;
+//$cycle_debug = true;
 
 $mqtt_devices = SQLSelect("SELECT ID, DEV_ID FROM tudevices WHERE STATUS=2;");
 
