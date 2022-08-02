@@ -126,7 +126,8 @@ if ($tab == 'scene') {
 } else {
    if (!$qry) $qry = '';
 
-   $sortby_tudevices = 'tudevices.DEV_ID';
+   //$sortby_tudevices = 'tudevices.DEV_ID';
+   $sortby_tudevices = 'tudevices.TYPE, tudevices.TITLE';
 
    $out['SORTBY'] = $sortby_tudevices;
 
