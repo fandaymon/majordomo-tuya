@@ -46,7 +46,7 @@
          $rec['TYPE'] = $type;
 
          global $send12;
-         $rec['SEND12'] = $send12;
+         $rec['SEND12'] = (int)$send12;
 
          global $flags12;
          $rec['FLAGS12'] = $flags12;
