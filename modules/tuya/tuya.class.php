@@ -1568,7 +1568,7 @@ class tuya extends module
       $token =  $this->Tuya_IOT_GET($url, '', true);
       
       if (!$token->success) {
-         dedmes("Can't refresh token for IOT ".$token->msg);
+         debmes("Can't refresh token for IOT ".$token->msg);
          $token = $this->Tuya_IOT_Login();
       } else {   
          $this->config['TUYA_ACCESS_TOKEN'] = $token->result->access_token;
