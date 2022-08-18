@@ -177,7 +177,13 @@
                      [#else#]
                         <span id="tuonline[#ID#]" class="label label-warning" title="Device Offline">Offline</span>
                      [#endif#]
-
+                     <div style="font-size:0.8em;">
+                     <b>
+                        [#if STATUS==0#]Cloud[#endif#]
+                        [#if STATUS==1#]LAN[#endif#]
+                        [#if STATUS==2#]MQTT[#endif#]
+                     </b>
+                     </div>
                      </td>
 
                      <td style="vertical-align:middle;text-align:center">

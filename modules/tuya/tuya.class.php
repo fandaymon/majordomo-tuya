@@ -136,7 +136,7 @@ class tuya extends module
    {
       $this->getConfig();
 
-      if ((time() - (int)gg('cycle_tuyaRun')) < (int)$this->config['TUYA_INTERVAL']+30) {
+      if ((time() - (int)gg('cycle_tuyaRun')) < $this->config['TUYA_INTERVAL']+30) {
          $out['CYCLERUN'] = 1;
       } else {
          $out['CYCLERUN'] = 0;
@@ -1132,9 +1132,9 @@ class tuya extends module
 
             if ($rec==NULL) {
                if (isset($device['moduleMap']['infrared'])) {
-                  $ir_flag = 1;
+                  $ir_flag = True;
                } else {
-                  $ir_flag = 0;
+                  $ir_flag = False;
                }      
                $rec['IR_FLAG'] = $ir_flag;
 
@@ -1157,12 +1157,12 @@ class tuya extends module
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
                if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] ='';
-               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = 0;
+               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
                
                if (isset($device['moduleMap']['infrared'])) {
-                  $ir_flag = 1;
+                  $ir_flag = True;
                } else {
-                  $ir_flag = 0;
+                  $ir_flag = False;
                }      
                    
 
@@ -1247,9 +1247,9 @@ class tuya extends module
 
             if ($rec==NULL) {
                if (isset($device['moduleMap']['infrared'])) {
-                  $ir_flag = 1;
+                  $ir_flag = True;
                } else {
-                  $ir_flag = 0;
+                  $ir_flag = False;
                }      
                $rec['IR_FLAG'] = $ir_flag;
 
@@ -1273,12 +1273,12 @@ class tuya extends module
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
                if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] =''; 
-               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = 0;
+               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
                
                if (isset($device['moduleMap']['infrared'])) {
-                  $ir_flag = 1;
+                  $ir_flag = True;
                } else {
-                  $ir_flag = 0;
+                  $ir_flag = False;
                }      
                    
 
@@ -1289,6 +1289,7 @@ class tuya extends module
                  $rec['MESH_ID'] = $device['meshId'];
                  $rec['MAC'] = $device['mac'];
                  $rec['IR_FLAG'] = $ir_flag;
+                 
                  $rec['ID']=SQLUpdate('tudevices',$rec);
                }
             }
@@ -1322,7 +1323,7 @@ class tuya extends module
 					  $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
 
 					  $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
-					  $cmd_rec['VALUE_SCALE'] = (int)$sc[$device['productId']][$key]['scale'];
+					  $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
 					  $cmd_rec['DIVIDEDBY2'] = 0;
 					  $cmd_rec['DIVIDEDBY10'] = 0;
 					  $cmd_rec['DIVIDEDBY100'] = 0;

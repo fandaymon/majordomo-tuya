@@ -10,11 +10,23 @@
    .ir_command {
          margin: 10px;
          text-valign: center;
+         background-color: aliceblue;
+         padding: 2px;
+         display: inline-flex;
    }
    
    .ir_command_text {
       vertical-align: middle;
-   }      
+      padding: 10px;
+   }
+   
+   .ir_command_button {
+      padding: 5px;
+   }   
+   
+   .ir_button {
+      margin-bottom: 2px;
+   }         
 </style>
 
 <div style="margin-top: 10px;"></div>
@@ -25,8 +37,8 @@
       <div class="col-md-2 ir_device">[#TITLE#]</div>
    </div>
    <div class="row ir_command">
-      <div class="col-md-5 ir_command_text">Команда на выполнение: TuyaIR('[#DEV_ID#]', 'Название клавиши');</div>
-      <div class="col=md-2 ir_command_text">
+      <div class="ir_command_text">Команда на выполнение: TuyaIR('[#DEV_ID#]', 'Название клавиши');</div>
+      <div class="ir_command_button">
          <a href="?id=[#ID#]&view_mode=delete_tudevices&tab=ir" onClick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default" title="Удалить">
          <i class="glyphicon glyphicon-remove"></i></a>
       </div>   
@@ -35,7 +47,7 @@
    <div class="row">
       <div class="col-md-12">
          [#begin CODES#]
-            <div onClick="$.ajax({url: '/ajax/tuya.html?op=run_ir&dev_id=[#DEV_ID#]&id=[#ID#]'});" class="btn btn-default" title="[#TITLE#]" style="display:inline-block;">[#TITLE#]</div>
+            <div onClick="$.ajax({url: '/ajax/tuya.html?op=run_ir&dev_id=[#DEV_ID#]&id=[#ID#]'});" class="btn btn-default ir_button" title="[#TITLE#]" style="display:inline-block;">[#TITLE#]</div>
          [#end CODES#]
       </div>   
    </div>               
