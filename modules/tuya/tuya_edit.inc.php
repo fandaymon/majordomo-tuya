@@ -46,7 +46,7 @@
          $rec['TYPE'] = $type;
 
          global $send12;
-         $rec['SEND12'] = (int)$send12;
+         $rec['SEND12'] = $send12;
 
          global $flags12;
          $rec['FLAGS12'] = $flags12;
@@ -140,6 +140,9 @@
             $properties[$i]['ALIAS']=trim(${'alias'.$properties[$i]['ID']});
             global ${'color_convert'.$properties[$i]['ID']};
             $properties[$i]['COLOR_CONVERT']=${'color_convert'.$properties[$i]['ID']}; 
+            global ${'color_v2'.$properties[$i]['ID']};
+            $properties[$i]['COLOR_V2']=${'color_v2'.$properties[$i]['ID']}; 
+
             global ${'dividedby10'.$properties[$i]['ID']};
             $properties[$i]['DIVIDEDBY10']=${'dividedby10'.$properties[$i]['ID']}; 
             global ${'dividedby2'.$properties[$i]['ID']};

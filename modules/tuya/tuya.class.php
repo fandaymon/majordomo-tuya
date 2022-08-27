@@ -1447,7 +1447,7 @@ class tuya extends module
     return $result;
    }
    
-   function RGB_to_Tuya ($RGB)  
+   function RGB_to_Tuya ($RGB, $color_v2 = false)  
    {                                 
       $R=hexdec(substr($RGB,0,2));
       $G=hexdec(substr($RGB,2,2));
@@ -1465,13 +1465,10 @@ class tuya extends module
 
       $V = $var_Max;
 
-      if ($del_Max == 0)
-      {
+      if ($del_Max == 0) {
          $H = 0;
          $S = 0;
-      }
-      else
-      {
+      } else {
          $S = $del_Max / $var_Max;
 
          $del_R = ( ( ( $var_Max - $var_R ) / 6 ) + ( $del_Max / 2 ) ) / $del_Max;
@@ -1486,32 +1483,73 @@ class tuya extends module
          if ($H>1) $H--;
       }
 
-      $HSL['H'] = dechex((int)($H*360));
-      $HSL['S'] = dechex((int)($S*255));
-      $HSL['V'] = dechex((int)($V*255));
 
-     $Tuya_Color=$RGB.'00';
-     if (strlen($HSL['H'])==1) {
-      $Tuya_Color .= '0'. $HSL['H'];
-     } else {
-      $Tuya_Color .= $HSL['H'];    
-    }
+      if (!$color_v2) {
+         $HSL['H'] = dechex((int)($H*360));
+         $HSL['S'] = dechex((int)($S*255));
+         $HSL['V'] = dechex((int)($V*255));
 
-     if (strlen($HSL['S'])==1) {
-      $Tuya_Color .= '0'. $HSL['S'];
-     } else {
-      $Tuya_Color .= $HSL['S'];    
-    }
+         $Tuya_Color=$RGB.'00';
+         if (strlen($HSL['H'])==1) {
+          $Tuya_Color .= '0'. $HSL['H'];
+         } else {
+          $Tuya_Color .= $HSL['H'];    
+         }
 
-     if (strlen($HSL['V'])==1) {
-      $Tuya_Color .= '0'. $HSL['V'];
-     } else {
-      $Tuya_Color .= $HSL['V'];    
-    }
+         if (strlen($HSL['S'])==1) {
+          $Tuya_Color .= '0'. $HSL['S'];
+         } else {
+          $Tuya_Color .= $HSL['S'];    
+         }
 
+         if (strlen($HSL['V'])==1) {
+          $Tuya_Color .= '0'. $HSL['V'];
+         } else {
+          $Tuya_Color .= $HSL['V'];    
+         }
 
-      return $Tuya_Color;
+         return $Tuya_Color;
+      } else {
+         $HSL['H'] = dechex((int)($H*360));
+         $HSL['S'] = dechex((int)($S*1000));
+         $HSL['V'] = dechex((int)($V*1000));
+
+         return str_pad($HSL['H'],4, '0', STR_PAD_LEFT) . str_pad($HSL['S'],4, '0', STR_PAD_LEFT) . str_pad($HSL['V'],4, '0', STR_PAD_LEFT);          
+         
+      }   
    }
+   
+   function Tuya_to_RGB($tuya_color) { 
+      if (strlen($tuya_color) > 12) {
+         return substr($tuya_color,0,6); 
+      } else {
+         $hue=hexdec(substr($tuya_color,0,4));
+         $sat=hexdec(substr($tuya_color,4,4));
+         $val=hexdec(substr($tuya_color,8,4));
+
+         $sat = $sat/10;
+         $val = $val/10;  
+         
+         $rgb = array(0,0,0);
+         //calc rgb for 100% SV, go +1 for BR-range
+         for($i=0;$i<4;$i++) {
+            if (abs($hue - $i*120)<120) {
+              $distance = max(60,abs($hue - $i*120));
+              $rgb[$i % 3] = 1 - (($distance-60) / 60);
+         }
+         }
+         //desaturate by increasing lower levels
+         $max = max($rgb);
+         $factor = 255 * ($val/100);
+         for($i=0;$i<3;$i++) {
+            //use distance between 0 and max (1) and multiply with value
+            $rgb[$i] = round(($rgb[$i] + ($max - $rgb[$i]) * (1 - $sat/100)) * $factor);
+         }
+         $rgb = sprintf('%02X%02X%02X', $rgb[0], $rgb[1], $rgb[2]);                
+         
+         return $rgb;
+      }   
+   }    
    
    function Tuya_IOT_Login() {
       $this->getConfig();
@@ -1734,6 +1772,10 @@ class tuya extends module
          $value = $value / (10** $cmd_rec['VALUE_SCALE']);
       } 
       
+      if ($properties[0]['COLOR_CONVERT']) {
+         $value = $this->Tuya_to_RGB($value);
+      }        
+      
   
       $old_value = $cmd_rec['VALUE'];
 
@@ -1798,7 +1840,7 @@ class tuya extends module
      $dps_name = $properties[0]['TITLE'];
      
      if ($properties[0]['COLOR_CONVERT']) {
-      $value = $this->RGB_to_Tuya($value);
+      $value = $this->RGB_to_Tuya($value, $properties[0]['COLOR_V2']);
       //debmes('New color value:' . $value);
      }   
 
@@ -1984,6 +2026,7 @@ class tuya extends module
  tucommands: VALUE_UNIT varchar(10) DEFAULT ''
  tucommands: COLOR_CONVERT boolean DEFAULT 0
  tucommands: REPLACE_LIST varchar(255) DEFAULT ''
+ tucommands: COLOR_V2 boolean DEFAULT 0
  tucommands: UPDATED datetime
 
  turange: ID int(10) unsigned NOT NULL auto_increment
