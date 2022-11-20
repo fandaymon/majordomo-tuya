@@ -525,7 +525,7 @@ class tuya extends module
                $rec = SQLSelectOne("SELECT * FROM tudevices WHERe DEV_ID='" . $scene['id'] . "' AND TYPE='scene';");
                if ($rec) {
                   if ($rec['TITLE'] != $scene['name']) {
-                     $rec['TITLE'] = $csene['name'];
+                     $rec['TITLE'] = $scene['name'];
                      SQLUpdate('tudevices', $rec);
                   }   
                } else {
@@ -1582,7 +1582,7 @@ class tuya extends module
       $this->config['TUYA_ACCESS_TOKEN'] = $access_token;
       $this->config['TUYA_REFRESH_TOKEN'] = $result->result->refresh_token;
       $this->config['TUYA_TOKEN_EXPIRE_TIME'] = $result->result->expire_time + time();
-      $tuyathis_module->config['TUYA_IOT_UID'] = $result->result->uid;
+      $this->config['TUYA_IOT_UID'] = $result->result->uid;
 
       $this->saveConfig();
       
@@ -1783,7 +1783,7 @@ class tuya extends module
          $value = $value / (10** $cmd_rec['VALUE_SCALE']);
       } 
       
-      if ($properties[0]['COLOR_CONVERT']) {
+      if ($cmd_rec['COLOR_CONVERT']) {
          $value = $this->Tuya_to_RGB($value);
       }        
       
