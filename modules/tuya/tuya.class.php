@@ -277,6 +277,10 @@ class tuya extends module
             $this->delete_tudevices($this->id);
             $this->redirect("?data_source=tudevices&tab=". $this->tab);
          }
+         if ($this->view_mode == 'refresh_tudevices') {
+            $this->refresh_tudevices($this->id);
+            $this->redirect("?data_source=tudevices&tab=". $this->tab);
+         }         
       }
 
       if (isset($this->data_source) && !$_GET['data_source'] && !$_POST['data_source']) {
@@ -376,6 +380,16 @@ class tuya extends module
        SQLExec("DELETE FROM tucommands WHERE DEVICE_ID='" . $rec['ID'] . "'");
        SQLExec("DELETE FROM tudevices WHERE ID='" . $rec['ID'] . "'");
    }
+
+   function refresh_tudevices($id)
+   {
+       $rec = SQLSelectOne("SELECT * FROM tudevices WHERE ID='$id'");
+       
+       if ($rec['IR_FLAG'] ) {
+         SQLExec("DELETE FROM tuircommand WHERE DEVICE_ID='" . $rec['ID'] . "'");
+       }   
+
+   }   
 
    /**
     * tucommands search
@@ -1415,40 +1429,39 @@ class tuya extends module
    } 
    
    function TuyaRemoteMsg($dev_id,$value,$mode){
-    $token=$this->RefreshToken();
-    $sURL = 'https://px1.tuyaeu.com/homeassistant/skill';
+      $token=$this->RefreshToken();
+      $sURL = 'https://px1.tuyaeu.com/homeassistant/skill';
 
-        $header = [
-            'name'           => $mode,
-            'namespace'      => 'control',
-            'payloadVersion' => 1,
-        ];
-        $payload['value']=$value;
-        $payload['accessToken'] = $token;
-        $payload['devId']=$dev_id;
+         $header = [
+               'name'           => $mode,
+               'namespace'      => 'control',
+               'payloadVersion' => 1,
+         ];
+         $payload['value']=$value;
+         $payload['accessToken'] = $token;
+         $payload['devId']=$dev_id;
 
-        $data = [
-            'header'  => $header,
-            'payload' => $payload,
-        ];
- 
+         $data = [
+               'header'  => $header,
+               'payload' => $payload,
+         ];
+   
 
-   $aHTTP = array(
-   'http' => 
-    array(
-    'method'  => 'POST', 
-    'header'  => 'Content-Type: application/json',
-    'content' => json_encode($data, JSON_FORCE_OBJECT)
-    )
-    );
-    $context = stream_context_create($aHTTP);  
-    $contents = file_get_contents($sURL, false, $context);
-    $result=json_decode($contents);
-    return $result;
+      $aHTTP = array(
+      'http' => 
+      array(
+      'method'  => 'POST', 
+      'header'  => 'Content-Type: application/json',
+      'content' => json_encode($data, JSON_FORCE_OBJECT)
+      )
+      );
+      $context = stream_context_create($aHTTP);  
+      $contents = file_get_contents($sURL, false, $context);
+      $result=json_decode($contents);
+      return $result;
    }
    
-   function RGB_to_Tuya ($RGB, $color_v2 = false)  
-   {                                 
+   function RGB_to_Tuya ($RGB, $color_v2 = false) {                                 
       $R=hexdec(substr($RGB,0,2));
       $G=hexdec(substr($RGB,2,2));
       $B=hexdec(substr($RGB,4,2));
@@ -1667,8 +1680,6 @@ class tuya extends module
       return $result;
 
    }
-
-
 
    function Tuya_IOT_GET($url, $token_managment=false) {
       $base = 'https://openapi.tuyaeu.com';
@@ -2041,7 +2052,7 @@ class tuya extends module
  tuircommand: EXTS varchar(150) NOT NULL DEFAULT ''
  tuircommand: CPULSE_ALT varchar(800) NOT NULL DEFAULT ''
  tuircommand: CPULSE_ALT_FLAG boolean DEFAULT 0
-
+ tuircommand: RF_FLAG boolean DEFAULT 0
 
 EOD;
 

@@ -9,7 +9,7 @@
    
    .ir_command {
          margin: 10px;
-         text-valign: center;
+         vertical-align: center;
          background-color: aliceblue;
          padding: 2px;
          display: inline-flex;
@@ -41,7 +41,11 @@
       <div class="ir_command_button">
          <a href="?id=[#ID#]&view_mode=delete_tudevices&tab=ir" onClick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default" title="Удалить">
          <i class="glyphicon glyphicon-remove"></i></a>
-      </div>   
+      </div> 
+      <div class="ir_command_button">
+         <a href="?id=[#ID#]&view_mode=refresh_tudevices&tab=ir" class="btn btn-default" title="Перечитать">
+         <i class="glyphicon glyphicon-refresh"></i></a>
+      </div>          
 
    </div>
    <div class="row">

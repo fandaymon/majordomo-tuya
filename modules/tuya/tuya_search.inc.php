@@ -51,74 +51,129 @@ if ($tab == 'scene') {
                                                 'requiresSID'=> 1]);
             $result=json_decode($apiResult , true);
 
-            $remote_id = $result['result']['remoteId'];
-            $dev_type_id = $result['result']['devTypeId']; 
+            // RF Code
 
-            $apiResult =  $this->TuyaWebRequest(['action'=> 'tuya.m.infrared.keydata.get',
-                                                         'gid'=>$gid,
-                                                         'data'=> ['devId'=> $device_id,
-                                                         'devTypeId'=> $dev_type_id,
-                                                         'gwId'=>  $gw_id,
-                                                         'remoteId'=> $remote_id,
-                                                         'vender'=>'3',
-                                                         ],
-                                                      'requiresSID'=> 1], '2.0');
-            $result=json_decode($apiResult , true);
             
-            $codes = array();
-            
-            if ($result['result']) {
+            if ($result['result']['exts'] == '{"study":6}') {
+               $action = "tuya.m.infrared.learn.get";
 
-               foreach ($result['result']['compressPulseList'] as $code) {
-                  $new_code['DEVICE_ID'] = $pult['ID'];
-                  $new_code['TITLE'] = $code['keyName'];
-                  $new_code['COMPRESSPULSE'] = $code['compressPulse'];
-                  $exts = $code['exts'];
-                  $exts = str_replace("\\","",$exts);
-                  $exts = json_decode($exts , true);
-                  $new_code['EXTS'] = $exts['99999'];
-                  $new_code['CPULSE_ALT_FLAG'] =  false;
+               $gw_id = $device_id;
+
+               $apiResult = $this->TuyaWebRequest(['action'=>$action,
+                                                   'gid'=>$gid,
+                                                   'data'=> ['devId'=> $device_id,
+                                                            'gwId'=>  $gw_id,
+                                                            'subDevId'=> $gw_id,
+                                                            'vender'=>'20',
+                                                    ],
+                                                   'requiresSID'=> 1]);
+
+               $result=json_decode($apiResult , true);
+   
+               if ($result['result']) {
+                  foreach ($result['result'] as $code) {
+
+                     $pulse = ($code['compressPulse']);
                   
-                  SQLInsert('tuircommand', $new_code);
-                  $new_code['DEV_ID'] = $pult['DEV_ID'];
-                  array_push($codes, $new_code); 
-                  unset($new_code['DEV_ID']);
+                     $pulse = str_replace('"', '\"', $pulse); 
+                     $pulse = substr($pulse, 0, strlen($pulse)-1); 
+                     $pulse .= ',\"ver\":\"2\"}';
+
+                     $new_code['DEVICE_ID'] = $pult['ID'];
+                     $new_code['TITLE'] = $code['keyName'];
+                     $new_code['CPULSE_ALT'] = $pulse;
+                     $new_code['EXTS'] = '';
+                     $new_code['CPULSE_ALT_FLAG'] =  false;
+                     $new_code['RF_FLAG'] =  true;
+                     
+
+                     SQLInsert('tuircommand', $new_code);
+                     $new_code['DEV_ID'] = $pult['DEV_ID'];
+                     array_push($codes, $new_code); 
+                     unset($new_code['DEV_ID']);                     
+
+                     
+                  }
+               
+               }    
+               
+               $pult['CODES'] = $codes;    
+
+
+            } else {
+
+               $remote_id = $result['result']['remoteId'];
+               $dev_type_id = $result['result']['devTypeId']; 
+
+               $apiResult =  $this->TuyaWebRequest(['action'=> 'tuya.m.infrared.keydata.get',
+                                                            'gid'=>$gid,
+                                                            'data'=> ['devId'=> $device_id,
+                                                            'devTypeId'=> $dev_type_id,
+                                                            'gwId'=>  $gw_id,
+                                                            'remoteId'=> $remote_id,
+                                                            'vender'=>'3',
+                                                            ],
+                                                         'requiresSID'=> 1], '2.0');
+               $result=json_decode($apiResult , true);
+               
+               $codes = array();
+               
+               if ($result['result']) {
+
+                  foreach ($result['result']['compressPulseList'] as $code) {
+                     $new_code['DEVICE_ID'] = $pult['ID'];
+                     $new_code['TITLE'] = $code['keyName'];
+                     $new_code['COMPRESSPULSE'] = $code['compressPulse'];
+                     $exts = $code['exts'];
+                     $exts = str_replace("\\","",$exts);
+                     $exts = json_decode($exts , true);
+                     $new_code['EXTS'] = $exts['99999'];
+                     $new_code['CPULSE_ALT_FLAG'] =  false;
+                     $new_code['RF_FLAG'] =  false;                     
+                     
+                     SQLInsert('tuircommand', $new_code);
+                     $new_code['DEV_ID'] = $pult['DEV_ID'];
+                     array_push($codes, $new_code); 
+                     unset($new_code['DEV_ID']);
+                  }
+               
                }
-            
-            }
 
-            $action = "tuya.m.infrared.learn.get";
+               $action = "tuya.m.infrared.learn.get";
 
-            $apiResult = $this->TuyaWebRequest(['action'=>$action,
-                                         'gid'=>$gid,
-                                         'data'=> ['devId'=> $gw_id,
-                                                 'gwId'=>  $gw_id,
-                                                 'subDevId'=> $device_id,
-                                                 'vender'=>'3',
-                                                ],
-                                         'requiresSID'=> 1]);
+               $apiResult = $this->TuyaWebRequest(['action'=>$action,
+                                          'gid'=>$gid,
+                                          'data'=> ['devId'=> $gw_id,
+                                                   'gwId'=>  $gw_id,
+                                                   'subDevId'=> $device_id,
+                                                   'vender'=>'3',
+                                                   ],
+                                          'requiresSID'=> 1]);
 
-            $result=json_decode($apiResult , true);
-            
-            $codes = array();
-            
-            if ($result['result']) {
+               $result=json_decode($apiResult , true);
+               
+               $codes = array();
+               
+               if ($result['result']) {
 
-               foreach ($result['result'] as $code) {
-                  $new_code['DEVICE_ID'] = $pult['ID'];
-                  $new_code['TITLE'] = $code['keyName'];
-                  $new_code['CPULSE_ALT'] =  base64_encode(hex2bin($code['compressPulse']));
-                  $new_code['CPULSE_ALT_FLAG'] =  true;
-                  
-                  SQLInsert('tuircommand', $new_code);
-                  $new_code['DEV_ID'] = $pult['DEV_ID'];
-                  array_push($codes, $new_code); 
-                  unset($new_code['DEV_ID']);
+                  foreach ($result['result'] as $code) {
+                     $new_code['DEVICE_ID'] = $pult['ID'];
+                     $new_code['TITLE'] = $code['keyName'];
+                     $new_code['CPULSE_ALT'] =  base64_encode(hex2bin($code['compressPulse']));
+                     $new_code['CPULSE_ALT_FLAG'] =  true;
+                     $new_code['RF_FLAG'] =  false;                     
+                     
+                     SQLInsert('tuircommand', $new_code);
+                     $new_code['DEV_ID'] = $pult['DEV_ID'];
+                     array_push($codes, $new_code); 
+                     unset($new_code['DEV_ID']);
+                  }
+               
                }
+               
+               $pult['CODES'] = $codes;     
             
-            }
-            
-            $pult['CODES'] = $codes;              
+           }
          }   
       }      
    }
