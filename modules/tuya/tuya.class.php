@@ -2019,7 +2019,7 @@ class tuya extends module
  tudevices: IR_FLAG boolean NOT NULL DEFAULT 0
  tudevices: CONTROL int(10) unsigned NOT NULL DEFAULT 0
  tudevices: STATUS int(10) unsigned NOT NULL DEFAULT 0
- tudevices: UUID varchar(20) unsigned NOT NULL DEFAULT ''
+ tudevices: UUID varchar(20) NOT NULL DEFAULT ''
  
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment
