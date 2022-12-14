@@ -1279,15 +1279,18 @@ class tuya extends module
                $rec['SEND12'] = 0;
                $rec['VER_3_1'] = 0;
                $rec['STATUS'] = 0;
-               $rec['CONTROL'] = 0;             
+               $rec['CONTROL'] = 0;
+               $rec['UUID'] = $device['uuid'];             
 
-               $rec['ID']=SQLInsert('tudevices',$rec);
+               $rec['ID'] = SQLInsert('tudevices', $rec);
             } else {
 
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
                if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] =''; 
                if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
+               if (is_null($rec['UUID'])) $rec['UUID'] = '';
+
                
                if (isset($device['moduleMap']['infrared'])) {
                   $ir_flag = True;
@@ -1296,15 +1299,16 @@ class tuya extends module
                }      
                    
 
-               if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
+               if ($rec['UUID'] != $device['uuid'] or $rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY'] = $device['localKey'];
                  $rec['PRODUCT_ID'] = $device['productId'];
                  $rec['GID_ID'] = $gid;
                  $rec['MESH_ID'] = $device['meshId'];
                  $rec['MAC'] = $device['mac'];
                  $rec['IR_FLAG'] = $ir_flag;
+                 $rec['UUID'] = $device['uuid'];  
                  
-                 $rec['ID']=SQLUpdate('tudevices',$rec);
+                 $rec['ID'] = SQLUpdate('tudevices',$rec);
                }
             }
 
@@ -2015,6 +2019,7 @@ class tuya extends module
  tudevices: IR_FLAG boolean NOT NULL DEFAULT 0
  tudevices: CONTROL int(10) unsigned NOT NULL DEFAULT 0
  tudevices: STATUS int(10) unsigned NOT NULL DEFAULT 0
+ tudevices: UUID varchar(20) unsigned NOT NULL DEFAULT ''
  
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment

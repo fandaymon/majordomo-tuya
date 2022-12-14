@@ -50,8 +50,8 @@ $dps_null = array();
 while (1) {
     if ((time() - $latest_disc) >= 5 * 60) {
         $latest_disc = time();
-        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, '' as MAC, 0 as 'ZIGBEE', SEND12, FLAGS12, VER_3_1 FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and STATUS=1 ORDER BY DEV_ID");
-        $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.STATUS=1");
+        $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, d.UUID, '' as MAC, 0 as 'ZIGBEE', SEND12, FLAGS12, VER_3_1 FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and STATUS=1 ORDER BY DEV_ID");
+        $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.UUID, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.STATUS=1");
         $devices = array_merge($devices ,$gw_devices); 
         if ($cycle_debug) {
             debmes(date('H:i:s') . ' Tuya: added ' .count($devices) . ' devices for local monitoring' );
@@ -96,7 +96,8 @@ while (1) {
 				if ($device['ZIGBEE'] == 0) {
 					$json='{"gwId":"'.$dev_id.'","devId":"'.$dev_id.'"}';
 				} else {
-					$json = '{"cid":"'.$device['MAC'].'"}';
+					//$json = '{"cid":"'.$device['MAC'].'"}';
+					$json = '{"cid":"'.$device['UUID'].'"}';
 				}        
                 
 				$payload =$tuya_module->TuyaLocalEncrypt($hexByte, $json, $local_key,$device['VER_3_1']);
