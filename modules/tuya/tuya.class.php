@@ -1144,14 +1144,15 @@ class tuya extends module
          
             $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device['devId'].'"');
 
-            if ($rec==NULL) {
-               if (isset($device['moduleMap']['infrared'])) {
-                  $ir_flag = True;
-               } else {
-                  $ir_flag = False;
-               }      
-               $rec['IR_FLAG'] = $ir_flag;
+            if (isset($device['moduleMap']['infrared'])) {
+               $ir_flag = 1;
+            } else {
+               $ir_flag = 0;
+            }   
 
+            if ($rec==NULL) {
+   
+               $rec['IR_FLAG'] = $ir_flag;
                $rec['TITLE']=$device['name'] ;
                $rec['DEV_ICON']= $device['iconUrl'];
                $rec['DEV_ID']= $device['devId'];
@@ -1171,15 +1172,8 @@ class tuya extends module
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
                if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] ='';
-               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
+               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = 0;
                
-               if (isset($device['moduleMap']['infrared'])) {
-                  $ir_flag = True;
-               } else {
-                  $ir_flag = False;
-               }      
-                   
-
                if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY']=$device['localKey'];
                  $rec['PRODUCT_ID']=$device['productId'];
@@ -1259,14 +1253,15 @@ class tuya extends module
          
             $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device['devId'].'"');
 
-            if ($rec==NULL) {
-               if (isset($device['moduleMap']['infrared'])) {
-                  $ir_flag = True;
-               } else {
-                  $ir_flag = False;
-               }      
-               $rec['IR_FLAG'] = $ir_flag;
+            if (isset($device['moduleMap']['infrared'])) {
+               $ir_flag = 1;
+            } else {
+               $ir_flag = 0;
+            }                
 
+            if ($rec==NULL) {
+    
+               $rec['IR_FLAG'] = $ir_flag;
                $rec['TITLE']=$device['name'] ;
                $rec['DEV_ICON']= $device['iconUrl'];
                $rec['DEV_ID']= $device['devId'];
@@ -1288,16 +1283,9 @@ class tuya extends module
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
                if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] =''; 
-               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = False;
+               if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = 0;
                if (is_null($rec['UUID'])) $rec['UUID'] = '';
-
-               
-               if (isset($device['moduleMap']['infrared'])) {
-                  $ir_flag = True;
-               } else {
-                  $ir_flag = False;
-               }      
-                   
+            
 
                if ($rec['UUID'] != $device['uuid'] or $rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                  $rec['LOCAL_KEY'] = $device['localKey'];
