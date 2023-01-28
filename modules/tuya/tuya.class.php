@@ -2077,7 +2077,7 @@ EOD;
  *
  */
 function SQLPrepareData($table, &$data)  {
-   if ( $table == 'tudevices' ) {
+   if ( $table == 'tudevices' ) { 
       foreach ($data as $key => &$value) {
          if ( strtoupper($key) == 'IR_FLAG' && $value != true ) { $value = 0; }
          if ( strtoupper($key) == 'SEND12' && $value != true ) { $value = 0; }

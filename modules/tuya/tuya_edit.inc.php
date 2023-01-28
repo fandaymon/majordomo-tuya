@@ -58,7 +58,7 @@
 
       //UPDATING RECORD
       if ($ok) {
-         $rec['UPDATED']=date('y-m-d H:j:s',time());
+         $rec['UPDATED']=date('y-m-d H:j:s',time()); 
          SQLPrepareData($table_name,$rec);
          if ($rec['ID']) {
             SQLUpdate($table_name, $rec);
