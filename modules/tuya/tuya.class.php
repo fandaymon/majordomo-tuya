@@ -457,6 +457,7 @@ class tuya extends module
             if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
                $rec['DEV_IP'] = $result['ip'];
                $rec['VER_3_1'] = $version;
+               SQLPrepareData('tudevices',$rec);
                SQLUpdate('tudevices', $rec);
              }
             echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
@@ -483,6 +484,7 @@ class tuya extends module
                if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
                   $rec['DEV_IP'] = $result['ip'];
                   $rec['VER_3_1'] = $version;
+                  SQLPrepareData('tudevices',$rec);
                   SQLUpdate('tudevices', $rec);
                 }
                echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
@@ -526,6 +528,7 @@ class tuya extends module
                if ($rec) {
                   if ($rec['TITLE'] != $scene['name']) {
                      $rec['TITLE'] = $scene['name'];
+                     SQLPrepareData('tudevices',$rec);
                      SQLUpdate('tudevices', $rec);
                   }   
                } else {
@@ -533,6 +536,7 @@ class tuya extends module
                   $rec['DEV_ID'] = $scene['id'];
                   $rec['TITLE'] = $scene['name'];
                   $rec['TYPE'] = 'scene';
+                  SQLPrepareData('tudevices',$rec);
                   SQLInsert('tudevices', $rec);
                }
             }   
@@ -885,6 +889,7 @@ class tuya extends module
          $rec['VER_3_1'] = 0;   
          $rec['IR_FLAG'] = 0;
 
+         SQLPrepareData('tudevices',$rec);
          $rec['ID']=SQLInsert('tudevices',$rec);
       }
 
@@ -1167,6 +1172,7 @@ class tuya extends module
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;      
 
+               SQLPrepareData('tudevices',$rec);
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
@@ -1182,6 +1188,7 @@ class tuya extends module
                  $rec['MAC'] = $device['mac'];
                  $rec['IR_FLAG'] = $ir_flag;
                  
+                 SQLPrepareData('tudevices',$rec);
                  $rec['ID']=SQLUpdate('tudevices',$rec);
                }
 
@@ -1277,6 +1284,7 @@ class tuya extends module
                $rec['CONTROL'] = 0;
                $rec['UUID'] = $device['uuid'];             
 
+               SQLPrepareData('tudevices',$rec);
                $rec['ID'] = SQLInsert('tudevices', $rec);
             } else {
 
@@ -1296,6 +1304,7 @@ class tuya extends module
                  $rec['IR_FLAG'] = $ir_flag;
                  $rec['UUID'] = $device['uuid'];  
                  
+                 SQLPrepareData('tudevices',$rec);
                  $rec['ID'] = SQLUpdate('tudevices',$rec);
                }
             }
@@ -1335,6 +1344,8 @@ class tuya extends module
 					  $cmd_rec['DIVIDEDBY100'] = 0;
 
 					  $cmd_rec['DEVICE_ID'] = $rec['ID'];
+
+                 SQLPrepareData('tucommands',$cmd_rec);
 					  $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
 					} else {
 					  $cmd_rec['VALUE_MIN'] = $sc[$device['productId']][$key]['min'];
@@ -1347,6 +1358,7 @@ class tuya extends module
                  } 
 					  $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
 
+                 SQLPrepareData('tucommands',$cmd_rec);
 					  $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
 					}
                
@@ -1359,6 +1371,7 @@ class tuya extends module
                         $rng_rec['RANGE_VALUE']=$range_key;
                         $rng_rec['RANGE_DESCRIPTION']=$range_value;
                
+                        SQLPrepareData('turange',$rng_rec);
                         $rng_rec['ID'] = SQLInsert('turange', $rng_rec);
                      }
                   }
@@ -1764,7 +1777,8 @@ class tuya extends module
                } 
              }
 
-        $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
+             SQLPrepareData('tucommands',$cmd_rec);
+             $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
       }
       
       if  ($cmd_rec['VALUE_SCALE']==NULL || $cmd_rec['VALUE_SCALE']==0) {    
@@ -1784,6 +1798,7 @@ class tuya extends module
 
       $cmd_rec['VALUE'] = $value;
       $cmd_rec['UPDATED'] = date('Y-m-d H:i:s');
+      SQLPrepareData('tucommands',$cmd_rec);
       SQLUpdate('tucommands', $cmd_rec);
       if (is_null($old_value)) $old_value='';
       if (is_null($value)) $value='';
@@ -1910,6 +1925,7 @@ class tuya extends module
      }
      $rec=SQLSelectOne("select * from tucommands where ID=".$properties[0]['ID']);
      $rec['value']=$value;
+     SQLPrepareData('tucommands',$rec);
      SQLUpdate('tucommands',$rec);
     
     }
@@ -2053,6 +2069,26 @@ EOD;
    }
 // --------------------------------------------------------------------
 }
+
+/** 
+ * SQLPrepareData
+ *
+ * use before calling the procedure SQLInsert or SQLUpdate
+ *
+ */
+function SQLPrepareData($table, &$data)  {
+   if ( $table == 'tudevices' ) {
+      foreach ($data as $key => &$value) {
+         if ( strtoupper($key) == 'IR_FLAG' && $value != true ) { $value = 0; }
+         if ( strtoupper($key) == 'SEND12' && $value != true ) { $value = 0; }
+         if ( strtoupper($key) == 'VER_3_1' && $value != true ) { $value = 0; }
+         if ( strtoupper($key) == 'ONLY_LOCAL' && $value != true ) { $value = 0; }
+         if ( strtoupper($key) == 'REMOTE_CONTROL' && $value != true ) { $value = 0; }
+         if ( strtoupper($key) == 'BUSY' && $value != true ) { $value = 0; }
+      }   
+   }
+}
+
 /*
 *
 * 

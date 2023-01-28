@@ -59,6 +59,7 @@
       //UPDATING RECORD
       if ($ok) {
          $rec['UPDATED']=date('y-m-d H:j:s',time());
+         SQLPrepareData($table_name,$rec);
          if ($rec['ID']) {
             SQLUpdate($table_name, $rec);
          } else {
@@ -159,6 +160,7 @@
             if (strlen($properties[$i]['DIVIDEDBY2']) == 0) $properties[$i]['DIVIDEDBY2'] = 0;
             
 
+            SQLPrepareData('tucommands',$properties[$i]);
             SQLUpdate('tucommands', $properties[$i]);
             if ($old_linked_object && $old_linked_object!=$properties[$i]['LINKED_OBJECT'] && $old_linked_property && $old_linked_property!=$properties[$i]['LINKED_PROPERTY']) {
              removeLinkedProperty($old_linked_object, $old_linked_property, $this->name);
