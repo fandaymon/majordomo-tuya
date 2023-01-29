@@ -449,9 +449,9 @@ class tuya extends module
             array_push($devices, $result['gwId']);
             
             if ($result['version'] == '3.3') {
-               $version = false;
+               $version = 0;
             } else {
-               $version = true;
+               $version = 1;
             }   
             $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
             if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
@@ -475,9 +475,9 @@ class tuya extends module
                array_push($devices, $result['gwId']);
                
                if ($result['version'] == '3.3') {
-                  $version = false;
+                  $version = 0;
                } else {
-                  $version = true;
+                  $version = 1;
                }   
                $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
                if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
