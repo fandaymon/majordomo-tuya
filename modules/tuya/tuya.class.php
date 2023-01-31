@@ -1330,6 +1330,7 @@ class tuya extends module
 
 					  $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
 					  $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
+                 if ($cmd_rec['VALUE_SCALE'] == '') $cmd_rec['VALUE_SCALE']=0;
 					  $cmd_rec['DIVIDEDBY2'] = 0;
 					  $cmd_rec['DIVIDEDBY10'] = 0;
 					  $cmd_rec['DIVIDEDBY100'] = 0;
@@ -1345,6 +1346,7 @@ class tuya extends module
                  if ($cmd_rec['DIVIDEDBY2'] == 0) {
 					   $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
                  } 
+                 if ($cmd_rec['VALUE_SCALE'] == '') $cmd_rec['VALUE_SCALE']=0;
 					  $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
 
 					  $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
@@ -1724,7 +1726,7 @@ class tuya extends module
    
 
    function processCommand($device_id, $command, $value, $params = 0, $checkOld = true) {
-		
+
       $cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$device_id." AND TITLE LIKE '".DBSafe($command)."'");
          
       if (!$cmd_rec['ID']) {
@@ -1779,6 +1781,9 @@ class tuya extends module
          $value = $this->Tuya_to_RGB($value);
       }        
       
+      if (gettype($value) == 'string' and strlen($value) > 255) {
+         $value = substr($value, 0, 255);
+      }
   
       $old_value = $cmd_rec['VALUE'];
 
@@ -2007,7 +2012,7 @@ class tuya extends module
  tudevices: IR_FLAG boolean NOT NULL DEFAULT 0
  tudevices: CONTROL int(10) unsigned NOT NULL DEFAULT 0
  tudevices: STATUS int(10) unsigned NOT NULL DEFAULT 0
- tudevices: UUID varchar(20) NOT NULL DEFAULT ''
+ tudevices: UUID varchar(30) NOT NULL DEFAULT ''
  
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment

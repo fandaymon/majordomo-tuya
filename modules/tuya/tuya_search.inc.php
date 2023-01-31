@@ -83,8 +83,8 @@ if ($tab == 'scene') {
                      $new_code['TITLE'] = $code['keyName'];
                      $new_code['CPULSE_ALT'] = $pulse;
                      $new_code['EXTS'] = '';
-                     $new_code['CPULSE_ALT_FLAG'] =  false;
-                     $new_code['RF_FLAG'] =  true;
+                     $new_code['CPULSE_ALT_FLAG'] =  0;
+                     $new_code['RF_FLAG'] =  1;
                      
 
                      SQLInsert('tuircommand', $new_code);
@@ -128,8 +128,8 @@ if ($tab == 'scene') {
                      $exts = str_replace("\\","",$exts);
                      $exts = json_decode($exts , true);
                      $new_code['EXTS'] = $exts['99999'];
-                     $new_code['CPULSE_ALT_FLAG'] =  false;
-                     $new_code['RF_FLAG'] =  false;                     
+                     $new_code['CPULSE_ALT_FLAG'] =  0;
+                     $new_code['RF_FLAG'] =  0;                     
                      
                      SQLInsert('tuircommand', $new_code);
                      $new_code['DEV_ID'] = $pult['DEV_ID'];
@@ -160,8 +160,8 @@ if ($tab == 'scene') {
                      $new_code['DEVICE_ID'] = $pult['ID'];
                      $new_code['TITLE'] = $code['keyName'];
                      $new_code['CPULSE_ALT'] =  base64_encode(hex2bin($code['compressPulse']));
-                     $new_code['CPULSE_ALT_FLAG'] =  true;
-                     $new_code['RF_FLAG'] =  false;                     
+                     $new_code['CPULSE_ALT_FLAG'] =  1;
+                     $new_code['RF_FLAG'] =  0;                     
                      
                      SQLInsert('tuircommand', $new_code);
                      $new_code['DEV_ID'] = $pult['DEV_ID'];
