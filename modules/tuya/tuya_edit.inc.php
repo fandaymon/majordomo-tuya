@@ -47,6 +47,7 @@
 
          global $send12;
          $rec['SEND12'] = $send12;
+         
 
          global $flags12;
          $rec['FLAGS12'] = $flags12;
@@ -60,6 +61,7 @@
       if ($ok) {
          $rec['UPDATED']=date('y-m-d H:j:s',time());
          if ($rec['ID']) {
+            if (strlen($rec['SEND12']) == 0) $rec['SEND12'] = 0;
             SQLUpdate($table_name, $rec);
          } else {
             $new_rec = 1;
@@ -158,8 +160,7 @@
             if (strlen($properties[$i]['DIVIDEDBY10']) == 0) $properties[$i]['DIVIDEDBY10'] = 0;
             if (strlen($properties[$i]['DIVIDEDBY100']) == 0) $properties[$i]['DIVIDEDBY100'] = 0;
             if (strlen($properties[$i]['DIVIDEDBY2']) == 0) $properties[$i]['DIVIDEDBY2'] = 0;
-            if (strlen($properties[$i]['SEND12']) == 0) $properties[$i]['SEND12'] = 0;
-            
+           
 
             SQLUpdate('tucommands', $properties[$i]);
             if ($old_linked_object && $old_linked_object!=$properties[$i]['LINKED_OBJECT'] && $old_linked_property && $old_linked_property!=$properties[$i]['LINKED_PROPERTY']) {
