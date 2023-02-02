@@ -47,7 +47,6 @@
 
          global $send12;
          $rec['SEND12'] = $send12;
-         
 
          global $flags12;
          $rec['FLAGS12'] = $flags12;
@@ -59,7 +58,7 @@
 
       //UPDATING RECORD
       if ($ok) {
-         $rec['UPDATED']=date('y-m-d H:j:s',time());
+         //$rec['UPDATED']=date('y-m-d H:j:s',time());
          if ($rec['ID']) {
             if (strlen($rec['SEND12']) == 0) $rec['SEND12'] = 0;
             SQLUpdate($table_name, $rec);
@@ -114,9 +113,11 @@
 
       if ($delete_id) {
          SQLExec("DELETE FROM tucommands WHERE ID='".(int)$delete_id."'");
+         SQLExec("DELETE FROM tuvalues WHERE ID='".(int)$delete_id."'");
+
       }
 
-      $properties = SQLSelect("SELECT * FROM tucommands WHERE DEVICE_ID='".$rec['ID']."' ORDER BY ID");
+      $properties = SQLSelect("SELECT tucommands.*, VALUE,UPDATED FROM tucommands INNER JOIN tuvalues ON tucommands.ID=tuvalues.ID WHERE DEVICE_ID='".$rec['ID']."' ORDER BY ID");
 
       $total = count($properties);
 
@@ -158,9 +159,10 @@
             
             if (strlen($properties[$i]['VALUE_SCALE']) == 0) $properties[$i]['VALUE_SCALE'] = 0;
             if (strlen($properties[$i]['DIVIDEDBY10']) == 0) $properties[$i]['DIVIDEDBY10'] = 0;
-            if (strlen($properties[$i]['DIVIDEDBY100']) == 0) $properties[$i]['DIVIDEDBY100'] = 0;
             if (strlen($properties[$i]['DIVIDEDBY2']) == 0) $properties[$i]['DIVIDEDBY2'] = 0;
-           
+            
+	    unset($properties[$i]['VALUE']);
+	    unset($properties[$i]['UPDATED']);
 
             SQLUpdate('tucommands', $properties[$i]);
             if ($old_linked_object && $old_linked_object!=$properties[$i]['LINKED_OBJECT'] && $old_linked_property && $old_linked_property!=$properties[$i]['LINKED_PROPERTY']) {

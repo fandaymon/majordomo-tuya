@@ -1784,15 +1784,34 @@ class tuya extends module
       if (gettype($value) == 'string' and strlen($value) > 255) {
          $value = substr($value, 0, 255);
       }
-  
-      $old_value = $cmd_rec['VALUE'];
 
-      $cmd_rec['VALUE'] = $value;
-      $cmd_rec['UPDATED'] = date('Y-m-d H:i:s');
-      SQLUpdate('tucommands', $cmd_rec);
-      if (is_null($old_value)) $old_value='';
       if (is_null($value)) $value='';
-      
+
+      $old_rec = SQLSelectOne('SELECT * FROM tuvalues WHERE ID='.$cmd_rec['ID'].';');
+      //$old_value = $cmd_rec['VALUE'];
+      if ($old_rec) {
+         $old_value = $old_rec['VALUE'];
+         if (is_null($old_value)) $old_value='';
+
+         $old_rec['VALUE'] = $value;
+         $old_rec['UPDATED'] = date('Y-m-d H:i:s');         
+
+         SQLUpdate('tuvalues', $old_rec);
+         
+      } else {
+         $old_rec = array();
+         $old_rec['ID'] = $cmd_rec['ID'];
+         $old_rec['VALUE'] = $value;
+         $old_rec['UPDATED'] = date('Y-m-d H:i:s');   
+         
+         SQLInsert('tuvalues', $old_rec);         
+      }   
+
+
+      //$cmd_rec['VALUE'] = $value;
+      //$cmd_rec['UPDATED'] = date('Y-m-d H:i:s');
+      //SQLUpdate('tucommands', $cmd_rec);
+
       if ($checkOld and $old_value == $value) return;
          
       if ($command=='state' or $command=='switch_1' or $command=='power' or $command=='Power' or $command=='switch_on') processSubscriptions('TUSTATUS', array('FIELD' => 'STATE','VALUE' => $value,'ID' =>$device_id));
@@ -1914,6 +1933,7 @@ class tuya extends module
       }
      }
      $rec=SQLSelectOne("select * from tucommands where ID=".$properties[0]['ID']);
+     $rec = SQLSelectOne("SELECT * FROM tuvalues WHERE ID=".$rec['ID'].';');
      $rec['value']=$value;
      SQLUpdate('tucommands',$rec);
     
@@ -1941,6 +1961,12 @@ class tuya extends module
          }   
          
       } 
+
+      $rec = SQLSelectOne("SHOW TABLES LIKE 'tuvalues';");
+      if (!$rec) {
+         $sql = "CREATE TABLE tuvalues (ID INT, VALUE VARCHAR(255), UPDATED datetime, INDEX USING HASH (ID)) ENGINE = MEMORY;";
+         SQLExec($sql);
+      }
       
       $rec = SQLSelectOne("SHOW TABLES LIKE 'tuircommand';" );
       if ($rec) {
@@ -2038,6 +2064,7 @@ class tuya extends module
  tucommands: COLOR_V2 boolean DEFAULT 0
  tucommands: UPDATED datetime
 
+
  turange: ID int(10) unsigned NOT NULL auto_increment
  turange: COMMAND_ID int(10) unsigned NOT NULL 
  turange: RANGE_VALUE varchar(10) NOT NULL DEFAULT ''
@@ -2063,3 +2090,4 @@ EOD;
 * 
 *
 */
+
