@@ -1961,6 +1961,19 @@ class tuya extends module
          }   
          
       } 
+	   
+      $rec = SQLSelectOne("SHOW TABLES LIKE 'tucommands';" );
+      if ($rec) {
+         $table='tucommands';
+         $fields = SQLSelect("SHOW FIELDS FROM `$table`;");
+         $fields = array_column($fields, 'Field');
+         if (in_array('VALUE', $fields)) {
+            SQLExec("ALTER TABLE tucommands DROP COLUMN VALUE;");
+         }   
+         if (in_array('UPDATED', $fields)) {
+            SQLExec("ALTER TABLE tucommands DROP COLUMN UPDATED;");
+         }   
+      } 	   
 
       $rec = SQLSelectOne("SHOW TABLES LIKE 'tuvalues';");
       if (!$rec) {
@@ -2043,7 +2056,6 @@ class tuya extends module
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment
  tucommands: TITLE varchar(100) NOT NULL DEFAULT ''
- tucommands: VALUE varchar(255) NOT NULL DEFAULT ''
  tucommands: ALIAS varchar(255) NOT NULL DEFAULT ''
  tucommands: SDEVICE_TYPE varchar(255) NOT NULL DEFAULT ''
  tucommands: DEVICE_ID int(10) NOT NULL DEFAULT '0'
@@ -2062,8 +2074,6 @@ class tuya extends module
  tucommands: COLOR_CONVERT boolean DEFAULT 0
  tucommands: REPLACE_LIST varchar(255) DEFAULT ''
  tucommands: COLOR_V2 boolean DEFAULT 0
- tucommands: UPDATED datetime
-
 
  turange: ID int(10) unsigned NOT NULL auto_increment
  turange: COMMAND_ID int(10) unsigned NOT NULL 
