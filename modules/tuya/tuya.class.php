@@ -1932,10 +1932,10 @@ class tuya extends module
          $this->TuyaLocalMsg('SET',$dev_id,$gw['LOCAL_KEY'],$gw['DEV_IP'],$dps,$properties[0]['MAC']);
       }
      }
-     $rec=SQLSelectOne("select * from tucommands where ID=".$properties[0]['ID']);
+     
      $rec = SQLSelectOne("SELECT * FROM tuvalues WHERE ID=".$rec['ID'].';');
      $rec['value']=$value;
-     SQLUpdate('tucommands',$rec);
+     SQLUpdate('tuvalues',$rec);
     
     }
    }
