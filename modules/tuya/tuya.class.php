@@ -1933,7 +1933,7 @@ class tuya extends module
       }
      }
      
-     $rec = SQLSelectOne("SELECT * FROM tuvalues WHERE ID=".$rec['ID'].';');
+     $rec = SQLSelectOne("SELECT * FROM tuvalues WHERE ID=".$properties[0]['ID'].';');
      $rec['value']=$value;
      SQLUpdate('tuvalues',$rec);
     
