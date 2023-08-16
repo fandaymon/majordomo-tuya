@@ -77,11 +77,15 @@
    </div>
 
    <div class="form-group ">
-    <label class="col-lg-4 control-label">Версия 3.1: </label>
+    <label class="col-lg-4 control-label">Версия протокола: </label>
     <div class="col-lg-4">
-     <input type="radio" name="ver_3_1" value="1"[#if VER_3_1!="0"#] checked[#endif#]> <#LANG_YES#>
-     <input type="radio" name="ver_3_1" value="0"[#if (VER_3_1=="0") || (VER_3_1=="")#] checked[#endif#]> <#LANG_NO#>
-     </span>
+      <select name="tuya_ver" value="[#TUYA_VER#]">
+         <option [#if TUYA_VER=="3.1" #] selected[#endif#]>3.1</option>
+         <option [#if TUYA_VER=="3.2" #] selected[#endif#]>3.2</option>
+         <option [#if TUYA_VER=="3.3" #] selected[#endif#]>3.3</option>
+         <option [#if TUYA_VER=="3.4" #] selected[#endif#]>3.4</option>
+         <option [#if TUYA_VER=="3.5" #] selected[#endif#]>3.5</option>
+      </select> 
     </div>
    </div>
    

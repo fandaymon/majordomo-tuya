@@ -448,17 +448,13 @@ class tuya extends module
             echo '<tr>';
             array_push($devices, $result['gwId']);
             
-            if ($result['version'] == '3.3') {
-               $version = 0;
-            } else {
-               $version = 1;
-            }   
             $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
             if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
                $rec['DEV_IP'] = $result['ip'];
-               $rec['VER_3_1'] = $version;
+               $rec['TUYA_VER'] = $result['version'];
                SQLUpdate('tudevices', $rec);
              }
+
             echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
             echo '<td>'.$result['gwId'].'</td>';
             echo '<td> ('.$result['version'].') </td>';
@@ -642,10 +638,10 @@ class tuya extends module
      return $this->config['TUYA_ACCESS_TOKEN'];
    }
 
-  function TuyaLocalEncrypt($command, $json, $local_key,$ver_3_1=false) {
+  function TuyaLocalEncrypt($command, $json, $local_key,$tuya_ver='3.3') {
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
-   if ($ver_3_1) {
+   if ($tuya_ver == '3.1') {
       $json_payload=$json;
    } else {   
       $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
@@ -675,16 +671,22 @@ class tuya extends module
   }
   
        
-  function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='',$cid='',$ver_3_1=false) {
+  function TuyaLocalMsg($command,$dev_id,$local_key,$local_ip,$data='',$cid='',$tuya_ver='3.3') {
+
+   if ($tuya_ver == '3.4') {
+
+      return $this->TuyaLocalMsg34($command,$dev_id,$local_key,$local_ip,$data,$cid);
+   }
 
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
    
-   if ($ver_3_1) {
+   if ($tuya_ver == '3.1') {
       $gw_name='uid';
    } else {
       $gw_name='gwId';
-   }      
+   }
+
    if ($command=='STATUS') {
     $hexByte="0a";
     $json='{"'.$gw_name.'":"'.$dev_id.'","devId":"'.$dev_id.'"}';
@@ -699,7 +701,7 @@ class tuya extends module
     }     
    }
 
-   if ($ver_3_1) {
+   if ($tuya_ver == '3.1') {
       if ($command != 'STATUS') {
        $json_payload = base64_encode(openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA));
        
@@ -741,22 +743,23 @@ class tuya extends module
    
    if (mb_substr($result,0,1) == '{' ) {
     return $result;
-   } else if ($ver_3_1) {
+   } else if ($tuya_ver == '3.1') {
       $result = openssl_decrypt(base64_decode($result), 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
    } else {       
       $result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
    } 
    return $result;
-  }
+  
+}
 
   function requestLocalStatus(){
-   $devices=SQLSelect("SELECT * FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' ORDER BY DEV_ID");
+   $devices = SQLSelect("SELECT * FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' ORDER BY DEV_ID");
    foreach($devices as $device) {
     $mdev=strpos($device['DEV_ID'],'_');
     if ($mdev>0 and substr($device['DEV_ID'],$mdev+1)==1) {
        $dev_id=substr($device['DEV_ID'],0,$mdev);
        $status='';
-       $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP'],'','',$device['VER_3_1']);
+       $status=$this->TuyaLocalMsg('STATUS',$dev_id,$device['LOCAL_KEY'],$device['DEV_IP'],'','',$device['TUYA_VER']);
        
        if ($status!='') { 
        // debmes('Status: '.$status.' '.$device['DEV_IP']);
@@ -787,7 +790,7 @@ class tuya extends module
 
   
     } else {
-     $status=$this->TuyaLocalMsg('STATUS',$device['DEV_ID'],$device['LOCAL_KEY'],$device['DEV_IP'],'','',$device['VER_3_1']);
+     $status=$this->TuyaLocalMsg('STATUS',$device['DEV_ID'],$device['LOCAL_KEY'],$device['DEV_IP'],'','',$device['TUYA_VER']);
      if ($status!='') { 
       //debmes('Status: '.$status.' '.$device['DEV_IP']);
       $status=json_decode($status);
@@ -809,6 +812,171 @@ class tuya extends module
     }
    }
   }
+
+
+  function TuyaLocalMsg34($command, $dev_id, $local_key, $local_ip, $dps, $cid) {
+   $real_local_key = $local_key;
+
+   $hexByte="03";
+   $local_nonce = '0123456789abcdef';
+   $json = '0123456789abcdef';
+   
+   // Запрос на ключ
+   
+   $payload = $this->encode_message($json, $local_key, $hexByte, 1);
+   
+   
+   $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+   socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
+   
+   $buf='';
+   
+   
+   if (socket_connect($socket, $local_ip, 6668)) {
+      for ($i=0;$i<3;$i++) {
+      $send=socket_send($socket, $payload, strlen($payload), 0);
+      if ($send!=strlen($payload)) {
+         //debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip);
+      }
+      $reciv=socket_recv ( $socket , $buf , 2048 ,0);
+      //debmes( date('y-m-d h:i:s') . ' recived '.strlen($buf));
+      if ($buf!='') break;
+      sleep(1);
+      }
+   
+   } else {  
+      $err = socket_last_error($socket); 
+      echo date('y-m-d h:i:s') .' ' .socket_strerror($err) . ' '. $local_ip ."\n";
+   }
+   
+   
+   $data = $buf;
+   $data = bin2hex($data);
+   
+   $payload_offset = (16+4) * 2;
+   $payload_len = hexdec((substr($data, 28, 4))) - 4;
+   $payload = substr($data, $payload_offset ,$payload_len*2);
+   $crc =  substr($payload, strlen($payload)-8-64, 64);
+   $suffix = substr($payload, strlen($payload)-8, 8);
+   $payload = substr($payload, 0, strlen($payload)-8-64);
+   
+   
+   // CRC check
+   
+   $have_crc = hash_hmac('sha256', hex2bin(substr($data, 0, strlen($data)-8-64)), $local_key);
+   
+   if ($have_crc != $crc) {
+    DebMes('Device '.$dev_id.'. Wrong CRC');
+   } 
+   
+   $payload = openssl_decrypt(hex2bin($payload), 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA );
+   $remote_nonce = substr(bin2hex($payload), 0, 32);
+   $hmac_check = hash_hmac('sha256', ($local_nonce),$local_key);
+   $have_hmac =  bin2hex(substr($payload, 16, 32));
+   
+   if ($hmac_check != $have_hmac) {
+      DebMes('Device '.$dev_id.'. Wrong HMAC');
+   } 
+   
+   // Encrypt remote_nonce and send SESS_KEY_NEG_FINISH
+   $rkey_hmac = hash_hmac('sha256', hex2bin($remote_nonce),($local_key));
+   
+   // send command=5
+   //MessagePayload(SESS_KEY_NEG_FINISH, rkey_hmac)
+   
+   $hexByte="05";
+   $prefix="000055aa00000002000000";
+   $payload = $this->encode_message(hex2bin($rkey_hmac), $local_key, $hexByte, 2);
+   
+   
+   $send=socket_send($socket, $payload, strlen($payload), 0);
+
+   if ($send!=strlen($payload)) {
+      DebMes ( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip);
+   }
+      
+   
+   $remote_nonce = hex2bin($remote_nonce);
+   
+   for ($i=0; $i < strlen($local_nonce); $i++) {
+      $hex_ary[] = sprintf("%02X", ord(substr($local_nonce, $i, 1)) ^ ord(substr($remote_nonce, $i, 1))  );
+   }
+   
+   $local_key = implode('',$hex_ary);
+   $local_key = openssl_encrypt(hex2bin($local_key), 'AES-128-ECB', $real_local_key,  OPENSSL_RAW_DATA );
+   $local_key = substr($local_key, 0, 16);
+   
+
+   if ($command == 'STATUS') {
+      $json = '{}';
+      $hexByte="10";
+      
+      
+      $buf = '';
+      
+      $payload = $this->encode_message($json, $local_key, $hexByte, 3);
+      
+      $send=socket_send($socket, $payload, strlen($payload), 0);
+         
+      $reciv=socket_recv ( $socket , $buf , 2048 ,MSG_WAITALL);
+      
+      $data = $buf;
+      $result = substr(($data),20,-8);
+      $result = substr($data, 20,80);
+
+      socket_close($socket);
+
+        
+      return openssl_decrypt($result, 'AES-128-ECB', ($local_key), OPENSSL_RAW_DATA);
+
+   } else {   
+
+      $json = '3.4'."\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".'{"protocol":5,"t":'.time().',"data":{"dps":'.$dps.'}}';
+      $hexByte="0d";
+
+      $payload = $this->encode_message($json, ($local_key), $hexByte, 3);
+
+      $send=socket_send($socket, $payload, strlen($payload), 0);
+
+      $reciv=socket_recv ( $socket , $buf , 2048 ,MSG_WAITALL);
+
+  } 
+
+  socket_close($socket);
+
+ }
+
+  function encode_message($json, $local_key, $hexByte, $seqno) {
+   $prefix="000055aa00000000000000";
+   $prefix="000055aa0000000".$seqno."000000";
+   $suffix="0000aa55";
+   
+      
+   $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+   
+   $postfix_payload = hex2bin(bin2hex($json_payload) . $suffix);
+   $postfix_payload_hex_len = dechex(strlen($json_payload)+36);
+   
+   
+   if (strlen($postfix_payload_hex_len)>2) {
+      $buffer = hex2bin($prefix . $hexByte . '00000' . $postfix_payload_hex_len.bin2hex($json_payload) ) ;
+   } else { 
+      $buffer = hex2bin($prefix . $hexByte . '000000' . $postfix_payload_hex_len . bin2hex($json_payload)) ;
+   }
+   $buffer=bin2hex($buffer);
+   $buffer1=strtoupper(substr($buffer,0,-16));
+   $buffer1=strtoupper(($buffer));
+   
+   $hex_crc=(hash_hmac('sha256',hex2bin($buffer1),$local_key));
+      
+   $hex_crc=str_pad($hex_crc,8,"0",STR_PAD_LEFT);
+   
+   $buffer = $buffer1.$hex_crc.$suffix;
+   
+   return hex2bin($buffer);
+
+
+ }
 
   function Tuya_send_receive( $payload,$local_ip) {
    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -1849,7 +2017,7 @@ class tuya extends module
 
    function propertySetHandle($object, $property, $value) {
 
-    $properties = SQLSelect("SELECT tucommands.*, tudevices.VER_3_1, tudevices.DEV_ID,tudevices.CONTROL,tudevices.STATUS, tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID,tudevices.MAC FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+    $properties = SQLSelect("SELECT tucommands.*, tudevices.TUYA_VER, tudevices.DEV_ID,tudevices.CONTROL,tudevices.STATUS, tudevices.LOCAL_KEY,tudevices.DEV_IP,tudevices.TYPE,tudevices.MESH_ID,tudevices.GID_ID,tudevices.MAC FROM tucommands LEFT JOIN tudevices ON tudevices.ID=tucommands.DEVICE_ID WHERE tucommands.LINKED_OBJECT LIKE '".DBSafe($object)."' AND tucommands.LINKED_PROPERTY LIKE '".DBSafe($property)."'");
 
     if ($properties) {
        
@@ -1926,7 +2094,7 @@ class tuya extends module
       
       if (strlen($properties[0]['MESH_ID'])==0) {
          //debmes('Tuya: dps=' .$dps);
-         $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps,'', $properties[0]['VER_3_1']);
+         $this->TuyaLocalMsg('SET',$dev_id,$properties[0]['LOCAL_KEY'],$properties[0]['DEV_IP'],$dps,'', $properties[0]['TUYA_VER']);
       } else {
          $gw=SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" .$properties[0]['MESH_ID']."'");
          $this->TuyaLocalMsg('SET',$dev_id,$gw['LOCAL_KEY'],$gw['DEV_IP'],$dps,$properties[0]['MAC']);
@@ -2052,6 +2220,8 @@ class tuya extends module
  tudevices: CONTROL int(10) unsigned NOT NULL DEFAULT 0
  tudevices: STATUS int(10) unsigned NOT NULL DEFAULT 0
  tudevices: UUID varchar(30) NOT NULL DEFAULT ''
+ tudevices: TUYA_VER varchar(5) DEFAULT '3.3'
+ 
  
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment
