@@ -51,8 +51,8 @@
          global $flags12;
          $rec['FLAGS12'] = $flags12;
 
-         global $ver_3_1;
-         $rec['VER_3_1'] = $ver_3_1;
+         global $tuya_ver;
+         $rec['TUYA_VER'] = $tuya_ver;
 
       }
 
