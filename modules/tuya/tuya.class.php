@@ -1950,7 +1950,7 @@ class tuya extends module
                } 
              }
 
-         DebMes('Added: '.$command.' '.$device_id);
+         
 
         $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
       }
@@ -1967,6 +1967,24 @@ class tuya extends module
          $value = $this->Tuya_to_RGB($value);
       }  
       
+      if ($cmd_rec['DECODE']) {
+         $value = base64_decode($value);
+      }
+
+
+      if ($cmd_rec['SPLIT']) {
+         $json = json_decode($value);
+         foreach ($json as $k=>$d){
+            if (is_bool($d)) {
+              $d=($d)?1:0;
+            } 
+
+            $this->processCommand($device_id, $k, $d);
+         }         
+      }
+      
+
+
       if ($cmd_rec['POWER_METER']) {
 
          $v = base64_decode($value);
