@@ -156,10 +156,19 @@
             $properties[$i]['VALUE_SCALE']=${'value_scale'.$properties[$i]['ID']};
             global ${'replace_list'.$properties[$i]['ID']};
             $properties[$i]['REPLACE_LIST']=${'replace_list'.$properties[$i]['ID']};
+            global ${'power_meter'.$properties[$i]['ID']};
+            $properties[$i]['POWER_METER']=${'power_meter'.$properties[$i]['ID']};
+            global ${'decode'.$properties[$i]['ID']};
+            $properties[$i]['DECODE']=${'decode'.$properties[$i]['ID']};
+            global ${'split'.$properties[$i]['ID']};
+            $properties[$i]['SPLIT']=${'split'.$properties[$i]['ID']};                                    
             
             if (strlen($properties[$i]['VALUE_SCALE']) == 0) $properties[$i]['VALUE_SCALE'] = 0;
             if (strlen($properties[$i]['DIVIDEDBY10']) == 0) $properties[$i]['DIVIDEDBY10'] = 0;
             if (strlen($properties[$i]['DIVIDEDBY2']) == 0) $properties[$i]['DIVIDEDBY2'] = 0;
+            if (strlen($properties[$i]['POWER_METER']) == 0) $properties[$i]['POWER_METER'] = 0;
+            if (strlen($properties[$i]['DECODE']) == 0) $properties[$i]['DECODE'] = 0;
+            if (strlen($properties[$i]['SPLIT']) == 0) $properties[$i]['SPLIT'] = 0;
             
 	    unset($properties[$i]['VALUE']);
 	    unset($properties[$i]['UPDATED']);

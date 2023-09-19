@@ -98,6 +98,10 @@
                      <td valign="middle"><b>UNIT:</b> <div class="metric_attr">[#VALUE_UNIT#]</div></td>
                      <td valign="middle"><b>Mode: </b><div class="metric_attr">[#MODE#] </div></td>
                      <td valign="middle"><b>Type:</b> <div class="metric_attr">[#VALUE_TYPE#]</div></td>
+                     <td valign="middle" width="100px"><input type="checkbox" name="power_meter[#ID#]" id="power_meter[#ID#]" value="1" [#if POWER_METER=='1'#]checked[#endif POWER_METER#]><label for="power_meter[#ID#]"> Счётчик</label></td>
+                     <td valign="middle" width="150px"><input type="checkbox" name="decode[#ID#]" id="decode[#ID#]" value="1" [#if DECODE=='1'#]checked[#endif DECODE#]><label for="decode[#ID#]"> Декодировать</label></td>
+                     <td valign="middle" width="150px"><input type="checkbox" name="split[#ID#]" id="split[#ID#]" value="1" [#if SPLIT=='1'#]checked[#endif SPLIT#]><label for="split[#ID#]"> Разбивать</label></td>
+
                   </tr>
                </tbody>
                </table>
