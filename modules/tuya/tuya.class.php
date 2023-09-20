@@ -2304,7 +2304,7 @@ class tuya extends module
  tucommands: REPLACE_LIST varchar(255) DEFAULT ''
  tucommands: COLOR_V2 boolean DEFAULT 0
  tucommands: POWER_METER boolean DEFAULT 0
- tucommands: DECODE boolean DEFAULT 
+ tucommands: DECODE boolean DEFAULT 0
  tucommands: SPLIT boolean DEFAULT 0
  
 
