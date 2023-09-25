@@ -1344,9 +1344,7 @@ class tuya extends module
                $rec['TUYA_VER'] = '3.3';
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;      
-               $rec['POWER_METER'] = 0;      
-               $rec['DECODE'] = 0;      
-               $rec['SPLIT'] = 0;      
+    
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
@@ -1457,9 +1455,6 @@ class tuya extends module
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;
                $rec['UUID'] = $device['uuid'];    
-               $rec['POWER_METER'] = 0;      
-               $rec['DECODE'] = 0;      
-               $rec['SPLIT'] = 0;                          
 
                $rec['ID'] = SQLInsert('tudevices', $rec);
             } else {
@@ -1531,7 +1526,12 @@ class tuya extends module
                      $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
                   } 
                   if ($cmd_rec['VALUE_SCALE'] == '') $cmd_rec['VALUE_SCALE']=0;
+
                   $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
+
+                  $cmd_rec['POWER_METER'] = 0;      
+                  $cmd_rec['DECODE'] = 0;      
+                  $cmd_rec['SPLIT'] = 0;                    
 
                   $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
                   }
