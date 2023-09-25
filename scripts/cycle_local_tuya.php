@@ -108,7 +108,7 @@ while (1) {
 
 				} else {
                 
-					$payload =$tuya_module->TuyaLocalEncrypt($hexByte, $json, $local_key,$device['TUYA_VER']);
+					$payload =$tuya_module->TuyaLocalEncrypt($hexByte, $json, $local_key, $tuya_ver);
 					
 					$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 					socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
@@ -119,8 +119,24 @@ while (1) {
 					if (socket_connect($socket, $local_ip, 6668)) {
 						//echo 'Connect '.  PHP_EOL ;
 						if ($device['SEND12']) {
-						$payload_12 = $tuya_module->TuyaLocalEncrypt('12', $device['FLAGS12'], $local_key);   
-						$send=socket_send($socket, $payload_12, strlen($payload_12), 0);
+							$payload_12 = $tuya_module->TuyaLocalEncrypt('12', $device['FLAGS12'], $local_key, $tuya_ver);   
+							$send = socket_send($socket, $payload_12, strlen($payload_12), 0);
+
+							if ($send != strlen($payload)) {
+								debmes('Error sending 12. '.date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . ', ip' . $local_ip );
+							}
+							
+							$reciv = socket_recv ( $socket , $buf , 2048 ,0);
+							$result = substr($buf,20,-8);
+
+							if ($tuya_ver != '3.1') { 
+								$result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
+							}    							
+							
+							if ($cycle_debug) { 
+								debmes('12 answer: '.$result );
+							}	
+							
 
 						}    
 						for ($i=0;$i<1;$i++) {
