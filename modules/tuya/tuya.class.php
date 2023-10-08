@@ -634,7 +634,7 @@ class tuya extends module
      return $this->config['TUYA_ACCESS_TOKEN'];
    }
 
-  function TuyaLocalEncrypt($command, $json, $local_key,$tuya_ver='3.3') {
+  function TuyaLocalEncrypt($command, $json, $local_key, $tuya_ver='3.3') {
    $prefix="000055aa00000000000000";
    $suffix="000000000000aa55";
    if ($tuya_ver == '3.1') {
@@ -1499,42 +1499,27 @@ class tuya extends module
                   $cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$rec['ID']." AND TITLE LIKE '".DBSafe($key)."'");
                
                   if (!$cmd_rec['ID']) {
-                  $cmd_rec = array();
-                  $cmd_rec['TITLE'] = $key;
-                  $cmd_rec['VALUE_MIN'] = $sc[$device['productId']][$key]['min'];
-                  $cmd_rec['MODE'] = $sc[$device['productId']][$key]['mode'];
-                  $cmd_rec['ALIAS'] = $sc[$device['productId']][$key]['code'];
-                  $cmd_rec['VALUE_UNIT'] = $sc[$device['productId']][$key]['unit'];
-                  $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
+                     $cmd_rec = array();
+                     $cmd_rec['TITLE'] = $key;
+                     $cmd_rec['VALUE_MIN'] = $sc[$device['productId']][$key]['min'];
+                     $cmd_rec['MODE'] = $sc[$device['productId']][$key]['mode'];
+                     $cmd_rec['ALIAS'] = $sc[$device['productId']][$key]['code'];
+                     $cmd_rec['VALUE_UNIT'] = $sc[$device['productId']][$key]['unit'];
+                     $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
 
-                  $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
-                  $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
-                  if ($cmd_rec['VALUE_SCALE'] == '') $cmd_rec['VALUE_SCALE']=0;
-                  $cmd_rec['DIVIDEDBY2'] = 0;
-                  $cmd_rec['DIVIDEDBY10'] = 0;
-                  $cmd_rec['DIVIDEDBY100'] = 0;
-
-                  $cmd_rec['DEVICE_ID'] = $rec['ID'];
-                  $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
-                  } else {
-                  $cmd_rec['VALUE_MIN'] = $sc[$device['productId']][$key]['min'];
-                  $cmd_rec['MODE'] = $sc[$device['productId']][$key]['mode'];
-                  $cmd_rec['ALIAS'] = $sc[$device['productId']][$key]['code'];
-                  $cmd_rec['VALUE_UNIT'] = $sc[$device['productId']][$key]['unit'];
-                  $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
-                  if ($cmd_rec['DIVIDEDBY2'] == 0) {
+                     $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
                      $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
+                     if ($cmd_rec['VALUE_SCALE'] == '') $cmd_rec['VALUE_SCALE']=0;
+                     $cmd_rec['DIVIDEDBY2'] = 0;
+                     $cmd_rec['DIVIDEDBY10'] = 0;
+                     $cmd_rec['DIVIDEDBY100'] = 0;
+                     $cmd_rec['POWER_METER'] = 0;      
+                     $cmd_rec['DECODE'] = 0;      
+                     $cmd_rec['SPLIT'] = 0;                      
+
+                     $cmd_rec['DEVICE_ID'] = $rec['ID'];
+                     $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
                   } 
-                  if ($cmd_rec['VALUE_SCALE'] == '') $cmd_rec['VALUE_SCALE']=0;
-
-                  $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
-
-                  $cmd_rec['POWER_METER'] = 0;      
-                  $cmd_rec['DECODE'] = 0;      
-                  $cmd_rec['SPLIT'] = 0;                    
-
-                  $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
-                  }
                   
                   if (isset($sc[$device['productId']][$key]['range']) and $sc[$device['productId']][$key]['range']) { 
                      foreach ($sc[$device['productId']][$key]['range'] as  $range_key => $range_value) {	   
