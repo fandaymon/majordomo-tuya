@@ -1597,7 +1597,7 @@ class tuya extends module
                                           
       $result=json_decode($apiResult , true);
       if (!$result['success']) {
-         debmes('Ошибка изменения статуса:' . $result['errorCode']);
+         debmes('Ошибка изменения статуса:' . $result['errorCode'], 'tuya');
       
       }   
       
@@ -2235,10 +2235,16 @@ class tuya extends module
     */
    function uninstall()
    {
+      $req = SQLSelect("SELECT * FROM tucommands WHERE LINKED_OBJECT != '' AND LINKED_PROPERTY != ''");
+
+      foreach ($req as $prop) {
+          removeLinkedProperty($prop['LINKED_OBJECT'], $prop['LINKED_PROPERTY'], $this->name);
+      }
       SQLExec('DROP TABLE IF EXISTS tudevices');
       SQLExec('DROP TABLE IF EXISTS tucommands');
       SQLExec('DROP TABLE IF EXISTS turange');
       SQLExec('DROP TABLE IF EXISTS tuircommand');
+      SQLExec('DROP TABLE IF EXISTS tuvalues');
 
       parent::uninstall();
    }
