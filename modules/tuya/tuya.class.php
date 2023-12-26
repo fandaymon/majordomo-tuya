@@ -1519,7 +1519,20 @@ class tuya extends module
 
                      $cmd_rec['DEVICE_ID'] = $rec['ID'];
                      $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
-                  } 
+                  } else if ($cmd_rec['ALIAS'] == '') {
+                     $cmd_rec['VALUE_MIN'] = $sc[$device['productId']][$key]['min'];
+                     $cmd_rec['MODE'] = $sc[$device['productId']][$key]['mode'];
+                     $cmd_rec['ALIAS'] = $sc[$device['productId']][$key]['code'];
+
+                     $cmd_rec['VALUE_UNIT'] = $sc[$device['productId']][$key]['unit'];
+                     $cmd_rec['VALUE_MAX'] = $sc[$device['productId']][$key]['max'];
+                     if ($cmd_rec['DIVIDEDBY2'] == 0 and $cmd_rec['DIVIDEDBY10'] == 0 and $cmd_rec['DIVIDEDBY100'] == 0) {
+                        $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
+                     } 
+                     $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
+
+                     $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
+                  }
                   
                   if (isset($sc[$device['productId']][$key]['range']) and $sc[$device['productId']][$key]['range']) { 
                      foreach ($sc[$device['productId']][$key]['range'] as  $range_key => $range_value) {	   
