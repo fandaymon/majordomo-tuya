@@ -449,7 +449,7 @@ class tuya extends module
             array_push($devices, $result['gwId']);
             
             $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
-            if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['VER_3_1'] != $version )) {
+            if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['TUYA_VER'] != $result['version'] )) {
                $rec['DEV_IP'] = $result['ip'];
                $rec['TUYA_VER'] = $result['version'];
                SQLUpdate('tudevices', $rec);
@@ -1327,6 +1327,11 @@ class tuya extends module
                $ir_flag = 0;
             }   
 
+            if (!isset($device['meshId'])) {
+               $device['meshId'] = '';
+            }
+
+
             if ($rec==NULL) {
    
                $rec['IR_FLAG'] = $ir_flag;
@@ -1344,7 +1349,7 @@ class tuya extends module
                $rec['TUYA_VER'] = '3.3';
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;      
-    
+               $rec['UPDATED']=date('y-m-d H:j:s',time()); 
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
@@ -1360,6 +1365,7 @@ class tuya extends module
                $rec['MESH_ID']=$device['meshId'];
                $rec['MAC'] = $device['mac'];
                $rec['IR_FLAG'] = $ir_flag;
+               $rec['UPDATED']=date('y-m-d H:j:s',time());
                
                $rec['ID']=SQLUpdate('tudevices',$rec);
                }
@@ -1435,7 +1441,11 @@ class tuya extends module
                $ir_flag = 1;
             } else {
                $ir_flag = 0;
-            }                
+            }  
+            
+            if (!isset($device['meshId'])) {
+               $device['meshId'] = '';
+            }
 
             if ($rec==NULL) {
    
@@ -1454,7 +1464,8 @@ class tuya extends module
                $rec['TUYA_VER'] = '3.3';
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;
-               $rec['UUID'] = $device['uuid'];    
+               $rec['UUID'] = $device['uuid'];  
+               $rec['UPDATED']=date('y-m-d H:j:s',time());  
 
                $rec['ID'] = SQLInsert('tudevices', $rec);
             } else {
@@ -1474,6 +1485,7 @@ class tuya extends module
                $rec['MAC'] = $device['mac'];
                $rec['IR_FLAG'] = $ir_flag;
                $rec['UUID'] = $device['uuid'];  
+               $rec['UPDATED']=date('y-m-d H:j:s',time());
                
                $rec['ID'] = SQLUpdate('tudevices',$rec);
                }
@@ -1515,9 +1527,10 @@ class tuya extends module
                      $cmd_rec['DIVIDEDBY100'] = 0;
                      $cmd_rec['POWER_METER'] = 0;      
                      $cmd_rec['DECODE'] = 0;      
-                     $cmd_rec['SPLIT'] = 0;                      
-
+                     $cmd_rec['SPLIT'] = 0;  
+                     
                      $cmd_rec['DEVICE_ID'] = $rec['ID'];
+
                      $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
                   } else if ($cmd_rec['ALIAS'] == '') {
                      $cmd_rec['VALUE_MIN'] = $sc[$device['productId']][$key]['min'];
@@ -2053,7 +2066,7 @@ class tuya extends module
                 }
             }
          }  
-         setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, array($this->name => '0'));
+         setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, 0, array($this->name => '0'));
       }
          
       if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_METHOD']) {
