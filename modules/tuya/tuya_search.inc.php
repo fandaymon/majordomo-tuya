@@ -198,8 +198,8 @@ if ($tab == 'scene') {
 
       $total = count($res);
       for ($i = 0; $i < $total; $i++) {
-         $tmp = explode(' ', $res[$i]['UPDATED']);
-         $res[$i]['UPDATED'] = $tmp[0] . " " . $tmp[1];
+         //$tmp = explode(' ', $res[$i]['UPDATED']);
+         //$res[$i]['UPDATED'] = $tmp[0] . " " . $tmp[1];
          
          $commands = SQLSelect("SELECT tucommands.*, tuvalues.VALUE, tuvalues.UPDATED FROM tucommands INNER JOIN tuvalues ON tucommands.ID=tuvalues.ID WHERE DEVICE_ID=" . $res[$i]['ID'] . " and TITLE!='state' AND TITLE!='report'  ORDER BY TITLE");
 

@@ -47,12 +47,16 @@ if ($tuya_module->config['TUYA_WEB_INTERVAL']) {
     $tuya_web_interval = $tuya_module->config['TUYA_WEB_INTERVAL'];
 }
 
-if ($tuya_module->config['TUYA_WEB']) {
+if (isset($tuya_module->config['TUYA_WEB']) && $tuya_module->config['TUYA_WEB']) {
     $tuya_web = $tuya_module->config['TUYA_WEB'];
+} else {
+    $tuya_web = false;
 }
 
-if ($tuya_module->config['TUYA_HA']) {
+if (isset($tuya_module->config['TUYA_HA']) && $tuya_module->config['TUYA_HA']) {
     $tuya_ha = $tuya_module->config['TUYA_HA'];
+} else {
+    $tuya_ha = false;
 }
 
 
@@ -74,7 +78,7 @@ while (1) {
         setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
     }
     
-    if ((time() - $latest_check) >= $tuya_interval and $tuya_ha) {
+    if ($tuya_ha && (time() - $latest_check) >= $tuya_interval) {
         $latest_check = time();
         #$tuya_module->requestLocalStatus();
 

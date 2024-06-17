@@ -54,6 +54,13 @@
          global $tuya_ver;
          $rec['TUYA_VER'] = $tuya_ver;
 
+         global $dsp_filled;
+         if (isset($dsp_filled)) {
+            $rec['DSP_FILLED'] = $dsp_filled;    
+         } else {
+            $rec['DSP_FILLED'] = 0;    
+         }     
+
       }
 
       //UPDATING RECORD
@@ -133,7 +140,8 @@
             global ${'decode'.$properties[$i]['ID']};
             $properties[$i]['DECODE']=${'decode'.$properties[$i]['ID']};
             global ${'split'.$properties[$i]['ID']};
-            $properties[$i]['SPLIT']=${'split'.$properties[$i]['ID']};                                    
+            $properties[$i]['SPLIT']=${'split'.$properties[$i]['ID']};  
+                                             
             
             if (strlen($properties[$i]['VALUE_SCALE']) == 0) $properties[$i]['VALUE_SCALE'] = 0;
             if (strlen($properties[$i]['DIVIDEDBY10']) == 0) $properties[$i]['DIVIDEDBY10'] = 0;
@@ -141,6 +149,7 @@
             if (strlen($properties[$i]['POWER_METER']) == 0) $properties[$i]['POWER_METER'] = 0;
             if (strlen($properties[$i]['DECODE']) == 0) $properties[$i]['DECODE'] = 0;
             if (strlen($properties[$i]['SPLIT']) == 0) $properties[$i]['SPLIT'] = 0;
+       
             
 	    unset($properties[$i]['VALUE']);
 	    unset($properties[$i]['UPDATED']);

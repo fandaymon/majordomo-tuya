@@ -180,7 +180,11 @@ class tuya extends module
          $this->config['TUYA_PASSWD'] = $tuya_passwd;
          
          global $tuya_ha;
-         $this->config['TUYA_HA'] = $tuya_ha;
+         if (isset($tuya_ha) && $tuya_ha) { 
+            $this->config['TUYA_HA'] = true;
+         } else {
+            $this->config['TUYA_HA'] = false;
+         }   
 
          global $tuya_interval;
          $this->config['TUYA_INTERVAL'] = $tuya_interval;
@@ -283,9 +287,6 @@ class tuya extends module
          }         
       }
 
-      if (isset($this->data_source) && !$_GET['data_source'] && !$_POST['data_source']) {
-         $out['SET_DATASOURCE'] = 1;
-      }
 
       if ($this->data_source == 'tucommands') {
          if ($this->view_mode == '' || $this->view_mode == 'search_tucommands') {
@@ -1251,6 +1252,15 @@ class tuya extends module
 
     foreach ($result['result'] as $scheme) {
          foreach (json_decode($scheme['schemaInfo']['schema'], true) as $dp) {
+            if (!isset($dp['mode'])) $dp['mode'] = '';
+            if (!isset($dp['code'])) $dp['code'] = '';
+            if (!isset($dp['property']['min'])) $dp['property']['min'] = '';
+            if (!isset($dp['property']['max'])) $dp['property']['max'] = '';
+            if (!isset($dp['property']['scale'])) $dp['property']['scale'] = '';
+            if (!isset($dp['property']['unit'])) $dp['property']['unit'] = '';
+            if (!isset($dp['property']['type'])) $dp['property']['type'] = '';            
+
+
             $sc[$scheme['id']][$dp['id']]['mode']=$dp['mode'];
             $sc[$scheme['id']][$dp['id']]['code']=$dp['code'];
             $sc[$scheme['id']][$dp['id']]['min']=$dp['property']['min'];
@@ -1350,6 +1360,7 @@ class tuya extends module
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;      
                $rec['UPDATED']=date('y-m-d H:j:s',time()); 
+               $rec['DSP_FILLED'] = 0; 
 
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
@@ -1465,7 +1476,8 @@ class tuya extends module
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;
                $rec['UUID'] = $device['uuid'];  
-               $rec['UPDATED']=date('y-m-d H:j:s',time());  
+               $rec['UPDATED']=date('y-m-d H:j:s',time()); 
+               $rec['DSP_FILLED'] = 0; 
 
                $rec['ID'] = SQLInsert('tudevices', $rec);
             } else {
@@ -1504,9 +1516,15 @@ class tuya extends module
                } else {
                   $this->processCommand($rec['ID'], 'online', 0);
                }
-            }       
+            }  
+            
+            if (isset($rec['DSP_FILLED'])) {
+               $dsp_filled = $rec['DSP_FILLED'];
+            } else {
+               $dsp_filled = false;
+            }
          
-            if ($rec['STATUS']==0) {
+            if (!$dsp_filled)  {
                foreach($device['dps'] as $key => $value) {
                   $cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$rec['ID']." AND TITLE LIKE '".DBSafe($key)."'");
                
@@ -1532,6 +1550,7 @@ class tuya extends module
                      $cmd_rec['DEVICE_ID'] = $rec['ID'];
 
                      $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
+                     $dsp_filled = true;
                   } else if ($cmd_rec['ALIAS'] == '') {
                      $cmd_rec['VALUE_MIN'] = $sc[$device['productId']][$key]['min'];
                      $cmd_rec['MODE'] = $sc[$device['productId']][$key]['mode'];
@@ -1545,6 +1564,9 @@ class tuya extends module
                      $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
 
                      $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
+                     $dsp_filled = true;
+                  } else {
+                     $dsp_filled = true;
                   }
                   
                   if (isset($sc[$device['productId']][$key]['range']) and $sc[$device['productId']][$key]['range']) { 
@@ -1560,23 +1582,31 @@ class tuya extends module
                         }
                      }
                   }
-                  if (is_bool($value)) {
-                     $value=(($value) ? 1:0);
-                     $data.=$key.':'.(($value) ? 1:0).' ';
-                  } else if ($value=='true') {
-                     $value=1;
-                     $data.=$key.':'.$value.' ';
-                  } else if ($value=='false') {
 
-                     $value=0;
-                     $data.=$key.':'.$value.' ';
-                  } else {
-                     $data.=$key.':'.$value.' ';
-                  }
-                  $this->processCommand($rec['ID'], $key, $value);
+
                }
-         
+
+               if ($dsp_filled) {
+                  $rec['DSP_FILLED'] = 1;
+                  $rec['ID'] = SQLUpdate('tudevices',$rec);
+               }   
             }
+
+            if (is_bool($value)) {
+               $value=(($value) ? 1:0);
+               $data.=$key.':'.(($value) ? 1:0).' ';
+            } else if ($value=='true') {
+               $value=1;
+               $data.=$key.':'.$value.' ';
+            } else if ($value=='false') {
+
+               $value=0;
+               $data.=$key.':'.$value.' ';
+            } else {
+               $data.=$key.':'.$value.' ';
+            }
+            $this->processCommand($rec['ID'], $key, $value);
+            
 
          }
 	   }
@@ -2066,7 +2096,7 @@ class tuya extends module
                 }
             }
          }  
-         setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, 0, array($this->name => '0'));
+         setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, 0, $this->name );
       }
          
       if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_METHOD']) {
@@ -2297,8 +2327,8 @@ class tuya extends module
  tudevices: STATUS int(10) unsigned NOT NULL DEFAULT 0
  tudevices: UUID varchar(30) NOT NULL DEFAULT ''
  tudevices: TUYA_VER varchar(5) DEFAULT '3.3'
- 
- 
+ tudevices: DSP_FILLED boolean NOT NULL DEFAULT 0
+  
  
  tucommands: ID int(10) unsigned NOT NULL auto_increment
  tucommands: TITLE varchar(100) NOT NULL DEFAULT ''
