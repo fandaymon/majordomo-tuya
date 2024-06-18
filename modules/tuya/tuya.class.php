@@ -1120,11 +1120,11 @@ class tuya extends module
                   'clientId' => $key,
                   'time' => $d];
 
-      if ($options['data']) {
+      if (isset($options['data'])) {
          $pairs['postData'] = json_encode($options['data']);
       }
       
-      if ($options['gid']) {
+      if (isset($options['gid'])) {
          $pairs['gid'] = $options['gid'];
       }
 
