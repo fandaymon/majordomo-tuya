@@ -1583,6 +1583,22 @@ class tuya extends module
                      }
                   }
 
+                  if (is_bool($value)) {
+                     $value=(($value) ? 1:0);
+                     $data.=$key.':'.(($value) ? 1:0).' ';
+                  } else if ($value=='true') {
+                     $value=1;
+                     $data.=$key.':'.$value.' ';
+                  } else if ($value=='false') {
+      
+                     $value=0;
+                     $data.=$key.':'.$value.' ';
+                  } else {
+                     $data.=$key.':'.$value.' ';
+                  }
+                  $this->processCommand($rec['ID'], $key, $value);
+                                    
+
 
                }
 
@@ -1592,21 +1608,7 @@ class tuya extends module
                }   
             }
 
-            if (is_bool($value)) {
-               $value=(($value) ? 1:0);
-               $data.=$key.':'.(($value) ? 1:0).' ';
-            } else if ($value=='true') {
-               $value=1;
-               $data.=$key.':'.$value.' ';
-            } else if ($value=='false') {
 
-               $value=0;
-               $data.=$key.':'.$value.' ';
-            } else {
-               $data.=$key.':'.$value.' ';
-            }
-            $this->processCommand($rec['ID'], $key, $value);
-            
 
          }
 	   }
