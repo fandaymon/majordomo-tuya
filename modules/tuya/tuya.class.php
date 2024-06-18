@@ -1359,7 +1359,7 @@ class tuya extends module
                $rec['TUYA_VER'] = '3.3';
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;      
-               $rec['UPDATED']=date('y-m-d H:j:s',time()); 
+               $rec['UPDATED']=date('y-m-d H:i:s',time()); 
                $rec['DSP_FILLED'] = 0; 
 
                $rec['ID']=SQLInsert('tudevices',$rec);
@@ -1376,7 +1376,7 @@ class tuya extends module
                $rec['MESH_ID']=$device['meshId'];
                $rec['MAC'] = $device['mac'];
                $rec['IR_FLAG'] = $ir_flag;
-               $rec['UPDATED']=date('y-m-d H:j:s',time());
+               $rec['UPDATED']=date('y-m-d H:i:s',time());
                
                $rec['ID']=SQLUpdate('tudevices',$rec);
                }
@@ -1476,7 +1476,7 @@ class tuya extends module
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;
                $rec['UUID'] = $device['uuid'];  
-               $rec['UPDATED']=date('y-m-d H:j:s',time()); 
+               $rec['UPDATED']=date('y-m-d H:i:s',time()); 
                $rec['DSP_FILLED'] = 0; 
 
                $rec['ID'] = SQLInsert('tudevices', $rec);
@@ -1497,7 +1497,7 @@ class tuya extends module
                $rec['MAC'] = $device['mac'];
                $rec['IR_FLAG'] = $ir_flag;
                $rec['UUID'] = $device['uuid'];  
-               $rec['UPDATED']=date('y-m-d H:j:s',time());
+               $rec['UPDATED']=date('y-m-d H:i:s',time());
                
                $rec['ID'] = SQLUpdate('tudevices',$rec);
                }
