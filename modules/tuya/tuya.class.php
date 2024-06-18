@@ -1105,7 +1105,7 @@ class tuya extends module
 
       $keyHmac = $certSign . '_' . $secret2 . '_' . $secret;
 
-      if ($options['deviceID']) {
+      if (isset($options['deviceID'])) {
          $deviceID=$options['deviceID'];
       } else {  
          $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz';
