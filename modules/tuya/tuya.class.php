@@ -1561,8 +1561,8 @@ class tuya extends module
                      if ($cmd_rec['DIVIDEDBY2'] == 0 and $cmd_rec['DIVIDEDBY10'] == 0 and $cmd_rec['DIVIDEDBY100'] == 0) {
                         $cmd_rec['VALUE_SCALE'] = $sc[$device['productId']][$key]['scale'];
                      } 
+					 if($cmd_rec['VALUE_SCALE'] == '') $cmd_rec['VALUE_SCALE']=0;
                      $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
-
                      $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
                      $dsp_filled = true;
                   } else {
@@ -2098,7 +2098,7 @@ class tuya extends module
                 }
             }
          }  
-         setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, 0, $this->name );
+         setGlobal($cmd_rec['LINKED_OBJECT'] . '.' . $cmd_rec['LINKED_PROPERTY'], $value, array($this->name=>1), $this->name );
       }
          
       if ($cmd_rec['LINKED_OBJECT'] && $cmd_rec['LINKED_METHOD']) {
