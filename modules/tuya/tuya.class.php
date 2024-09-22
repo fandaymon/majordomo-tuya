@@ -923,8 +923,8 @@ class tuya extends module
       $reciv=socket_recv ( $socket , $buf , 2048 ,MSG_WAITALL);
       
       $data = $buf;
-      $result = substr(($data),20,-8);
-      $result = substr($data, 20,80);
+
+      $result = substr($data, 20, -36);
 
       socket_close($socket);
 
