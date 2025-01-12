@@ -1319,31 +1319,32 @@ class tuya extends module
                                           'requiresSID'=> 1]);
       $result=json_decode($apiResult , true);
 
-      foreach ( $result['result'] as $home) {
+      if(empty($result['result'])) return;
+      foreach ($result['result'] as $home) {
          $gid= $home['groupId'];
          
          $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.my.group.device.list',
                                              'gid'=>$gid,
                                              'requiresSID'=> 1]);
-
+	  
          $result=json_decode($apiResult , true);
-         foreach ( $result['result'] as $device) {
-
+         foreach ($result['result'] as $device) {
+	  
             $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device['devId'].'"');
-
+	  
             if (isset($device['moduleMap']['infrared'])) {
                $ir_flag = 1;
             } else {
                $ir_flag = 0;
             }   
-
+	  
             if (!isset($device['meshId'])) {
                $device['meshId'] = '';
             }
-
-
+	  
+	  
             if ($rec==NULL) {
-   
+	  
                $rec['IR_FLAG'] = $ir_flag;
                $rec['TITLE']=$device['name'] ;
                $rec['DEV_ICON']= $device['iconUrl'];
@@ -1361,7 +1362,7 @@ class tuya extends module
                $rec['CONTROL'] = 0;      
                $rec['UPDATED']=date('y-m-d H:i:s',time()); 
                $rec['DSP_FILLED'] = 0; 
-
+	  
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
@@ -1380,9 +1381,9 @@ class tuya extends module
                
                $rec['ID']=SQLUpdate('tudevices',$rec);
                }
-
+	  
             }
-
+	  
             $data='';
             if (substr($device['categoryCode'],0,3)=='wf_') {
                if ($rec['STATUS']==0) {
@@ -1408,7 +1409,7 @@ class tuya extends module
          
             if ($rec['STATUS']==0) {
                foreach($device['dps'] as $key => $value) {
-
+	  
                   if (is_bool($value)) {
                      $value=(($value) ? 1:0);
                      $data.=$key.':'.(($value) ? 1:0).' ';
@@ -1416,7 +1417,7 @@ class tuya extends module
                      $value=1;
                      $data.=$key.':'.$value.' ';
                   } else if ($value=='false') {
-
+	  
                      $value=0;
                      $data.=$key.':'.$value.' ';
                   } else {
@@ -1426,7 +1427,7 @@ class tuya extends module
                }
       
             }
-
+	  
          }
 	  }
    } 
@@ -2051,12 +2052,11 @@ class tuya extends module
       if (is_null($value)) $value='';
 
       
-
       $old_rec = SQLSelectOne('SELECT * FROM tuvalues WHERE ID='.$cmd_rec['ID'].';');
       //$old_value = $cmd_rec['VALUE'];
+      $old_value = '';
       if ($old_rec) {
          $old_value = $old_rec['VALUE'];
-         if (is_null($old_value)) $old_value='';
 
          $old_rec['VALUE'] = $value;
          $old_rec['UPDATED'] = date('Y-m-d H:i:s');         
