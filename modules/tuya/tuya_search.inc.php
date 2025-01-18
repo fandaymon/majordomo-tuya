@@ -201,26 +201,31 @@ if ($tab == 'scene') {
          //$tmp = explode(' ', $res[$i]['UPDATED']);
          //$res[$i]['UPDATED'] = $tmp[0] . " " . $tmp[1];
          
-         $commands = SQLSelect("SELECT tucommands.*, tuvalues.VALUE, tuvalues.UPDATED FROM tucommands INNER JOIN tuvalues ON tucommands.ID=tuvalues.ID WHERE DEVICE_ID=" . $res[$i]['ID'] . " and TITLE!='state' AND TITLE!='report'  ORDER BY TITLE");
+         $commands = SQLSelect("SELECT tucommands.*, tuvalues.VALUE, tuvalues.UPDATED FROM tucommands LEFT JOIN tuvalues ON tucommands.ID=tuvalues.ID WHERE DEVICE_ID=" . $res[$i]['ID'] . " and TITLE!='state' AND TITLE!='report'  ORDER BY TITLE");
 
          if ($commands[0]['ID']) {
             $totalc = count($commands);
             $sub_dev = array();
             for ($ic = 0; $ic < $totalc; $ic++) {
                if ($commands[$ic]['TITLE'] == 'online') {
+                  if (is_null($commands[$ic]['VALUE'])) $commands[$ic]['VALUE'] = 0;
                   $res[$i]['ONLINE'] = (int)$commands[$ic]['VALUE'];
                   continue;
                }
+
                if ($commands[$ic]['ALIAS']=='') {
+                if (is_null($commands[$ic]['VALUE'])) $commands[$ic]['VALUE'] = '';  
                 $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['TITLE'] . ': <i>' . substr($commands[$ic]['VALUE'],0,50) . ' ' . $commands[$ic]['VALUE_UNIT'] . '</i>';
                } else {
                 $res[$i]['COMMANDS'] .= '<nobr>' . $commands[$ic]['ALIAS'] . ': <i>' . substr($commands[$ic]['VALUE'],0,50) .  ' ' . $commands[$ic]['VALUE_UNIT'] . '</i>';
                 if ($commands[$ic]['ALIAS']=='led_switch' OR $commands[$ic]['ALIAS']=='switch_led') {
+                  if (is_null($commands[$ic]['VALUE'])) $commands[$ic]['VALUE'] = 0; 
                   $res[$i]['LAMP'] = (int)$commands[$ic]['VALUE'];
                   $res[$i]['IS_LAMP'] = 1;
                 }
                    
                 if ($commands[$ic]['ALIAS']=='power' OR $commands[$ic]['ALIAS']=='switch_1' OR $commands[$ic]['ALIAS']=='switch_on' OR $commands[$ic]['ALIAS']=='Power' OR $commands[$ic]['ALIAS']=='switch') {
+                  if (is_null($commands[$ic]['VALUE'])) $commands[$ic]['VALUE'] = 0; 
                   $res[$i]['STATE'] = (int)$commands[$ic]['VALUE'];
                   $res[$i]['IS_STATE'] = 1;
                 }
@@ -232,7 +237,8 @@ if ($tab == 'scene') {
                      $switch_name = $sub_name['TITLE']; 
                    } else {    
                      $switch_name = $commands[$ic]['ALIAS'];
-                   }    
+                   }   
+                   if (is_null($commands[$ic]['VALUE'])) $commands[$ic]['VALUE'] = 0;
                    array_push($sub_dev, ['ID' => $switch_id, 'SWITCH_NAME' => $switch_name, 'SWITCH_STATE' => (int)$commands[$ic]['VALUE'] ]);
                 } 
                 

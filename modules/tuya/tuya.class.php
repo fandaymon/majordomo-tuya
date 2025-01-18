@@ -2053,15 +2053,17 @@ class tuya extends module
 
       
       $old_rec = SQLSelectOne('SELECT * FROM tuvalues WHERE ID='.$cmd_rec['ID'].';');
-      //$old_value = $cmd_rec['VALUE'];
-      $old_value = '';
-      if ($old_rec) {
-         $old_value = $old_rec['VALUE'];
 
-         $old_rec['VALUE'] = $value;
-         $old_rec['UPDATED'] = date('Y-m-d H:i:s');         
+     if ($old_rec) {
 
-         SQLUpdate('tuvalues', $old_rec);
+	      $old_value = $old_rec['VALUE'];
+        if (is_null($old_value)) $old_value='';
+
+        $old_rec['VALUE'] = $value;
+        $old_rec['UPDATED'] = date('Y-m-d H:i:s');         
+
+        SQLUpdate('tuvalues', $old_rec);
+	      if ($checkOld and $old_value == $value) return;
          
       } else {
          $old_rec = array();
@@ -2077,8 +2079,6 @@ class tuya extends module
       //$cmd_rec['UPDATED'] = date('Y-m-d H:i:s');
       //SQLUpdate('tucommands', $cmd_rec);
 
-      if ($checkOld and $old_value == $value) return;
-         
       if ($command=='state' or $command=='switch_1' or $command=='power' or $command=='Power' or $command=='switch_on') processSubscriptions('TUSTATUS', array('FIELD' => 'STATE','VALUE' => $value,'ID' =>$device_id));
       if ($command=='online') processSubscriptions('TUSTATUS', array('FIELD' => 'ONLINE','VALUE' => $value,'ID' =>$device_id));
 
