@@ -38,7 +38,7 @@ while (!$result->success) {
   }
   $result = $tuya_module->Tuya_IOT_GET('/v1.0/token?grant_type=1', True);
   $count++;
-  sleep(1);
+  sleep(10);
 }
 
 $access_token = $result->result->access_token;
