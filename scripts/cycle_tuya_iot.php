@@ -30,8 +30,15 @@ if (!$tuya_module->config['TUYA_IOT'] ) {
 //$result = $tuya_module->Tuya_IOT_Login();
 $result = $tuya_module->Tuya_IOT_GET('/v1.0/token?grant_type=1', True);
 
-if (!$result->success) {
+if(!$result->success) $count = 1;
+while (!$result->success) {
+  if($count > 9){
     debmes("Can't login to IOT cloud.".$result->msg);
+    exit;
+  }
+  $result = $tuya_module->Tuya_IOT_GET('/v1.0/token?grant_type=1', True);
+  $count++;
+  sleep(1);
 }
 
 $access_token = $result->result->access_token;
@@ -157,7 +164,7 @@ function procMsg($msg_topic, $msg, $qos) {
     $result = openssl_decrypt(base64_decode($data), 'AES-128-ECB', $key,OPENSSL_RAW_DATA);
     $result = json_decode($result, true);
     
-    if (in_array($result['devId'], $mqtt_devices)) {
+    if (in_array($result['devId'], $mqtt_devices) and !empty($result['status'])) {
         foreach ($result['status'] as $status) {
             foreach($status as $k=>$v) {
              if (is_integer($k)) {
