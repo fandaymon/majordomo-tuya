@@ -811,7 +811,7 @@ class tuya extends module
   }
 
 
-  function TuyaLocalMsg34($command, $dev_id, $local_key, $local_ip, $dps, $cid) {
+  function TuyaLocalMsg34($command, $dev_id, $local_key, $local_ip, $dps, $cid, $dps12='') {
    $real_local_key = $local_key;
 
    $hexByte="03";
@@ -906,17 +906,32 @@ class tuya extends module
 
    if ($command == 'STATUS') {
 
+      $sequenceN = 3; 
+
+      if ($dps12 != '') {  
+         $payload_12 = $this->encode_message($dps12, $local_key, "12", $sequenceN);   
+         $send=socket_send($socket, $payload_12, strlen($payload_12), 0); 
+         $buf1 = '';
+         $reciv=socket_recv ( $socket , $buf1 , 2048, MSG_WAITALL); 
+         $result = substr($buf1, 20, -36);
+         $result = openssl_decrypt($result, 'AES-128-ECB', ($local_key), OPENSSL_RAW_DATA);
+         debmes('3.4 12 add receiv '.$result);
+         $sequenceN=4; 
+      } 
+
       if ($cid == '') {
          $json = '{}';
       } else {
          $json = '{"cid":"'.$cid.'"}';
       }
+
+
       $hexByte="10";
       
       
       $buf = '';
       
-      $payload = $this->encode_message($json, $local_key, $hexByte, 3);
+      $payload = $this->encode_message($json, $local_key, $hexByte, $sequenceN);
       
       $send=socket_send($socket, $payload, strlen($payload), 0);
          

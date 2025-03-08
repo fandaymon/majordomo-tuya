@@ -106,7 +106,8 @@ while (1) {
 				
 				if ($tuya_ver == '3.4') {
 					$dps = '{}';
-					$result = $tuya_module->TuyaLocalMsg34('STATUS', $dev_id, $local_key, $local_ip, $dps, $cid);
+					$dps12 = $device['SEND12'] ? $device['FLAGS12'] : '';
+					$result = $tuya_module->TuyaLocalMsg34('STATUS', $dev_id, $local_key, $local_ip, $dps, $cid, $dps12);
 					$status=json_decode($result);
 
 				} else {
@@ -125,12 +126,12 @@ while (1) {
 							$payload_12 = $tuya_module->TuyaLocalEncrypt('12', $device['FLAGS12'], $local_key, $tuya_ver);   
 							$send = socket_send($socket, $payload_12, strlen($payload_12), 0);
 
-							if ($send != strlen($payload)) {
+							if ($send != strlen($payload_12)) {
 								debmes('Error sending 12. '.date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . ', ip' . $local_ip );
 							}
 							
-							$reciv = socket_recv ( $socket , $buf , 2048 ,0);
-							$result = substr($buf,20,-8);
+							$reciv = socket_recv ( $socket , $buf , 2048, MSG_WAITALL);
+							$result = substr($buf,63,-8);
 
 							if ($tuya_ver != '3.1') { 
 								$result = openssl_decrypt($result, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
@@ -138,8 +139,8 @@ while (1) {
 							
 							if ($cycle_debug) { 
 								debmes('12 answer: '.$result );
-							}	
-							
+							}							
+					
 
 						}    
 						for ($i=0;$i<1;$i++) {
