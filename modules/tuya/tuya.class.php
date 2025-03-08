@@ -915,7 +915,7 @@ class tuya extends module
          $reciv=socket_recv ( $socket , $buf1 , 2048, MSG_WAITALL); 
          $result = substr($buf1, 20, -36);
          $result = openssl_decrypt($result, 'AES-128-ECB', ($local_key), OPENSSL_RAW_DATA);
-         debmes('3.4 12 add receiv '.$result);
+         //debmes('3.4 12 add receiv '.$result);
          $sequenceN=4; 
       } 
 
