@@ -157,7 +157,7 @@ function procMsg($msg_topic, $msg, $qos) {
     $result = openssl_decrypt(base64_decode($data), 'AES-128-ECB', $key,OPENSSL_RAW_DATA);
     $result = json_decode($result, true);
     
-    if (in_array($result['devId'], $mqtt_devices)) {
+    if (in_array($result['devId'], $mqtt_devices) and isset($result['status'])) {
         foreach ($result['status'] as $status) {
             foreach($status as $k=>$v) {
              if (is_integer($k)) {
