@@ -1375,15 +1375,16 @@ class tuya extends module
                $rec['TUYA_VER'] = '3.3';
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;      
-               $rec['UPDATED']=date('y-m-d H:i:s',time()); 
+               $rec['UPDATED']=date('y-m-d H:i:s',time());    
                $rec['DSP_FILLED'] = 0; 
-	  
+	       $rec['UUID'] = $device['uuid'];
                $rec['ID']=SQLInsert('tudevices',$rec);
             } else {
                if (is_null($rec['MAC'])) $rec['MAC'] =''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
                if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] ='';
                if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = 0;
+	       if (is_null($rec['UUID'])) $rec['UUID'] ='';
                
                if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                $rec['LOCAL_KEY']=$device['localKey'];
