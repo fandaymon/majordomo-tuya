@@ -67,9 +67,9 @@
 </div>
 
 <div id="scanInfo" style="display:none;">
-				<div id="info" style="word-wrap:break-word"></div>
+			<div id="info" style="word-wrap:break-word"></div>
 			<div style="text-align: left; margin-top: 10px; margin-bottom: 10px;">
-				<button id="scanButton" type="button" class="btn btn-success" onclick="javascript:hideScanInfo();" style="display:none;">Закрыть</button>
+			<button id="scanButton" type="button" class="btn btn-success" onclick="javascript:hideScanInfo();" style="display:none;">Закрыть</button>
 			</div>
 </div>
 
@@ -79,7 +79,7 @@
       scan.style.display = "block";
       
 	    var url="/ajax/tuya.html?op=scan";
-		$("#info").html('Сканируем сеть');
+		$("#info").html('Сканируем сеть <img src="../templates/tuya/img/arrows.gif">');
         $.ajax({
             url: url
         }).done(function(data) {

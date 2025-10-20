@@ -56,7 +56,7 @@
 
          global $dsp_filled;
          if (isset($dsp_filled)) {
-            $rec['DSP_FILLED'] = $dsp_filled;    
+            $rec['DSP_FILLED'] = $dsp_filled ? 1:0;    
          } else {
             $rec['DSP_FILLED'] = 0;    
          }     

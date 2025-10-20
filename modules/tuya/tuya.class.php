@@ -310,17 +310,17 @@ class tuya extends module
       if ($this->ajax) {
          global $op;
             if ($op == 'scan') {
-               $this->ScanDevices();
+               $this->scanDevices();
                exit;
             }
             if ($op == 'run_scene') {
                global $dev_id;
-               TuyaScene($dev_id);
+               tuyaScene($dev_id);
                exit;
             }
             if ($op == 'info_scene') {
                global $dev_id;
-               $this->InfoScene($dev_id);
+               $this->infoScene($dev_id);
                exit;
             }
     
@@ -413,88 +413,177 @@ class tuya extends module
    }
 
  
-   function ScanDevices() {
-      $udp_key = md5( 'yGAdlopoPVldABfn');
-      $udp_key = hex2bin($udp_key);
+   function scanDevices() {
 
-      $devices=array();
+      $udp_key_v31 = hex2bin(md5('yGAdlopoPVldABfn'));
+      $udp_key_v33_34 = hex2bin(md5('yGAdlopoPVldABfn')); // Для совместимости, может быть одинаковым
+      $udp_key_v35 = md5('yGAdlopoPVldABfn', true); // Binary MD5 для AES ключа
+  
+      $devices = array();
+      $found_devices = array(); // Для отслеживания уникальных ID устройств
+  
+      // Получаем локальный IP-адрес один раз
+      $local_ip = $this->getLocalIPAddress();
+      $broadcast_address = '255.255.255.255'; // Обычно так
 
-      $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-      socket_bind($socket, "0.0.0.0", 6667);
-      socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 2, "usec" => 0));
-
-
-      $socket1 = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-      socket_bind($socket1, "0.0.0.0", 6666);
-      socket_set_option($socket1, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
-
-
-      
+  
+      // Сокет для протокола 3.1 (порт 6666)
+      $socket_v31 = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+      socket_bind($socket_v31, "0.0.0.0", 6666);
+      socket_set_option($socket_v31, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 2, "usec" => 0));
+  
+      // Сокет для протоколов 3.3 и 3.4 (порт 6667)
+      $socket_v33_34 = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+      socket_bind($socket_v33_34, "0.0.0.0", 6667);
+      socket_set_option($socket_v33_34, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 2, "usec" => 0));
+  
+      // Сокет для протокола 3.5 (порт 7000)
+      $socket_v35 = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+      socket_bind($socket_v35, $local_ip, 7000);
+      socket_set_option($socket_v35, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 2, "usec" => 0));
+      socket_set_option($socket_v35, SOL_SOCKET, SO_BROADCAST, 1); // Включаем широковещание
+  
       echo '<H4>В локальной сети найдены следующие устройства:</H2>';
       echo '<table>';
-      
+  
       $start_time = time();
+      $scan_duration = 10; // Общая продолжительность сканирования в секундах
+      $seq_v35 = 0;
+  
+      while ((time() - $start_time) < $scan_duration) {
+          $read_sockets = array($socket_v31, $socket_v33_34, $socket_v35);
+          $write = null;
+          $except = null;
+          $num_changed_sockets = socket_select($read_sockets, $write, $except, 0, 500000); // 0.5 секунды таймаут
+  
+          if ($num_changed_sockets > 0) {
+              foreach ($read_sockets as $socket) {
+                  $from = null;
+                  $port = null;
+                  $buf = '';
+                  socket_recvfrom($socket, $buf, 2048, 0, $from, $port);
+  
+                  if ($buf) {
+                     $prefix = bin2hex(substr($buf, 0, 4));
+  
+                     if ($prefix == '000055aa') {
+                        // Обработка пакетов протоколов 3.3, 3.4
+                        $data = substr($buf, 20, -8);
+                        $udp_key = ($port == 6666) ? $udp_key_v31 : $udp_key_v33_34;
+                        $result_json = openssl_decrypt($data, 'AES-128-ECB', $udp_key, OPENSSL_RAW_DATA);
+                        $result = json_decode($result_json, true);
+                        if ($result && isset($result['gwId']) && !in_array($result['gwId'], $found_devices)) {
+                        $this->displayDeviceInfo($result, $from, ($port == 6666) ? 'v3.1' : 'v3.3/v3.4');
+                           $found_devices[] = $result['gwId'];
+                        }
 
-      for ($i = 1; $i <= 20; $i++) {
+                     } elseif ($prefix == '00006699') {
+                          // Обработка пакетов протокола 3.5
 
-         $from = '';
-         $port = 0;
-         socket_recvfrom($socket, $buf, 2048, 0, $from, $port);
+                        if ($from != $local_ip) {
+                           $packet = $buf;
+                           $lenBytes = substr($packet, 14, 4);
+                           $totalLen = unpack("N", $lenBytes)[1]; // big-endian
+                        
+                           // Расчёт длины payload
+                           $payloadLen = $totalLen - 12 - 16; // - IV - tag
+                           if ($payloadLen <= 0) return null;
+                           
+                           $aad = substr($packet, 4, 14);
+                           
+                           $iv = substr($packet, 18, 12);
+                           $payload = substr($packet, 30, $payloadLen);
+                           $tag = substr($packet, 30 + $payloadLen, 16);
+                        
+                           // Расшифровка
+                           $key = md5("yGAdlopoPVldABfn", true);
+                           $decrypted = openssl_decrypt($payload, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, $aad);
+ 
+                           if ($decrypted !== false) {
+                              // Проверка на префикс кода возврата (4 байта)
+                              if (strlen($decrypted) > 4) {
+                                 $return_code_hex = bin2hex(substr($decrypted, 0, 4));
+                                 $v35_payload_json = substr($decrypted, 4);
+                                 $v35_result = json_decode($v35_payload_json, true);
+                                 if ($v35_result && isset($v35_result['gwId']) && !in_array($v35_result['gwId'], $found_devices)) {
+                                    $this->displayDeviceInfo($v35_result, $from, 'v3.5');
+                                    $found_devices[] = $v35_result['gwId'];
+                                 }
 
-         $data = substr($buf,20,-8);
-         $result = openssl_decrypt(($data), 'AES-128-ECB', $udp_key,OPENSSL_RAW_DATA);
-         $result = json_decode($result, true);
+                              } else {
+                                 $v35_result = json_decode($decrypted, true);
+                                 if ($v35_result && isset($v35_result['gwId']) && !in_array($v35_result['gwId'], $found_devices)) {
+                                    $this->displayDeviceInfo($v35_result, $from, 'v3.5');
+                                       $found_devices[] = $v35_result['gwId'];
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  }
+              }
+          }
+  
+          // Отправка широковещательного запроса для v3.5 периодически
+          if ($local_ip) {
 
-         if (in_array($result['gwId'], $devices) == false) {
-            echo '<tr>';
-            array_push($devices, $result['gwId']);
-            
-            $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
-            if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['TUYA_VER'] != $result['version'] )) {
-               $rec['DEV_IP'] = $result['ip'];
-               $rec['TUYA_VER'] = $result['version'];
-               SQLUpdate('tudevices', $rec);
-             }
+            $discovery_payload = json_encode(["from" => "app", "ip" => $local_ip]);
+			   $v35_packet = $this->encodeMessage35($discovery_payload, $udp_key_v35, 37, 0);
+            socket_sendto($socket_v35, $v35_packet, strlen($v35_packet), 0, $broadcast_address, 7000);
 
-            echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
-            echo '<td>'.$result['gwId'].'</td>';
-            echo '<td> ('.$result['version'].') </td>';
-            echo '<td>'.$result['ip'].'</td>';
-            echo '</tr>';  
-         }
-         if (socket_recvfrom($socket1, $buf, 2048, 0, $from, $port)) {
-
-            $data = substr($buf,20,-8);
-            $result = json_decode($data, true);
-
-            if (in_array($result['gwId'], $devices) == false) {
-               echo '<tr>';
-               array_push($devices, $result['gwId']);
-               
-   
-               $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $result['gwId'] . "'"); 
-               if (IsSet($rec['ID']) and ($rec['DEV_IP'] != $result['ip'] or $rec['TUYA_VER'] != $result['version'])) {
-                  $rec['DEV_IP'] = $result['ip'];
-                  $rec['TUYA_VER'] = $result['version'];
-                  SQLUpdate('tudevices', $rec);
-                }
-               echo '<td><b>'.$rec['TITLE'].'</b></td>'; 
-               echo '<td>'.$result['gwId'].'</td>';
-               echo '<td> ('.$result['version'].') </td>';
-               echo '<td>'.$result['ip'].'</td>';
-               echo '</tr>';  
-            }
-            
-         }   
-         
-         if ((time() - $start_time) >10) break; 
-         
+          }
+          usleep(250000); // 0.25 секунды задержка между широковещательными запросами
       }
+  
       echo '</table>';
-      socket_close($socket);
-      socket_close($socket1);
+      socket_close($socket_v31);
+      socket_close($socket_v33_34);
+      socket_close($socket_v35);
+
+
+
 
    }
+
+   function getLocalIPAddress() {
+      $ip= exec('hostname -I');
+      return $ip;
+   
+   }
+
+
+   function displayDeviceInfo($result, $ip, $protocol) {
+
+      $dev_id = (isset($result['devId'])) ? $result['devId'] : (isset($result['gwId']) ? $result['gwId'] : null);
+  
+      $protocol = (isset($result['version']) ? $result['version'] : '');
+  
+      if ($dev_id) {
+          echo '<tr>';
+  
+          $rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $dev_id . "'");
+          if (isset($rec['ID']) && ($rec['DEV_IP'] != $ip || ( $rec['TUYA_VER'] != $protocol))) {
+              $rec['DEV_IP'] = $ip;
+              $rec['TUYA_VER'] = $protocol;
+              SQLUpdate('tudevices', $rec);
+          } elseif (!isset($rec['ID'])) {
+              $new_device = array(
+                  'DEV_ID' => $dev_id,
+                  'DEV_IP' => $ip,
+                  'TUYA_VER' => $protocol,
+                  'TITLE' => 'Новое Tuya устройство (' . $dev_id . ')'
+              );
+              SQLInsert('tudevices', $new_device);
+          }
+          //$rec = SQLSelectOne("SELECT * FROM tudevices WHERE DEV_ID='" . $dev_id . "'");
+  
+          echo '<td><b>' . (isset($rec['TITLE']) ? $rec['TITLE'] : '') . '</b></td>';
+          echo '<td>' . $dev_id . '</td>';
+          echo '<td> (' . $protocol  . ') </td>';
+          echo '<td>' . $ip . '</td>';
+          echo '</tr>';
+      }
+  }   
    
    function getScenes() {
       $this->getConfig();
@@ -533,7 +622,7 @@ class tuya extends module
       }   
    }
 
-   function InfoScene($dev_id) {
+   function infoScene($dev_id) {
       debmes('Info Scene running');
       $this->getConfig();
       if ($this->config['TUYA_WEB']) {
@@ -673,6 +762,8 @@ class tuya extends module
    if ($tuya_ver == '3.4') {
 
       return $this->TuyaLocalMsg34($command,$dev_id,$local_key,$local_ip,$data,$cid);
+   } else if ($tuya_ver == '3.5') {
+      return $this->tuyaLocalMsg35($command,$dev_id,$local_key,$local_ip,$data,$cid);
    }
 
    $prefix="000055aa00000000000000";
@@ -747,7 +838,7 @@ class tuya extends module
    } 
    return $result;
   
-}
+  }
 
   function requestLocalStatus(){
    $devices = SQLSelect("SELECT * FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' ORDER BY DEV_ID");
@@ -831,14 +922,14 @@ class tuya extends module
    
    if (socket_connect($socket, $local_ip, 6668)) {
       for ($i=0;$i<3;$i++) {
-      $send=socket_send($socket, $payload, strlen($payload), 0);
-      if ($send!=strlen($payload)) {
-         //debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip);
-      }
-      $reciv=socket_recv ( $socket , $buf , 2048 ,0);
-      //debmes( date('y-m-d h:i:s') . ' recived '.strlen($buf));
-      if ($buf!='') break;
-      sleep(1);
+         $send=socket_send($socket, $payload, strlen($payload), 0);
+         if ($send!=strlen($payload)) {
+            //debmes( date('y-m-d h:i:s') . ' sended '.$send .' from ' .strlen($payload) . 'ip' . $local_ip);
+         }
+         $reciv=socket_recv ( $socket , $buf , 2048 ,0);
+         //debmes( date('y-m-d h:i:s') . ' recived '.strlen($buf));
+         if ($buf!='') break;
+         sleep(1);
       }
    
    } else {  
@@ -961,11 +1052,131 @@ class tuya extends module
 
       $reciv=socket_recv ( $socket , $buf , 2048 ,MSG_WAITALL);
 
-  } 
+   } 
 
-  socket_close($socket);
+   socket_close($socket);
 
- }
+  }
+
+  function tuyaLocalMsg35($command, $dev_id, $local_key, $local_ip, $dps, $cid, $dps12='') {
+
+   $sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+   socket_set_option($sock, SOL_SOCKET, SO_RCVTIMEO, ["sec" => 2, "usec" => 0]);
+   socket_connect($sock, $local_ip, 6668);
+
+   // Handshake
+   $sessionKey = $this->negotiateSessionKey($local_key, $dev_id, $sock);
+   if (!$sessionKey) {
+       debmes("Handshake failed. Dev ID=" . $dev_id);
+   }
+
+   if ($command == 'STATUS') {
+
+      $sequenceN = 3; 
+
+      if ($dps12 != '') {  
+         $payload_12 = $this->encodeMessage35($dps12, $sessionKey, 0X12, $sequenceN);   
+         $send = socket_send($sock, $payload_12, strlen($payload_12), 0); 
+         $buf1 = '';
+         $reciv=socket_recv ( $sock , $buf1 , 2048, MSG_WAITALL); 
+         $result = $this->decodeMessage35($buf1, $sessionKey);
+         $sequenceN=4; 
+      } 
+
+      if ($cid == '') {
+         $json = '{}';
+      } else {
+         $json = '{"cid":"'.$cid.'"}';
+      }
+
+
+      $hexByte = 0X10;
+      
+      
+      $buf = '';
+      
+      $payload = $this->encodeMessage35($json, $sessionKey, $hexByte, $sequenceN);
+      
+      $send=socket_send($sock, $payload, strlen($payload), 0);
+         
+      $reciv=socket_recv ($sock , $buf, 2048, MSG_WAITALL);
+      
+      $result = $this->decodeMessage35($buf, $sessionKey);
+
+      $result = str_replace("\x00", "", $result);
+
+      socket_close($sock);
+        
+      return $result;
+
+   } else {   
+
+      if ($cid == '') {
+         $json = '3.5'."\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".'{"protocol":5,"t":'.time().',"data":{"dps":'.$dps.'}}';
+      } else {
+         $json = '3.5'."\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".'{"protocol":5,"cid":"'.$cid.'","t":'.time().',"data":{"dps":'.$dps.'}}';
+      }
+      $hexByte = 0x0D;
+
+      $payload = $this->encodeMessage35($json, $sessionKey, $hexByte, 3);   
+
+      $send = socket_send($sock, $payload, strlen($payload), 0);
+
+      $reciv = socket_recv ( $sock, $buf, 2048, MSG_WAITALL);
+
+   } 
+
+   socket_close($sock);
+
+  }
+
+  function negotiateSessionKey($local_key, $dev_id, $sock) {
+   // Шаг 1: отправка local_nonce
+   $localNonce = '0123456789abcdef';
+   $seq = 1;
+   $iv = str_pad(substr((string)(time() * 1000), 0, 12), 12, "\0", STR_PAD_RIGHT);
+   $msg_len = strlen($localNonce) + 28;
+   $header = pack("N", 0x00006699) . pack("n", 0x0000) . pack("N", $seq) . pack("N", 0x03) . pack("N", $msg_len);
+   $aad = substr($header, 4);
+   $encrypted = openssl_encrypt($localNonce, 'aes-128-gcm', $local_key, OPENSSL_RAW_DATA, $iv, $tag, $aad, 16);
+   $packet = $header . $iv . $encrypted . $tag . pack("N", 0x00009966);
+   socket_send($sock, $packet, strlen($packet), 0);
+
+   // Шаг 2: получение remote_nonce + HMAC
+   $buf = '';
+   socket_recv($sock, $buf, 2048, MSG_WAITALL);
+   $decrypted = $this->decodeMessage35($buf, $local_key);
+   $remoteNonce = substr($decrypted, 4, 16);
+   $hmacReceived = substr($decrypted, 20, 32);
+   $hmacExpected = hash_hmac('sha256', $localNonce, $local_key, true);
+
+   if ($hmacExpected !== $hmacReceived) {
+      debmes("HMAC mismatch. Dev ID = " . $dev_id);
+      return '';
+   }
+
+   // Шаг 3: отправка HMAC(remote_nonce)
+   $seq = 2;
+   $rkeyHmac = hash_hmac('sha256', $remoteNonce, $local_key, true);
+   $iv3 = str_pad(substr((string)(time() * 1000), 0, 12), 12, "\0", STR_PAD_RIGHT);
+   $msg_len3 = strlen($rkeyHmac) + 28;
+   $header3 = pack("N", 0x00006699) . pack("n", 0x0000) . pack("N", $seq) . pack("N", 0x05) . pack("N", $msg_len3);
+   $aad3 = substr($header3, 4);
+   $encrypted3 = openssl_encrypt($rkeyHmac, 'aes-128-gcm', $local_key, OPENSSL_RAW_DATA, $iv3, $tag3, $aad3, 16);
+   $packet3 = $header3 . $iv3 . $encrypted3 . $tag3 . pack("N", 0x00009966);
+   socket_send($sock, $packet3, strlen($packet3), 0);
+
+   // Генерация sessionKey
+   $xored = '';
+   for ($i = 0; $i < 16; $i++) {
+       $xored .= chr(ord($localNonce[$i]) ^ ord($remoteNonce[$i]));
+   }
+   $ivFinal = substr($localNonce, 0, 12);
+   $encryptedFinal = openssl_encrypt($xored, 'aes-128-gcm', $local_key, OPENSSL_RAW_DATA, $ivFinal, $tagFinal, '', 16);
+
+   return substr($encryptedFinal, 0, 16);
+}
+
 
   function encode_message($json, $local_key, $hexByte, $seqno) {
    $prefix="000055aa00000000000000";
@@ -998,6 +1209,29 @@ class tuya extends module
 
 
  }
+
+  function encodeMessage35($json, $key, $cmd, $seq) {
+
+      //$iv = str_pad(substr((string)(time() * 1000), 0, 12), 12, "\0", STR_PAD_RIGHT);
+      $iv = hex2bin('31373539393636363737312e');
+      $msg_len = strlen($json) + 28;
+      $header = pack("N", 0x00006699) . pack("n", 0x0000) . pack("N", $seq) . pack("N", $cmd) . pack("N", $msg_len);
+      $aad = substr($header, 4);
+      $encrypted = openssl_encrypt($json, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, $aad, 16);
+      $packet = $header . $iv . $encrypted . $tag . pack("N", 0x00009966);
+      return $packet;
+ }
+
+  function decodeMessage35($packet, $key) {
+   if (substr($packet, 0, 4) !== pack("N", 0x00006699)) return null;
+   $len = unpack("N", substr($packet, 14, 4))[1];
+   $aad = substr($packet, 4, 14);
+   $iv = substr($packet, 18, 12);
+   $encrypted = substr($packet, 30, $len - 28);
+   $tag = substr($packet, 18 + $len - 16, 16);
+   return openssl_decrypt($encrypted, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, $aad);
+}  
+
 
   function Tuya_send_receive( $payload,$local_ip) {
    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -1305,7 +1539,7 @@ class tuya extends module
             $last = substr($hex, -1);
             return bcadd(bcmul(16, $this->bchexdec($remain)), hexdec($last));
         }
-    }
+   }
 
 
    function bytes_to_int($bytes) {
@@ -1327,7 +1561,7 @@ class tuya extends module
         } else {
             return $this->bcdechex($remain).dechex($last);
         }
-    }
+   }
    
    function Tuya_Web_Status() {
       $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.location.list',
@@ -1335,6 +1569,7 @@ class tuya extends module
       $result=json_decode($apiResult , true);
 
       if(empty($result['result'])) return;
+
       foreach ($result['result'] as $home) {
          $gid= $home['groupId'];
          
@@ -1343,6 +1578,7 @@ class tuya extends module
                                              'requiresSID'=> 1]);
 	  
          $result=json_decode($apiResult , true);
+
          foreach ($result['result'] as $device) {
 	  
             $rec=SQLSelectOne('select * from tudevices where DEV_ID="'.$device['devId'].'"');
@@ -1361,40 +1597,41 @@ class tuya extends module
             if ($rec==NULL) {
 	  
                $rec['IR_FLAG'] = $ir_flag;
-               $rec['TITLE']=$device['name'] ;
-               $rec['DEV_ICON']= $device['iconUrl'];
-               $rec['DEV_ID']= $device['devId'];
-               $rec['TYPE']=$device['category'];
-               $rec['LOCAL_KEY']=$device['localKey'];
-               $rec['PRODUCT_ID']=$device['productId'];
-               $rec['GID_ID']=$gid;
-               $rec['MESH_ID']=$device['meshId'];
+               $rec['TITLE'] = $device['name'] ;
+               $rec['DEV_ICON'] = $device['iconUrl'];
+               $rec['DEV_ID'] = $device['devId'];
+               $rec['TYPE'] = $device['category'];
+               $rec['LOCAL_KEY'] = $device['localKey'];
+               $rec['PRODUCT_ID'] = $device['productId'];
+               $rec['GID_ID'] = $gid;
+               $rec['MESH_ID'] = $device['meshId'];
                $rec['MAC'] = $device['mac'];
                $rec['SEND12'] = 0;
                $rec['VER_3_1'] = 0;
                $rec['TUYA_VER'] = '3.3';
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;      
-               $rec['UPDATED']=date('y-m-d H:i:s',time()); 
+               $rec['UPDATED']=date('y-m-d H:i:s',time());    
                $rec['DSP_FILLED'] = 0; 
-	  
-               $rec['ID']=SQLInsert('tudevices',$rec);
+	            $rec['UUID'] = $device['uuid'];
+               $rec['ID'] = SQLInsert('tudevices',$rec);
             } else {
-               if (is_null($rec['MAC'])) $rec['MAC'] =''; 
-               if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] =''; 
-               if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] ='';
+               if (is_null($rec['MAC'])) $rec['MAC'] = ''; 
+               if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] = ''; 
+               if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] = '';
                if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = 0;
+	            if (is_null($rec['UUID'])) $rec['UUID'] = '';
                
                if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
-               $rec['LOCAL_KEY']=$device['localKey'];
-               $rec['PRODUCT_ID']=$device['productId'];
-               $rec['GID_ID']=$gid;
-               $rec['MESH_ID']=$device['meshId'];
+               $rec['LOCAL_KEY'] = $device['localKey'];
+               $rec['PRODUCT_ID'] = $device['productId'];
+               $rec['GID_ID'] = $gid;
+               $rec['MESH_ID'] = $device['meshId'];
                $rec['MAC'] = $device['mac'];
                $rec['IR_FLAG'] = $ir_flag;
-               $rec['UPDATED']=date('y-m-d H:i:s',time());
+               $rec['UPDATED'] = date('y-m-d H:i:s',time());
                
-               $rec['ID']=SQLUpdate('tudevices',$rec);
+               $rec['ID'] = SQLUpdate('tudevices',$rec);
                }
 	  
             }
@@ -1537,10 +1774,10 @@ class tuya extends module
             if (isset($rec['DSP_FILLED'])) {
                $dsp_filled = $rec['DSP_FILLED'];
             } else {
-               $dsp_filled = false;
+               $dsp_filled = 0;
             }
          
-            if (!$dsp_filled)  {
+            if ($dsp_filled == 0)  {
                foreach($device['dps'] as $key => $value) {
                   $cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$rec['ID']." AND TITLE LIKE '".DBSafe($key)."'");
                
@@ -1566,7 +1803,7 @@ class tuya extends module
                      $cmd_rec['DEVICE_ID'] = $rec['ID'];
 
                      $cmd_rec['ID'] = SQLInsert('tucommands', $cmd_rec);
-                     $dsp_filled = true;
+                     $dsp_filled = 1;
                   } else if ($cmd_rec['ALIAS'] == '') {
                      $cmd_rec['VALUE_MIN'] = $sc[$device['productId']][$key]['min'];
                      $cmd_rec['MODE'] = $sc[$device['productId']][$key]['mode'];
@@ -1580,9 +1817,9 @@ class tuya extends module
 					 if($cmd_rec['VALUE_SCALE'] == '') $cmd_rec['VALUE_SCALE']=0;
                      $cmd_rec['VALUE_TYPE'] = $sc[$device['productId']][$key]['type'];
                      $cmd_rec['ID'] = SQLUpdate('tucommands', $cmd_rec);
-                     $dsp_filled = true;
+                     $dsp_filled = 1;
                   } else {
-                     $dsp_filled = true;
+                     $dsp_filled = 1;
                   }
                   
                   if (isset($sc[$device['productId']][$key]['range']) and $sc[$device['productId']][$key]['range']) { 
@@ -1618,7 +1855,7 @@ class tuya extends module
 
                }
 
-               if ($dsp_filled) {
+               if ($dsp_filled == 1) {
                   $rec['DSP_FILLED'] = 1;
                   $rec['ID'] = SQLUpdate('tudevices',$rec);
                }   

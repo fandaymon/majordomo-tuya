@@ -108,7 +108,13 @@ while (1) {
 					$dps = '{}';
 					$dps12 = $device['SEND12'] ? $device['FLAGS12'] : '';
 					$result = $tuya_module->TuyaLocalMsg34('STATUS', $dev_id, $local_key, $local_ip, $dps, $cid, $dps12);
-					$status=json_decode($result);
+					$status = json_decode($result);
+
+				} else if ($tuya_ver == '3.5') {
+					$dps = '{}';
+					$dps12 = $device['SEND12'] ? $device['FLAGS12'] : '';
+					$result = $tuya_module->tuyaLocalMsg35('STATUS', $dev_id, $local_key, $local_ip, $dps, $cid, $dps12);
+					$status = json_decode($result);					
 
 				} else {
                 
