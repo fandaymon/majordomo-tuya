@@ -136,7 +136,7 @@ class tuya extends module
    {
       $this->getConfig();
 
-      if ((time() - (int)gg('cycle_tuyaRun')) < $this->config['TUYA_INTERVAL']+30) {
+      if ((time() - (int)gg('cycle_tuyaRun')) < (int)$this->config['TUYA_INTERVAL']+30) {
          $out['CYCLERUN'] = 1;
       } else {
          $out['CYCLERUN'] = 0;
