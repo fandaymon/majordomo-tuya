@@ -11,6 +11,30 @@
 Define('TUYA_LOCAL_PORT', 9898);
 Define('TUYA_WEB','https://px1.tuyaeu.com');
 
+const DK_1G_KETTLE_DPS_TO_ALIAS = [
+    1 => "start",
+    2 => "temp_current",
+    3 => "temp_current_f",
+    4 => "temp_setting_quick_c",
+    5 => "temp_setting_quick_f",
+    6 => "temp_boiling_quick_c",
+    7 => "temp_boiling_quick_f",
+    8 => "temp_set",
+    9 => "temp_set_f",
+    10 => "temp_boiling_c",
+    11 => "temp_boiling_f",
+    12 => "temp_unit_convert",
+    13 => "warm",
+    14 => "warm_time",
+    15 => "status",
+    16 => "work_type",
+    17 => "countdown_set",
+    18 => "countdown_left",
+    19 => "fault",
+    20 => "countdown",
+    101 => "fluoride",
+    102 => "xy",
+];
 
 class tuya extends module
 {
@@ -1776,7 +1800,6 @@ class tuya extends module
             } else {
                $dsp_filled = 0;
             }
-         
             if ($dsp_filled == 0)  {
                foreach($device['dps'] as $key => $value) {
                   $cmd_rec = SQLSelectOne("SELECT * FROM tucommands WHERE DEVICE_ID=".(int)$rec['ID']." AND TITLE LIKE '".DBSafe($key)."'");
@@ -2244,6 +2267,11 @@ class tuya extends module
                } elseif ($command=='102') {
                  $cmd_rec['DIVIDEDBY2']=1;
                } 
+             } elseif ($device['TYPE']=='kettle') {
+                 $cmd_rec['ALIAS'] = DK_1G_KETTLE_DPS_TO_ALIAS[$command];
+                 if ($cmd_rec['ALIAS'] == "start") {
+                     $cmd_rec['VALUE_TYPE'] = "bool";
+                 }
              }
 
          
@@ -2429,7 +2457,13 @@ class tuya extends module
        $dev_id=substr($properties[0]['DEV_ID'],0,$mdev);
        if ($properties[0]['TITLE']=='state') $dps_name=substr($properties[0]['DEV_ID'],$mdev+1);
       } else {
-       if ($properties[0]['TITLE']=='state') $dps_name='1';
+       if ($properties[0]['TITLE']=='state') {
+           $dps_name='1';
+       }
+       $dp_id = array_reverse(DK_1G_KETTLE_DPS_TO_ALIAS)[$properties[0]['ALIAS']];
+       if ($dp_id) {
+           $dps_name = $dp_id;
+       }
        $dev_id=$properties[0]['DEV_ID'];
       }
 
