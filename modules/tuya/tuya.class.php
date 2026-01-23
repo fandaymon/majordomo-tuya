@@ -2268,8 +2268,8 @@ class tuya extends module
                  $cmd_rec['DIVIDEDBY2']=1;
                } 
              } elseif ($device['TYPE']=='kettle') {
-                 $cmd_rec['ALIAS'] = DK_1G_KETTLE_DPS_TO_ALIAS[$command];
-                 if ($cmd_rec['ALIAS'] == "start") {
+                 $alias = $cmd_rec['ALIAS'] = DK_1G_KETTLE_DPS_TO_ALIAS[$command];
+                 if (in_array($alias, ["start", "warm", "xy", "fluoride"])) {
                      $cmd_rec['VALUE_TYPE'] = "bool";
                  }
              }
