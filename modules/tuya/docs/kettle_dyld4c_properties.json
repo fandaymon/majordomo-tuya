@@ -1,0 +1,440 @@
+{
+  "modelId": "dyld4c",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "默认服务",
+      "properties": [
+        {
+          "abilityId": 1,
+          "accessMode": "rw",
+          "code": "start",
+          "description": "【必选】控制设备启动暂停开关",
+          "extensions": {
+            "iconName": "icon-dp_play",
+            "attribute": "1024"
+          },
+          "name": "工作开关",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 2,
+          "accessMode": "ro",
+          "code": "temp_current",
+          "description": "【非必选】当前温度显示，该DP点用于温标为摄氏度使用，未选择该DP点则不展示该功能",
+          "extensions": {
+            "iconName": "icon-dp_c",
+            "attribute": "1024"
+          },
+          "name": "当前温度-℃",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 3,
+          "accessMode": "ro",
+          "code": "temp_current_f",
+          "description": "【非必选】当前温度显示，该DP点用于温标为华氏度使用，未选择该DP点则不展示该功能",
+          "extensions": {
+            "iconName": "icon-dp_f",
+            "attribute": "1024"
+          },
+          "name": "当前温度-℉",
+          "typeSpec": {
+            "type": "value",
+            "max": 212,
+            "min": 32,
+            "scale": 0,
+            "step": 1,
+            "unit": "℉"
+          }
+        },
+        {
+          "abilityId": 4,
+          "accessMode": "rw",
+          "code": "temp_setting_quick_c",
+          "description": "【非必选】快速选择加热到目标温度选项，该DP点枚举值可增、减、改，但修改枚举值名称仅支持为数字，未选则不展示该功能。 如需要修改代表名称，可以前往第四步的拓展中心，多语言管理修改代表值，新增的枚举值所代表的的内容也是在多语言中修改代表值。",
+          "extensions": {
+            "iconName": "icon-set",
+            "attribute": "1024"
+          },
+          "name": "加热到目标温度（净水模式煮水）",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "45",
+              "60",
+              "85",
+              "90",
+              "100"
+            ]
+          }
+        },
+        {
+          "abilityId": 5,
+          "accessMode": "rw",
+          "code": "temp_setting_quick_f",
+          "description": "【非必选】快速选择加热到目标温度选项，该DP点枚举值可增、减、改，但修改枚举值名称仅支持为数字，未选则不展示该功能。 如需要修改代表名称，可以前往第四步的拓展中心，多语言管理修改代表值，新增的枚举值所代表的的内容也是在多语言中修改代表值。",
+          "extensions": {
+            "iconName": "icon-set",
+            "attribute": "1024"
+          },
+          "name": "加热到目标温度（净水模式）",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "113",
+              "140",
+              "185",
+              "194",
+              "212"
+            ]
+          }
+        },
+        {
+          "abilityId": 6,
+          "accessMode": "rw",
+          "code": "temp_boiling_quick_c",
+          "description": "【非必选】快速选择沸腾后冷却到目标温度选项，该DP点枚举值可增、减、改，但修改枚举值名称仅支持为数字，未选则不展示该功能。 如需要修改代表名称，可以前往第四步的拓展中心，多语言管理修改代表值，新增的枚举值所代表的的内容也是在多语言中修改代表值。",
+          "extensions": {
+            "iconName": "icon-wendu2",
+            "attribute": "1024"
+          },
+          "name": "沸腾后冷却到目标温度（自来水煮水）",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "45",
+              "60",
+              "85",
+              "90",
+              "100"
+            ]
+          }
+        },
+        {
+          "abilityId": 7,
+          "accessMode": "rw",
+          "code": "temp_boiling_quick_f",
+          "description": "【非必选】快速选择沸腾后冷却到目标温度选项，该DP点枚举值可增、减、改，但修改枚举值名称仅支持为数字，未选则不展示该功能。 如需要修改代表名称，可以前往第四步的拓展中心，多语言管理修改代表值，新增的枚举值所代表的的内容也是在多语言中修改代表值。",
+          "extensions": {
+            "iconName": "icon-a_function_fahrenhei",
+            "attribute": "1024"
+          },
+          "name": "沸腾后冷却到目标温度（自来水模式）",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "113",
+              "140",
+              "185",
+              "194",
+              "212"
+            ]
+          }
+        },
+        {
+          "abilityId": 8,
+          "accessMode": "rw",
+          "code": "temp_set",
+          "description": "【非必选】选择加热到目标温度选项，该DP点数值范围可修改，未选则不展示该功能。",
+          "extensions": {
+            "iconName": "icon-set",
+            "attribute": "1024"
+          },
+          "name": "净水模式多段定温",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 9,
+          "accessMode": "rw",
+          "code": "temp_set_f",
+          "description": "【非必选】选择加热到目标温度选项，该DP点数值范围可修改，未选则不展示该功能。",
+          "extensions": {
+            "iconName": "icon-dp_f",
+            "attribute": "1024"
+          },
+          "name": "温度设置（℉）",
+          "typeSpec": {
+            "type": "value",
+            "max": 212,
+            "min": 32,
+            "scale": 0,
+            "step": 1,
+            "unit": "℉"
+          }
+        },
+        {
+          "abilityId": 10,
+          "accessMode": "rw",
+          "code": "temp_boiling_c",
+          "description": "【非必选】选择沸腾后冷却到目标温度选项，该DP点数值范围可修改，未选则不展示该功能。",
+          "extensions": {
+            "iconName": "icon-wendu2",
+            "attribute": "1024"
+          },
+          "name": "沸腾后冷却到目标温度（℃）",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 11,
+          "accessMode": "rw",
+          "code": "temp_boiling_f",
+          "description": "【非必选】选择沸腾后冷却到目标温度选项，该DP点数值范围可修改，未选则不展示该功能。",
+          "extensions": {
+            "iconName": "icon-wendu2",
+            "attribute": "1024"
+          },
+          "name": "沸腾后冷却到目标温度（℉）",
+          "typeSpec": {
+            "type": "value",
+            "max": 212,
+            "min": 32,
+            "scale": 0,
+            "step": 1,
+            "unit": "℉"
+          }
+        },
+        {
+          "abilityId": 12,
+          "accessMode": "rw",
+          "code": "temp_unit_convert",
+          "description": "【非必选】温标切换开关选择，未选则不展示该功能。如果选这了该功能，必须选择℃和℉的相关搭配DP点",
+          "extensions": {
+            "iconName": "icon-dp_mode",
+            "attribute": "1024"
+          },
+          "name": "温标切换",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "c",
+              "f"
+            ]
+          }
+        },
+        {
+          "abilityId": 13,
+          "accessMode": "rw",
+          "code": "warm",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_power2",
+            "attribute": "1024"
+          },
+          "name": "保温",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 14,
+          "accessMode": "rw",
+          "code": "warm_time",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_time3",
+            "attribute": "1024"
+          },
+          "name": "保温时间",
+          "typeSpec": {
+            "type": "value",
+            "max": 360,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 15,
+          "accessMode": "ro",
+          "code": "status",
+          "description": "【必选】设备上报工作状态，该DP点枚举值可增减，但不可修改枚举值名称，例如可以删除9，但是不能把9改为其他词，可以增加，仅支持增加数字，未选则不展示该功能。 默认： 1代表：待机中 2代表：加热中 3代表：冷却中 4代表：保温中 5代表：加热到目标温度 6代表：沸腾后冷却到目标温度 7代表：预留1 8代表：预留2 9代表：预留3 如需要修改代表名称，可以前往第四步的拓展中心，多语言管理修改代表值，新增的枚举值所代表的的内容也是在多语言中修改代表值。",
+          "extensions": {
+            "iconName": "icon-zhuangtai",
+            "attribute": "1024"
+          },
+          "name": "设备状态",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "standby",
+              "heating",
+              "cooling",
+              "warm",
+              "heating_temp",
+              "boiling_temp",
+              "reserve_1",
+              "reserve_2",
+              "reserve_3"
+            ]
+          }
+        },
+        {
+          "abilityId": 16,
+          "accessMode": "rw",
+          "code": "work_type",
+          "description": "【必选】不可修改、删除、增加枚举值。该DP点用于明确当前工作模式是什么，与所使用的温度设置DP点绑定上报。 例如： 用户选择了90℃直接加热快捷键 APP会下发：该DP点的setting_quick和对应温度的DP点； MCU需要上报：该DP点的setting_quick和对应温度的DP点；",
+          "extensions": {
+            "iconName": "icon-dp_mode",
+            "attribute": "1024"
+          },
+          "name": "工作类型",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "setting_quick",
+              "boiling_quick",
+              "temp_setting",
+              "temp_boiling"
+            ]
+          }
+        },
+        {
+          "abilityId": 17,
+          "accessMode": "rw",
+          "code": "countdown_set",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_time2",
+            "attribute": "1152"
+          },
+          "name": "倒计时",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "cancel",
+              "1h",
+              "2h",
+              "3h",
+              "4h",
+              "5h",
+              "6h",
+              "7h",
+              "8h",
+              "9h",
+              "10h",
+              "11h",
+              "12h",
+              "13h",
+              "14h",
+              "15h",
+              "16h",
+              "17h",
+              "18h",
+              "19h",
+              "20h",
+              "21h",
+              "22h",
+              "23h",
+              "24h"
+            ]
+          }
+        },
+        {
+          "abilityId": 18,
+          "accessMode": "ro",
+          "code": "countdown_left",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_time2",
+            "attribute": "1024"
+          },
+          "name": "倒计时剩余时间",
+          "typeSpec": {
+            "type": "value",
+            "max": 1440,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 19,
+          "accessMode": "ro",
+          "code": "fault",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-baojing",
+            "attribute": "1024"
+          },
+          "name": "故障告警",
+          "typeSpec": {
+            "type": "bitmap",
+            "label": [
+              "kettle_leave",
+              "lack_water"
+            ],
+            "maxlen": 2
+          }
+        },
+        {
+          "abilityId": 20,
+          "accessMode": "rw",
+          "code": "countdown",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_time2",
+            "attribute": "1024"
+          },
+          "name": "倒计时",
+          "typeSpec": {
+            "type": "value",
+            "max": 1440,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "rw",
+          "code": "fluoride",
+          "description": "",
+          "name": "除氯烧水",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "rw",
+          "code": "xy",
+          "description": "",
+          "name": "消音（蜂鸣器声音）",
+          "typeSpec": {
+            "type": "bool"
+          }
+        }
+      ]
+    }
+  ]
+}
