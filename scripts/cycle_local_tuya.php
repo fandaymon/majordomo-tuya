@@ -51,7 +51,7 @@ while (1) {
     if ((time() - $latest_disc) >= 5 * 60) {
         $latest_disc = time();
         $devices = SQLSelect("SELECT ID, TITLE, LOCAL_KEY, DEV_ID, DEV_IP, UUID, '' as MAC, 0 as 'ZIGBEE', SEND12, FLAGS12, TUYA_VER FROM tudevices WHERE LOCAL_KEY!='' and DEV_IP!='' and STATUS=1 ORDER BY DEV_ID");
-        $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.UUID, d.MAC, 1 as 'ZIGBEE' FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.STATUS=1");
+        $gw_devices = SQLSelect("SELECT d.ID, d.TITLE, gw.LOCAL_KEY, d.DEV_ID, gw.DEV_IP, d.UUID, d.MAC, 1 as 'ZIGBEE', d.SEND12, d.FLAGS12, gw.TUYA_VER FROM tudevices d INNER JOIN tudevices gw ON d.MESH_ID = gw.DEV_ID WHERE gw.LOCAL_KEY!='' and gw.DEV_IP!='' and d.STATUS=1");
         $devices = array_merge($devices ,$gw_devices); 
 
         if ($cycle_debug) {
