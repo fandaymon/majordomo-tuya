@@ -1638,23 +1638,25 @@ class tuya extends module
                $rec['CONTROL'] = 0;      
                $rec['UPDATED']=date('y-m-d H:i:s',time());    
                $rec['DSP_FILLED'] = 0; 
-	            $rec['UUID'] = $device['nodeId'];
+	           $rec['UUID'] = isset($device['nodeId']) ? $device['nodeId'] : $device['uuid'];
                $rec['ID'] = SQLInsert('tudevices',$rec);
             } else {
                if (is_null($rec['MAC'])) $rec['MAC'] = ''; 
                if (is_null($rec['LOCAL_KEY'])) $rec['LOCAL_KEY'] = ''; 
                if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] = '';
                if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = 0;
-	            if (is_null($rec['UUID'])) $rec['UUID'] = '';
+	           if (is_null($rec['UUID'])) $rec['UUID'] = '';
+
+			   $uuid = isset($device['nodeId']) ? $device['nodeId'] : $device['uuid'];
                
-               if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId'] or $rec['UUID']!=$device['nodeId'] ) {
+               if ($rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId'] or $rec['UUID']!=$uuid ) {
                   $rec['LOCAL_KEY'] = $device['localKey'];
                   $rec['PRODUCT_ID'] = $device['productId'];
                   $rec['GID_ID'] = $gid;
                   $rec['MESH_ID'] = $device['meshId'];
                   $rec['MAC'] = $device['mac'];
                   $rec['IR_FLAG'] = $ir_flag;
-                  $rec['UUID'] = $device['nodeId'];
+                  $rec['UUID'] = $uuid;
                   $rec['UPDATED'] = date('y-m-d H:i:s',time());
                   
                   $rec['ID'] = SQLUpdate('tudevices',$rec);
@@ -1760,7 +1762,7 @@ class tuya extends module
                $rec['TUYA_VER'] = '3.3';
                $rec['STATUS'] = 0;
                $rec['CONTROL'] = 0;
-               $rec['UUID'] = $device['nodeId']; 
+               $rec['UUID'] = isset($device['nodeId']) ? $device['nodeId'] : $device['uuid'];
                $rec['UPDATED'] = date('y-m-d H:i:s',time()); 
                $rec['DSP_FILLED'] = 0; 
 
@@ -1773,16 +1775,17 @@ class tuya extends module
                if (is_null($rec['MESH_ID'])) $rec['MESH_ID'] =''; 
                if (is_null($rec['IR_FLAG'])) $rec['IR_FLAG'] = 0;
                if (is_null($rec['UUID'])) $rec['UUID'] = '';
-            
 
-               if ($rec['UUID'] != $device['nodeId'] or $rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
+			   $uuid = isset($device['nodeId']) ? $device['nodeId'] : $device['uuid'];
+
+               if ($rec['UUID'] != $uuid or $rec['IR_FLAG'] != $ir_flag or $rec['MAC'] != $device['mac'] or $rec['LOCAL_KEY']!=$device['localKey'] or $rec['PRODUCT_ID']!=$device['productId'] or $rec['GID_ID']!=$gid or $rec['MESH_ID']!=$device['meshId']) {
                $rec['LOCAL_KEY'] = $device['localKey'];
                $rec['PRODUCT_ID'] = $device['productId'];
                $rec['GID_ID'] = $gid;
                $rec['MESH_ID'] = $device['meshId'];
                $rec['MAC'] = $device['mac'];
                $rec['IR_FLAG'] = $ir_flag;
-               $rec['UUID'] = $device['nodeId'];  
+               $rec['UUID'] = $uuid;  
                $rec['UPDATED']=date('y-m-d H:i:s',time());
                
                $dsp_filled = (int)$rec['DSP_FILLED'];
