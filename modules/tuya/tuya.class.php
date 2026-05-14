@@ -1221,7 +1221,7 @@ class tuya extends module
       $buffer = hex2bin($prefix . $hexByte . '000000' . $postfix_payload_hex_len . bin2hex($json_payload)) ;
    }
    $buffer=bin2hex($buffer);
-   $buffer1=strtoupper(substr($buffer,0,-16));
+
    $buffer1=strtoupper(($buffer));
    
    $hex_crc=(hash_hmac('sha256',hex2bin($buffer1),$local_key));
