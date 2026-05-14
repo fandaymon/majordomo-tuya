@@ -732,7 +732,7 @@ class tuya extends module
    } else {   
       $json_payload=openssl_encrypt($json, 'AES-128-ECB', $local_key, OPENSSL_RAW_DATA);
    }
-   if ($command != "0a" and $command != "12" and $ver_3_1 == false) {
+   if ($command != "0a" and $command != "12" and $tuya_ver != "3.1") {
     $json_payload = hex2bin("332E33000000000000000000000000" . bin2hex($json_payload));
    }
 
