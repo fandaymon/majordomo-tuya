@@ -1978,7 +1978,10 @@ class tuya extends module
       return $result;
    }
    
-   function RGB_to_Tuya ($RGB, $color_v2 = false) {                                 
+   function RGB_to_Tuya ($RGB, $color_v2 = false) {
+      
+      $RGB = strtoupper(ltrim(trim($RGB), '#'));
+      
       $R=hexdec(substr($RGB,0,2));
       $G=hexdec(substr($RGB,2,2));
       $B=hexdec(substr($RGB,4,2));
