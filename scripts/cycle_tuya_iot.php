@@ -121,8 +121,8 @@ function getMQTTConfig($link_id) {
     $url = '/v1.0/open-hub/access/config';
     $r_c = $tuya_module->Tuya_IOT_POST($url, $data, false);
 
-    if (!$r_c->success) {
-	debmes("Can't get MQTT conf.".$r_c->msg);
+    if (!is_object($r_c) || empty($r_c->success)) {
+	debmes("Can't get MQTT conf.".(is_object($r_c) && isset($r_c->msg) ? $r_c->msg : ''));
 	exit;
     } 
     $client_name = $r_c->result->client_id;
