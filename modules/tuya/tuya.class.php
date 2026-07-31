@@ -925,7 +925,7 @@ class tuya extends module
    
    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
    socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
-   
+   socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, array("sec" => 2, "usec" => 0));
    $buf='';
    
    
@@ -1096,6 +1096,7 @@ class tuya extends module
 
    $sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
    socket_set_option($sock, SOL_SOCKET, SO_RCVTIMEO, ["sec" => 2, "usec" => 0]);
+   socket_set_option($sock, SOL_SOCKET, SO_SNDTIMEO, ["sec" => 2, "usec" => 0]);
    socket_connect($sock, $local_ip, 6668);
 
    // Handshake
@@ -1270,6 +1271,7 @@ class tuya extends module
   function Tuya_send_receive( $payload,$local_ip) {
    $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
    socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
+   socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, array("sec" => 2, "usec" => 0));
    //socket_set_option($socket, SOL_SOCKET, TCP_NODELAY, 1);
 
    $buf='';
