@@ -62,14 +62,14 @@
  </script>
  
 <div style="text-align:right; margin-top: 10px;margin-bottom: 10px;">
-   <a href="javascript:scan();" class="btn btn-default"><i class="glyphicon glyphicon-search"></i> Сканировать</a>
+   <a href="javascript:scan();" class="btn btn-default"><i class="glyphicon glyphicon-search"></i> <#LANG_TUYA_SCAN#></a>
    <a href="?view_mode=edit_tudevices&data_source=<#DATA_SOURCE#>" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> <#LANG_ADD#></a>
 </div>
 
 <div id="scanInfo" style="display:none;">
 			<div id="info" style="word-wrap:break-word"></div>
 			<div style="text-align: left; margin-top: 10px; margin-bottom: 10px;">
-			<button id="scanButton" type="button" class="btn btn-success" onclick="javascript:hideScanInfo();" style="display:none;">Закрыть</button>
+			<button id="scanButton" type="button" class="btn btn-success" onclick="javascript:hideScanInfo();" style="display:none;"><#LANG_TUYA_CLOSE#></button>
 			</div>
 </div>
 
@@ -79,7 +79,7 @@
       scan.style.display = "block";
       
 	    var url="/ajax/tuya.html?op=scan";
-		$("#info").html('Сканируем сеть <img src="../templates/tuya/img/arrows.gif">');
+		$("#info").html('<#LANG_TUYA_SCANNING#> <img src="../templates/tuya/img/arrows.gif">');
         $.ajax({
             url: url
         }).done(function(data) {
@@ -127,7 +127,7 @@
                      <th>IP</th>
                      #-->
                      <th>Online</th>
-                     <th>Статус</th>
+                     <th><#LANG_TUYA_STATUS_COL#></th>
                      <th>&nbsp;</th>
                   </tr>
                   <tbody>
@@ -212,7 +212,7 @@
                            [#if "<#ACTION#>"=="admin"#]
                               <a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_tudevices&id=[#ID#]" class="btn btn-default" title="<#LANG_EDIT#>"><i class="glyphicon glyphicon-pencil"></i></a>
                            <a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_tudevices&id=[#ID#]&tab=data" class="btn btn-default" title="<#LANG_DATA#>"><i class="glyphicon glyphicon-th-list"></i></a>
-                              <a href="?data_source=<#DATA_SOURCE#>&view_mode=delete_tudevices&id=[#ID#]" onClick="return confirm('<#LANG_ARE_YOU_SURE#>')" class="btn btn-default" title="Удалить"><i class="glyphicon glyphicon-remove"></i></a>
+                              <a href="?data_source=<#DATA_SOURCE#>&view_mode=delete_tudevices&id=[#ID#]" onClick="return confirm('<#LANG_ARE_YOU_SURE#>')" class="btn btn-default" title="<#LANG_TUYA_DELETE#>"><i class="glyphicon glyphicon-remove"></i></a>
                            [#endif ACTION#]
                         </div>
                      </td>
