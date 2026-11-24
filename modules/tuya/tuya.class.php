@@ -554,9 +554,21 @@ class tuya extends module
       if (!empty($this->config['TUYA_LOCAL_IP'])) {
          return $this->config['TUYA_LOCAL_IP'];
       }
-      $ip = trim(exec('hostname -I'));
-      $ips = explode(' ', $ip);
-      return $ips[0];
+       if (function_exists('net_get_interfaces')) {
+          $interfaces = net_get_interfaces();
+          foreach ($interfaces as $info) {
+             if (!empty($info['flags']['UP']) && empty($info['flags']['LOOPBACK'])) {
+                foreach ($info['unicast'] as $address) {
+                   if (!empty($address['address']) && $address['address'] !== '127.0.0.1') {
+                      return $address['address'];
+                   }
+                }
+             }
+          }
+       }
+       $hostname = gethostname();
+       $ip = $hostname ? gethostbyname($hostname) : '';
+       return ($ip && $ip !== $hostname && $ip !== '127.0.0.1') ? $ip : '';
    
    }
 
@@ -1493,17 +1505,12 @@ class tuya extends module
      $token = $result["result"]["token"];
 
      $data=md5($this->config['TUYA_PASSWD']);
-     if (extension_loaded('bcmath')) {
-      $data_dec=$this->bytes_to_int($data);  
-      $encryptedPass = bcpowmod($data_dec, $e, $n);
-      $encryptedPass = str_pad($this->bcdechex($encryptedPass),256,'0',STR_PAD_LEFT);
-     } else {   
-      $a=exec('python3 '. __DIR__ .'/pow_python.py ' .$n . ' ' . $e . ' ' .$data);
-      if ($a=='') {
-         debmes('Питон не отработал');
-         return;
-      }   
-      $encryptedPass=substr($a,2,strlen($a)-3);
+     require_once(DIR_MODULES . 'tuya/lib/tuya_rsa.class.php');
+     try {
+      $encryptedPass = TuyaRsa::powMod($n, $e, $data);
+     } catch (Exception $ex) {
+      DebMes('Tuya RSA error: ' . $ex->getMessage(), 'tuya_error');
+      return;
      }
      $apiResult = $this->TuyaWebRequest(['action'=> 'tuya.m.user.email.password.login',
                                           'data'=> ['countryCode'=> $region,
