@@ -9,25 +9,25 @@
       <a class="btn btn-default" href="#api_settings" data-toggle="collapse"><i class="glyphicon glyphicon-cog"></i> <#LANG_SETUP#></a>
       &nbsp;&nbsp;&nbsp;
       [#if CYCLERUN==1#]
-         <span class="label label-success" title="Статус цикла">Цикл запущен</span>
+         <span class="label label-success" title="<#LANG_TUYA_CYCLE_STATUS#>"><#LANG_TUYA_CYCLE_RUN#></span>
       [#else#]
-         <span class="label label-danger" title="Статус цикла">Цикл остановлен</span>
+         <span class="label label-danger" title="<#LANG_TUYA_CYCLE_STATUS#>"><#LANG_TUYA_CYCLE_STOP#></span>
       [#endif#]
       [#if LOCAL_CYCLERUN==1#]
-         <span class="label label-success" title="Статус локального цикла">Локальный Цикл запущен</span>
+         <span class="label label-success" title="<#LANG_TUYA_LOCAL_CYCLE_STATUS#>"><#LANG_TUYA_LOCAL_CYCLE_RUN#></span>
       [#else#]
-         <span class="label label-danger" title="Статус локального цикла">Локальный Цикл остановлен</span>
+         <span class="label label-danger" title="<#LANG_TUYA_LOCAL_CYCLE_STATUS#>"><#LANG_TUYA_LOCAL_CYCLE_STOP#></span>
       [#endif#]
       [#if TUYA_IOT=='1'#]
          [#if IOT_CYCLERUN==1#]
-            <span class="label label-success" title="Статус цикла IOT">Цикл IOT запущен</span>
+            <span class="label label-success" title="<#LANG_TUYA_IOT_CYCLE_STATUS#>"><#LANG_TUYA_IOT_CYCLE_RUN#></span>
          [#else#]
-            <span class="label label-danger" title="Статус цикла IOT">Цикл IOT остановлен</span>
+            <span class="label label-danger" title="<#LANG_TUYA_IOT_CYCLE_STATUS#>"><#LANG_TUYA_IOT_CYCLE_STOP#></span>
          [#endif#]
       [#endif#]
 
       <div class="float-right">&nbsp;&nbsp;&nbsp;&nbsp;</div>
-      <button class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#about">О модуле&nbsp;&nbsp;<span class="glyphicon glyphicon-info-sign icon-white"></span></button>
+      <button class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#about"><#LANG_TUYA_ABOUT#>&nbsp;&nbsp;<span class="glyphicon glyphicon-info-sign icon-white"></span></button>
    </div>
 
    <div class="collapse" id='api_settings'>
@@ -37,7 +37,7 @@
             <div class="form-group">
                <label class="control-label col-lg-6"[#if ERR_TUYA_USERNAME#] style="color:red;font-weight:bold"[#endif#]>
                   E-Mail
-                  <span class='support-hover' tabindex="1" data-title="E-mail для входа в Tuya"><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_EMAIL_HINT#>"><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                   <input type="text" name="tuya_username" value="<#TUYA_USERNAME#>" class="form-control" placeholder="">
@@ -46,7 +46,7 @@
             <div class="form-group">
                <label class="control-label col-lg-6">
                   Password
-                  <span class='support-hover' tabindex="1" data-title="Пароль для входа в Tuya"><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_PASSWORD_HINT#>"><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_passwd" value="<#TUYA_PASSWD#>" class="form-control" placeholder="">
@@ -54,8 +54,8 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Код страны
-                  <span class='support-hover' tabindex="1" data-title="Код страны"><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_COUNTRY_CODE#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_COUNTRY_CODE#>"><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_ccode" value="<#TUYA_CCODE#>" class="form-control" placeholder="">
@@ -63,8 +63,8 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Тип программы управления
-                  <span class='support-hover' tabindex="1" data-title="Название программы, которая управляет устройствами Tuya"><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_APP_TYPE#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_APP_TYPE_HINT#>"><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <select name="tuya_bztype" value="<#TUYA_BZTYPE#>" class="form-control" placeholder="">
@@ -75,8 +75,8 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Использовать HA облако
-                  <span class='support-hover' tabindex="1" data-title="Использовать облако HA"><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_USE_HA_CLOUD#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_USE_HA_CLOUD_HINT#>"><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="checkbox" name="tuya_ha" id="tuya_ha" value="1" [#if TUYA_HA=='1'#]checked[#endif TUYA_HA#]> 
@@ -85,8 +85,8 @@
 
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Интервал обновлений (сек)
-                  <span class='support-hover' tabindex="1" data-title="Интервал между обновлениями состяния устройств "><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_UPDATE_INTERVAL#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_UPDATE_INTERVAL_HINT#> "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_interval" value="<#TUYA_INTERVAL#>" class="form-control" placeholder="">
@@ -94,8 +94,8 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Интервал локальных обновлений (сек)
-                  <span class='support-hover' tabindex="1" data-title="Интервал между локальными обновлениями состяния устройств "><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_LOCAL_UPDATE_INTERVAL#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_LOCAL_UPDATE_INTERVAL_HINT#> "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_local_interval" value="<#TUYA_LOCAL_INTERVAL#>" class="form-control" placeholder="">
@@ -103,17 +103,17 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Локальный IP адрес
-                  <span class='support-hover' tabindex="1" data-title="IP адрес сервера для локального обнаружения устройств. Если не указан, берётся первый из hostname -I"><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_LOCAL_IP#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_LOCAL_IP_HINT#>"><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
-                  <input type="text" name="tuya_local_ip" value="<#TUYA_LOCAL_IP#>" class="form-control" placeholder="определяется автоматически">
+                  <input type="text" name="tuya_local_ip" value="<#TUYA_LOCAL_IP#>" class="form-control" placeholder="<#LANG_TUYA_LOCAL_IP_AUTO#>">
                </div>
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Использовать оригинальное облако
-                  <span class='support-hover' tabindex="1" data-title="Использовать оригинальное облако "><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_USE_ORIGINAL_CLOUD#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_USE_ORIGINAL_CLOUD#> "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="checkbox" name="tuya_web" id="tuya_web" value="1" [#if TUYA_WEB=='1'#]checked[#endif TUYA_WEB#]> 
@@ -122,7 +122,7 @@
             <div class="form-group">
                <label class="control-label col-lg-6">
                   WEB Tuya SID
-                  <span class='support-hover' tabindex="1" data-title="SID для входа в облако "><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_SID_HINT#> "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_sid" value="<#TUYA_SID#>" class="form-control" placeholder="">
@@ -131,7 +131,7 @@
             <div class="form-group">
                <label class="control-label col-lg-6">
                   WEB Tuya Endpoint
-                  <span class='support-hover' tabindex="1" data-title="Адрес облака Tuya "><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_CLOUD_URL_HINT#> "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_web_endpoint" value="<#TUYA_WEB_ENDPOINT#>" class="form-control" placeholder="">
@@ -139,8 +139,8 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Интервал обновлений из облака (сек) 
-                  <span class='support-hover' tabindex="1" data-title="Интервал между обновлениями состяния устройств из оригинального облака в секундах."><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_CLOUD_UPDATE_INTERVAL#> 
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_CLOUD_UPDATE_INTERVAL_HINT#>."><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_web_interval" value="<#TUYA_WEB_INTERVAL#>" class="form-control" placeholder="">
@@ -148,8 +148,8 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Включить debug цикла
-                  <span class='support-hover' tabindex="1" data-title="Включить debug цикла "><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_DEBUG#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_DEBUG#> "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="checkbox" name="tuya_cycle_debug" id="tuya_cycle_debug" value="1" [#if TUYA_CYCLE_DEBUG=='1'#]checked[#endif TUYA_CYCLE_DEBUG#]> 
@@ -157,8 +157,8 @@
             </div>
             <div class="form-group">
                <label class="control-label col-lg-6">
-                  Использовать IOT облако
-                  <span class='support-hover' tabindex="1" data-title="Использовать IOT облако "><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <#LANG_TUYA_USE_IOT_CLOUD#>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_USE_IOT_CLOUD#> "><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="checkbox" name="tuya_iot" id="tuya_iot" value="1" [#if TUYA_IOT=='1'#]checked[#endif TUYA_IOT#]> 
@@ -167,7 +167,7 @@
             <div class="form-group">
                <label class="control-label col-lg-6">
                   Client ID
-                  <span class='support-hover' tabindex="1" data-title="Client ID IOT проекта"><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_CLIENT_ID_HINT#>"><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_client_id" value="<#TUYA_CLIENT_ID#>" class="form-control" placeholder="">
@@ -176,7 +176,7 @@
             <div class="form-group">
                <label class="control-label col-lg-6">
                   Client Secret
-                  <span class='support-hover' tabindex="1" data-title="Client Secret IOT проекта"><i class="glyphicon glyphicon-info-sign"></i></span>
+                  <span class='support-hover' tabindex="1" data-title="<#LANG_TUYA_CLIENT_SECRET_HINT#>"><i class="glyphicon glyphicon-info-sign"></i></span>
                </label>
                <div class="col-lg-4">
                  <input type="text" name="tuya_client_secret" value="<#TUYA_CLIENT_SECRET#>" class="form-control" placeholder="">
@@ -195,13 +195,13 @@
    
    <ul class="nav nav-tabs">
       <li[#if TAB=""#] class="active"[#endif#]>
-         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab=">Устройства</a>
+         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab="><#LANG_TUYA_DEVICES#></a>
       </li>
       <li[#if TAB="scene"#] class="active"[#endif#]>
-         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab=scene">Сцены</a>
+         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab=scene"><#LANG_TUYA_SCENES#></a>
       </li>
       <li[#if TAB="ir"#] class="active"[#endif#]>
-         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab=ir">Пульты</a>
+         <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#search_tudevices#>&tab=ir"><#LANG_TUYA_REMOTES#></a>
       </li>
    </ul>
 
@@ -280,7 +280,7 @@
    <div class="modal-dialog">
       <div class="modal-content">
          <div class="modal-header">
-            <button class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Закрыть</span></button>
+            <button class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"><#LANG_TUYA_CLOSE#></span></button>
             <h4 class="modal-title">Tuya</h4>
          </div>
          <div class="modal-body" style="padding-bottom: 1px;">
@@ -288,14 +288,14 @@
                <img src="../templates/tuya/img/tuya.png"  width="48" height="48">
             </div>
             <p class="float-left">
-               Модуль поддержки wi-fi устройств из экосистемы Tuya.<br><br>
+               <#LANG_TUYA_ABOUT_TEXT#><br><br>
             </p>
             <hr size="1">
 
          </div>
          <div class="modal-footer" style="margin-top: 1px;">
-            <div class="pull-left">Автор: FanDaymon" </div>
-            <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            <div class="pull-left"><#LANG_TUYA_AUTHOR#>" </div>
+            <button type="button" class="btn btn-default" data-dismiss="modal"><#LANG_TUYA_CLOSE#></button>
          </div>
       </div>
    </div>
