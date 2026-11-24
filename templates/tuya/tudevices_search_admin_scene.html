@@ -28,7 +28,7 @@
                <tr>
                   <th><#LANG_TITLE#></th>
                   <th><#LANG_DEVICE#></th>
-                  <th>Команда на выполнение</th>
+                  <th><#LANG_TUYA_COMMAND#></th>
                   <th>&nbsp;</th>
                </tr>
                [#begin RESULT#]
@@ -38,9 +38,9 @@
                   <td valign="top">TuyaScene('[#DEV_ID#]');</td>
                   
                   <td>
-                     <div onClick="$.ajax({url: '/ajax/tuya.html?op=run_scene&dev_id=[#DEV_ID#]'});" class="btn btn-default" title="Запустить сцену"><i class="glyphicon glyphicon-flash"></i></div>
-                     <div onClick="javascript:viewSceneInfo('[#DEV_ID#]');" class="btn btn-default" title="Показать код сцены"><i class="glyphicon glyphicon-eye-open"></i></div>
-                     <a href="?id=[#ID#]&view_mode=delete_tudevices&tab=scene" onClick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default" title="Удалить">
+                     <div onClick="$.ajax({url: '/ajax/tuya.html?op=run_scene&dev_id=[#DEV_ID#]'});" class="btn btn-default" title="<#LANG_TUYA_RUN_SCENE#>"><i class="glyphicon glyphicon-flash"></i></div>
+                     <div onClick="javascript:viewSceneInfo('[#DEV_ID#]');" class="btn btn-default" title="<#LANG_TUYA_VIEW_SCENE_CODE#>"><i class="glyphicon glyphicon-eye-open"></i></div>
+                     <a href="?id=[#ID#]&view_mode=delete_tudevices&tab=scene" onClick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default" title="<#LANG_TUYA_DELETE#>">
                      <i class="glyphicon glyphicon-remove"></i>
                   </td>
                </tr>
