@@ -58,26 +58,26 @@
    </div>
 
    <div class="form-group ">
-    <label class="col-lg-4 control-label">Управлять: </label>
+    <label class="col-lg-4 control-label"><#LANG_TUYA_CONTROL#> </label>
     <div class="col-lg-4">
-     <input type="radio" name="control" value="0"[#if CONTROL=="0"#] checked[#endif#]> Через облако
-     <input type="radio" name="control" value="1"[#if CONTROL=="1"#] checked[#endif#]> Локально
-     <input type="radio" name="control" value="2"[#if CONTROL=="2"#] checked[#endif#]> Через MQTT
+     <input type="radio" name="control" value="0"[#if CONTROL=="0"#] checked[#endif#]> <#LANG_TUYA_VIA_CLOUD#>
+     <input type="radio" name="control" value="1"[#if CONTROL=="1"#] checked[#endif#]> <#LANG_TUYA_VIA_LOCAL#>
+     <input type="radio" name="control" value="2"[#if CONTROL=="2"#] checked[#endif#]> <#LANG_TUYA_VIA_MQTT#>
     </div>
    </div>
    
    <div class="form-group ">
-    <label class="col-lg-4 control-label">Статус: </label>
+    <label class="col-lg-4 control-label"><#LANG_TUYA_STATUS_LABEL#> </label>
     <div class="col-lg-4">
-     <input type="radio" name="status" value="0"[#if STATUS=="0"#] checked[#endif#]> Через облако
-     <input type="radio" name="status" value="1"[#if STATUS=="1"#] checked[#endif#]> Локально
-     <input type="radio" name="status" value="2"[#if STATUS=="2"#] checked[#endif#]> Через MQTT
+     <input type="radio" name="status" value="0"[#if STATUS=="0"#] checked[#endif#]> <#LANG_TUYA_VIA_CLOUD#>
+     <input type="radio" name="status" value="1"[#if STATUS=="1"#] checked[#endif#]> <#LANG_TUYA_VIA_LOCAL#>
+     <input type="radio" name="status" value="2"[#if STATUS=="2"#] checked[#endif#]> <#LANG_TUYA_VIA_MQTT#>
 
     </div>
    </div>
 
    <div class="form-group ">
-    <label class="col-lg-4 control-label">Версия протокола: </label>
+    <label class="col-lg-4 control-label"><#LANG_TUYA_PROTOCOL_VERSION#> </label>
     <div class="col-lg-4">
       <select name="tuya_ver" value="[#TUYA_VER#]">
          <option [#if TUYA_VER=="3.1" #] selected[#endif#]>3.1</option>
@@ -90,7 +90,7 @@
    </div>
    
    <div class="form-group ">
-    <label class="col-lg-4 control-label">Посылать доп.пакет для изменения статуса: </label>
+    <label class="col-lg-4 control-label"><#LANG_TUYA_EXTRA_STATUS_PACKET#> </label>
     <div class="col-lg-4">
       <input type="checkbox" name="send12" id="send12" value="1" [#if SEND12=='1'#]checked[#endif SEND12#]> 
       <input type="text" class="form-control" name="flags12" value="[#FLAGS12#]" id="flags12">
@@ -98,7 +98,7 @@
    </div>
 
    <div class="form-group ">
-      <label class="col-lg-4 control-label">Свойства DSP заполнены: </label>
+      <label class="col-lg-4 control-label"><#LANG_TUYA_DSP_FILLED#> </label>
       <div class="col-lg-4">
         <input type="checkbox" name="dsp_filled" id="dsp_filled" value="1" [#if DSP_FILLED=='1'#]checked[#endif DSP_FILLED#]> 
       </div>
